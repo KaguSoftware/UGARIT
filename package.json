@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "next-intl": "^4.8.3",
+    "resend": "^6.9.4"
+  }
+}
