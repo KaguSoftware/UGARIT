@@ -1,1 +1,4 @@
-export interface footer { }
+export const Footer = () => {
+
+
+};

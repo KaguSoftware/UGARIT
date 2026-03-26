@@ -1,11 +1,10 @@
 
 export interface footerSection {
 
-    title: string; //title of the each column
+    titleKey: string; //title of the each column
     links: footerLinks[];
 
 }
-
 export interface footerLinks {
 
     label: string; //label of the links under each title 
