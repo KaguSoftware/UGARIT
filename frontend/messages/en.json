@@ -1,22 +1,22 @@
 {
 	"footer": {
 		"first": {
-			"title": "Services",
-			"one": "Web Development",
-			"two": "Mobile Apps",
-			"three": "AI Solutions"
+			"title": "Company",
+			"one": "Our Branches",
+			"two": "About Us",
+			"three": "Contact Us"
 		},
 		"second": {
-			"title": "Company",
-			"one": "About Us",
-			"two": "Our Team",
-			"three": "Careers",
+			"title": "Information",
+			"one": "Subscription",
+			"two": "My Account",
+			"three": "My Orders",
 			"four": "Blog",
 			"five": "Contact"
 		},
 		"third": {
-			"title": "Resources",
-			"one": "Documentation",
+			"title": "Popular Categories",
+			"one": "New Arrivals",
 			"two": "Help Center",
 			"three": "Privacy Policy",
 			"four": "Terms of Service",
