@@ -9,8 +9,8 @@ export default function CategoryCard({ category }: CategoryCardProps) {
     return (
         <div
 
-            className="relative w-full h-64 bg-white overflow-hidden group cursor-pointer rounded-lg">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            className="relative w-full h-64 bg-white overflow-hidden group cursor-pointer rounded-lg shadow-sm hover:shadow-md">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <Image
                     src={category.imageUrl}
                     alt={category.title}
@@ -38,6 +38,5 @@ export default function CategoryCard({ category }: CategoryCardProps) {
                 </div>
             </div>
         </div>
-
     );
 }

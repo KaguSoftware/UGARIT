@@ -8,7 +8,7 @@ export default function Home() {
 
 			<MaxWidthWrapper>
 
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-8 lg:grid-cols-4 mt-5">
+				<div className="grid grid-cols-1 sm:grid-cols-2 gap-2 lg:grid-cols-4 mt-5">
 					{CATEGORIES.map((categoryWindow) => (
 						<CategoryCard
 							key={categoryWindow.id}
