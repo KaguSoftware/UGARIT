@@ -13,7 +13,7 @@ export default async function ProductDetail({
 	return (
 		<main>
 			<h1> {id} </h1>
-			<div>
+			<div className="bg-red-700 p-10">
 				<h1> {SelectedProduct.name} </h1>
 				{SelectedProduct.images.map((img, index) => (
 					<Image
