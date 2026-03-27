@@ -16,11 +16,10 @@ export default function Home() {
 						<h2 className="font-bold text-lg mb-2">Frontend</h2>
 						<p className="text-sm text-slate-500">
 							The Next.js dev server is running with Turbopack.
-							You can edit this file in{" "}
+							You can edit this file in
 							<code className="bg-slate-100 px-1 rounded">
 								src/app/[locale]/page.tsx
 							</code>
-							.
 						</p>
 					</div>
 
