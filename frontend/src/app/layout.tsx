@@ -1,3 +1,5 @@
+import "./globals.css"; // Ensure this path correctly points to your CSS file
+
 export default function RootLayout({
 	children,
 }: {
@@ -5,10 +7,7 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
-			<body>
-				{/* Your header, footer, or providers go here */}
-				{children}
-			</body>
+			<body>{children}</body>
 		</html>
 	);
 }
