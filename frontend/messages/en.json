@@ -1,5 +1,26 @@
 {
-	"Index": {
-		"title": "Hello"
+	"footer": {
+		"first": {
+			"title": "Services",
+			"one": "Web Development",
+			"two": "Mobile Apps",
+			"three": "AI Solutions"
+		},
+		"second": {
+			"title": "Company",
+			"one": "About Us",
+			"two": "Our Team",
+			"three": "Careers",
+			"four": "Blog",
+			"five": "Contact"
+		},
+		"third": {
+			"title": "Resources",
+			"one": "Documentation",
+			"two": "Help Center",
+			"three": "Privacy Policy",
+			"four": "Terms of Service",
+			"five": "Support"
+		}
 	}
 }
