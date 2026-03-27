@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "../globals.css";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+// import { NextIntlClientProvider } from "next-intl";
+// import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/src/i18n/routing";
 
@@ -31,12 +31,12 @@ export default async function RootLayout({
 }) {
 	const { locale } = await params;
 
-	// Ensure that the incoming `locale` is valid
-	if (!routing.locales.includes(locale as any)) {
-		notFound();
-	}
+	// // Ensure that the incoming `locale` is valid
+	// if (!routing.locales.includes(locale as any)) {
+	// 	notFound();
+	// }
 
-	const messages = await getMessages();
+	//const messages = await getMessages();
 
 	// Select the primary font variable based on locale
 	const fontVariable =
@@ -45,9 +45,9 @@ export default async function RootLayout({
 	return (
 		<html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
 			<body className={`${fontVariable}  antialiased`}>
-				<NextIntlClientProvider messages={messages}>
-					{children}
-				</NextIntlClientProvider>
+				{/* <NextIntlClientProvider messages={messages}> */}
+				{children}
+				{/* </NextIntlClientProvider> */}
 			</body>
 		</html>
 	);
