@@ -4,22 +4,23 @@ export default async function ProductDetail({ params,
 }: {
     params: Promise<{ id: string }>;
 }) {
-
-    const id = (await params).id
+    const id = (await params).id;
+    const SelectedProduct = PRODUCTS.find((deneme) => deneme.id == id)
+    if (!SelectedProduct) {
+        return (
+            <main>
+                print("Invalid product ID:{id}  ")
+            </main>)
+    }
     return (
         <main>
-            <h1>why dont work {id} </h1>
-            {PRODUCTS.map((product) => (
-                <div key={product.id}>
-                    <h1> {product.name} </h1>
-                    {product.images.map((img, index) => (
-
-                        <Image key={index} alt="images" src={img.src} width={120} height={120}></Image>
-
-                    ))}
-
-                </div>
-            ))}
+            <h1> {id} </h1>
+            <div >
+                <h1> {SelectedProduct.name}  </h1>
+                {SelectedProduct.images.map((img, index) => (
+                    <Image key={index} alt="images" src={img.src} width={120} height={120}></Image>
+                ))}
+            </div>
 
 
         </main>

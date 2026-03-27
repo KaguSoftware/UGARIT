@@ -2,7 +2,7 @@ import { Product } from "./types"
 export const PRODUCTS: Product[] = [
     {
         id: "1",
-        name: "kofte iki",
+        name: "kofte 1",
         images: [
             { src: "/muz.png" },
             { src: "/mandalina.png" },
@@ -11,7 +11,7 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: "2",
-        name: "KOFTE BIGR",
+        name: "KOFTE 2",
         images: [
             { src: "/kofte.png" },
             { src: "/kuzu.jpeg" },
