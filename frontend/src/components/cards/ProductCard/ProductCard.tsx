@@ -12,8 +12,8 @@ export default function ProductCard({ product }: ProductCardProps) {
     const [isLiked, setIsLiked] = useState(false);
 
     return (
-        <div className="flex flex-col w-full max-w-xs mx-auto group cursor-pointer bg-white shadow-sm hover:shadow-md duration-400 pb-1 rounded-2xl">
-            <div className="relative w-full h-96 max-w-xs overflow-hidden group rounded-t-2xl mx-auto cursor-pointer bg-white z-0">
+        <div className="flex flex-col w-full  mx-auto group cursor-pointer bg-white shadow-sm hover:shadow-md duration-400 pb-1 rounded-2xl">
+            <div className="relative w-full md:h-96 h-60 max-w-xs overflow-hidden group rounded-t-2xl mx-auto cursor-pointer bg-white z-0">
                 <Image
                     src={product.imageUrl}
                     alt={product.title}
@@ -38,7 +38,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 </button>
 
                 {/* the add to cart button*/}
-                <button className="absolute bottom-0 left-0 w-full bg-black/70 py-3 z-10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
+                <button className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
                     <p className="text-white text-sm font-bold">Add to cart</p>
                 </button>
             </div>
