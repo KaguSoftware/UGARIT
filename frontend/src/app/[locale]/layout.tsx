@@ -1,25 +1,5 @@
-import { Geist, IBM_Plex_Sans_Arabic } from "next/font/google";
-import "../globals.css";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/src/i18n/routing";
-
-const geistSans = Geist({
-	variable: "--font-geist-sans",
-	subsets: ["latin"],
-});
-
-const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
-	variable: "--font-ibm-plex-sans-arabic",
-	subsets: ["arabic"],
-	weight: ["100", "200", "300", "400", "500", "600", "700"],
-});
-
-export const metadata = {
-	title: "MAZ",
-	description: "Mohammed-Azzam Ahdab",
-};
 
 export default async function LocaleLayout({
 	children,
@@ -30,21 +10,9 @@ export default async function LocaleLayout({
 }) {
 	const { locale } = await params;
 
-	if (!routing.locales.includes(locale as any)) {
+	if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
 		notFound();
 	}
 
-	const messages = await getMessages();
-	const fontVariable =
-		locale === "ar" ? ibmPlexSansArabic.variable : geistSans.variable;
-
-	return (
-		<html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
-			<body className={`${fontVariable} antialiased`}>
-				<NextIntlClientProvider messages={messages}>
-					{children}
-				</NextIntlClientProvider>
-			</body>
-		</html>
-	);
+	return children;
 }
