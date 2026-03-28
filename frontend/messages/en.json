@@ -1,43 +1,76 @@
 {
-    "footer": {
-        "first": {
-            "title": "Services",
-            "one": "Web Development",
-            "two": "Mobile Apps",
-            "three": "AI Solutions"
-        },
-        "second": {
-            "title": "Company",
-            "one": "About Us",
-            "two": "Our Team",
-            "three": "Careers",
-            "four": "Blog",
-            "five": "Contact"
-        },
-        "third": {
-            "title": "Resources",
-            "one": "Documentation",
-            "two": "Help Center",
-            "three": "Privacy Policy",
-            "four": "Terms of Service",
-            "five": "Support"
-        }
-    },
-    "nav": {
-        "links": {
-            "one": "New season",
-            "two": "T-shirt",
-            "three": "Sweats",
-            "four": "Tops",
-            "five": "Jacket",
-            "six": "Pants",
-            "seven": "Puffer",
-            "eight": "Jeans",
-            "nine": "Shorts",
-            "ten": "Set",
-            "eleven": "Accesories",
-            "twelve": "Shoes",
-            "thirteen": "Discount"
-        }
-    }
+	"footer": {
+		"first": {
+			"title": "Services",
+			"one": "Web Development",
+			"two": "Mobile Apps",
+			"three": "AI Solutions"
+		},
+		"second": {
+			"title": "Company",
+			"one": "About Us",
+			"two": "Our Team",
+			"three": "Careers",
+			"four": "Blog",
+			"five": "Contact"
+		},
+		"third": {
+			"title": "Resources",
+			"one": "Documentation",
+			"two": "Help Center",
+			"three": "Privacy Policy",
+			"four": "Terms of Service",
+			"five": "Support"
+		}
+	},
+	"nav": {
+		"links": {
+			"one": "New season",
+			"two": "T-shirt",
+			"three": "Sweats",
+			"four": "Tops",
+			"five": "Jacket",
+			"six": "Pants",
+			"seven": "Puffer",
+			"eight": "Jeans",
+			"nine": "Shorts",
+			"ten": "Set",
+			"eleven": "Accesories",
+			"twelve": "Shoes",
+			"thirteen": "Discount"
+		}
+	},
+	"Filters": {
+		"categoriesTitle": "Categories",
+		"category": {
+			"one": "Electronics",
+			"two": "Fashion",
+			"three": "Home & Garden",
+			"four": "Sports",
+			"five": "Health & Beauty",
+			"six": "Toys",
+			"seven": "Automotive",
+			"eight": "Books"
+		},
+		"sizeTitle": "Sizes",
+		"size": {
+			"one": "XS",
+			"two": "S",
+			"three": "M",
+			"four": "L",
+			"five": "XL",
+			"six": "XXL"
+		},
+		"spTitle": "Filters",
+		"sp": {
+			"one": "New Arrivals",
+			"two": "Discounted Products",
+			"three": "Free Shipment"
+		},
+		"Price": {
+			"title": "Price Range",
+			"currency": "$",
+			"separator": " - "
+		}
+	}
 }

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CATEGORIES_DATA } from "./constants";
+import { SP_DATA } from "./constants";
 
-export const Categories = () => {
+export const Sp = () => {
     const t = useTranslations("Filters");
-    const sizeList = CATEGORIES_DATA[0].ids;
+    const spList = SP_DATA[0].ids;
 
 
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -22,11 +22,11 @@ export const Categories = () => {
     return (
         <div className="p-6 pt-4 bg-white rounded-xl border border-slate-200 text-slate-900 shadow-lg max-w-64 ml-12 max-h-60 flex flex-col">
             <div className="mb-6">
-                <h3 className="font-bold text-lg">{t("categoriesTitle")}</h3>
+                <h3 className="font-bold text-lg">{t("sizeTitle")}</h3>
             </div>
 
             <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
-                {sizeList.map((item) => (
+                {spList.map((item) => (
                     <label // 3. Changed to label for better accessibility
                         key={item.id}
                         className="flex items-center gap-3 w-full cursor-pointer group"
