@@ -7,7 +7,9 @@ export const PRODUCTS: Product[] = [
             { src: "/muz.png" },
             { src: "/mandalina.png" },
             { src: "/domates.png" },
-        ]
+        ],
+        before_discount_price: "₺2999.99",
+        current_price: "₺2499.99"
     },
     {
         id: "2",
@@ -16,6 +18,11 @@ export const PRODUCTS: Product[] = [
             { src: "/kofte.png" },
             { src: "/kuzu.jpeg" },
             { src: "/inek.png" },
-        ]
+        ],
+
+        before_discount_price: "₺3999.99",
+        current_price: "₺3499.99"
     }
+
 ]
+
