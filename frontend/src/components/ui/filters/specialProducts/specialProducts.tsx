@@ -1,12 +1,12 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { SIZE_DATA } from "./constants";
+import { SP_DATA } from "./constants";
 
-export const Size = () => {
+export const Sp = () => {
     const t = useTranslations("Filters");
 
-    const sizeList = SIZE_DATA[0].ids;
+    const sizeList = SP_DATA[0].ids;
 
     return (
         <div className="p-6 pt-4 bg-white rounded-xl border border-slate-200 text-slate-900 shadow-lg max-w-56 ml-12 max-h-60 flex flex-col">
