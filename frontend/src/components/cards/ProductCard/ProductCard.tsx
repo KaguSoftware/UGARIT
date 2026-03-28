@@ -3,26 +3,22 @@
 import Image from "next/image"; // core nextjs
 import { Heart } from "lucide-react";
 import { useState } from "react"; //state tool
-import { Product } from "./types";
+import { ProductCardProps } from "./types";
 
-type ProductCardProps = { product: Product };
-
-export default function ProductCard({ product }: ProductCardProps) {
-    //memo variable, starts as 'false'
+const ProductCard = ({ product }: ProductCardProps) => {
+    if (!product) {
+        return null;
+    }
     const [isLiked, setIsLiked] = useState(false);
-
     return (
-        <div className="flex flex-col w-full  mx-auto group cursor-pointer bg-white shadow-sm hover:shadow-md duration-400 pb-1 rounded-2xl">
-            <div className="relative w-full md:h-96 h-60 max-w-xs overflow-hidden group rounded-t-2xl mx-auto cursor-pointer bg-white z-0">
+        <div className="w-full overflow-hidden rounded-2xl bg-white shadow-md">
+            <div className="group relative h-60 w-full cursor-pointer overflow-hidden rounded-t-2xl md:h-96">
                 <Image
                     src={product.imageUrl}
                     alt={product.title}
                     fill
-                    sizes="(max-width: 768px) 50vw, 25vw"
-                    className="object-cover transition-transform rounded-t-2xl duration-300 group-hover:scale-105 "
-                    //group-hover:scale-105 and transition-transform duration-300 - might be removed/goes together for smoothness
+                    className="rounded-t-2xl object-cover transition-transform duration-300 group-hover:scale-105"
                 />
-
                 <button
                     onClick={() => setIsLiked(!isLiked)}
                     className="absolute top-3 right-3 z-10 transition-transform hover:scale-110"
@@ -36,26 +32,25 @@ export default function ProductCard({ product }: ProductCardProps) {
                         }`}
                     />
                 </button>
-
                 {/* the add to cart button*/}
                 <button className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
                     <p className="text-white text-sm font-bold">Add to cart</p>
                 </button>
             </div>
-
-            <div className="text-center flex flex-col gap-1 mt-3 px-2">
+            <div className="text-center flex flex-col gap-1 m-3 px-2 bottom-0 ">
                 <h3 className="text-sm font-medium text-black group-hover:underline truncate">
                     {product.title}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm">
-                    <span className="text-gray-500 line-through">
+                    <h1 className="text-gray-500 line-through">
                         {product.originalPrice}
-                    </span>
-                    <span className="text-black font-bold">
+                    </h1>
+                    <h2 className="text-black font-bold">
                         {product.currentPrice}
-                    </span>
+                    </h2>
                 </div>
             </div>
         </div>
     );
-}
+};
+export default ProductCard;

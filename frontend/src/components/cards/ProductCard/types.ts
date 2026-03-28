@@ -5,3 +5,6 @@ export type Product = {
     currentPrice: string;
     imageUrl: string;
 };
+export interface ProductCardProps {
+    product: Product;
+}

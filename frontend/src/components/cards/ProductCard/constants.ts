@@ -36,25 +36,4 @@ export const PRODUCTS: Product[] = [
         currentPrice: "₺1.399,99",
         imageUrl: "/mockupCategory.png",
     },
-    {
-        id: 6,
-        title: "Vamos Korean Style Pants",
-        originalPrice: "₺1.599,99",
-        currentPrice: "₺1.399,99",
-        imageUrl: "/mockupCategory.png",
-    },
-    {
-        id: 7,
-        title: "Vamos Korean Style Pants",
-        originalPrice: "₺1.599,99",
-        currentPrice: "₺1.399,99",
-        imageUrl: "/mockupCategory.png",
-    },
-    {
-        id: 8,
-        title: "Vamos Korean Style Pants",
-        originalPrice: "₺1.599,99",
-        currentPrice: "₺1.399,99",
-        imageUrl: "/mockupCategory.png",
-    },
 ];
