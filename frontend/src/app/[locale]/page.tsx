@@ -1,14 +1,16 @@
-import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
-import { LOCATIONS } from "@/src/components/cards/LocationCard/constants";
-import { Locationtype } from "@/src/components/cards/LocationCard/types";
+import ContactSmallC from "@/src/components/ContactUs/card/card";
+import { CARDCONTACT } from "@/src/components/ContactUs/card/constants";
+import { Card } from "@/src/components/ContactUs/card/types";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
+import ContactPage from "@/src/components/ContactUs/contactUs";
 
 export default function Home() {
-    return (
-        <main>
-            <MaxWidthWrapper>
-                <LocationCard />
-            </MaxWidthWrapper>
-        </main>
-    );
+	return (
+		<main>
+			<MaxWidthWrapper>
+				<ContactPage />
+			</MaxWidthWrapper>
+		</main>
+
+	);
 }
