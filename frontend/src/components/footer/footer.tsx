@@ -10,6 +10,7 @@ export const Footer = () => {
     return (
         <footer className="w-full bg-white text-black border-t border-gray-800">
             <MaxWidthWrapper>
+                {/* footer section */}
                 <div className="grid grid-cols-1 md:grid-cols-3 p-8">
                     {FOOTER_DATA.map((section, idx) => (
                         <div key={idx}>
