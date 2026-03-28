@@ -161,13 +161,6 @@ export default function Navbar() {
         { label: t("four"), href: "#" },
         { label: t("five"), href: "#" },
         { label: t("six"), href: "#" },
-        { label: t("seven"), href: "#" },
-        { label: t("eight"), href: "#" },
-        { label: t("nine"), href: "#" },
-        { label: t("ten"), href: "#" },
-        { label: t("eleven"), href: "#" },
-        { label: t("twelve"), href: "#" },
-        { label: t("thirteen"), href: "#" },
     ];
 
     const [isOpen, setIsOpen] = useState(false);
@@ -222,20 +215,22 @@ export default function Navbar() {
         // Removed 'px-6' and flex utilities from here.
         <nav className="sticky top-0 z-999 border-b border-neutral-100 bg-white/80 shadow-sm backdrop-blur-md">
             {/* 2. MaxWidthWrapper: Handles the width constraints and alignment */}
-            <MaxWidthWrapper className="flex items-center justify-between">
+            <MaxWidthWrapper className="md:grid flex grid-cols-3 items-center">
+                {" "}
                 {/* LOGO */}
-                <Link href="/">
-                    <Image
-                        src="/LogoNoBg.png"
-                        width={100}
-                        height={40}
-                        alt="logo gang"
-                    />
-                </Link>
-
+                <div className="justify-self-start">
+                    <Link href="/">
+                        <Image
+                            src="/LogoNoBg.png"
+                            width={100}
+                            height={40}
+                            alt="logo gang"
+                        />
+                    </Link>
+                </div>
                 {/* DESKTOP MENU */}
                 <div
-                    className="hidden gap-5 md:flex items-center"
+                    className="hidden md:flex items-center justify-center gap-5 justify-self-center"
                     onMouseLeave={() => setHoveredIndex(null)}
                 >
                     {LINKS.map((item, index) => (
@@ -243,7 +238,7 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onMouseEnter={() => setHoveredIndex(index)}
-                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase tracking-widest transition-colors ${
+                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase whitespace-nowrap tracking-widest transition-colors ${
                                 hoveredIndex === index
                                     ? "text-white"
                                     : "text-neutral-500"
@@ -263,7 +258,8 @@ export default function Navbar() {
                             )}
                         </Link>
                     ))}
-
+                </div>
+                <div className="hidden md:flex items-center justify-self-end">
                     <LanguageMenu
                         locale={locale}
                         isOpen={isLangOpen}
@@ -272,7 +268,16 @@ export default function Navbar() {
                     />
                 </div>
                 {/* MOBILE TOGGLE */}
-                <div className="md:hidden">
+                <div className="md:hidden ml-auto flex items-center gap-4">
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen((prev) => !prev)}
+                        className="relative z-[1002] text-neutral-900"
+                        aria-label={isOpen ? "Close menu" : "Open menu"}
+                    >
+                        {isOpen ? <X size={24} /> : <MenuIcon size={24} />}
+                    </button>
+
                     <LanguageMenu
                         locale={locale}
                         isOpen={isLangOpen}
