@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "@/src/i18n/routing";
+import { usePathname, useRouter } from "@/src/i18n/routing";
 import { createPortal } from "react-dom";
 import { MenuIcon, X, ArrowRight, Globe } from "lucide-react";
 import { motion, AnimatePresence, type Variants } from "motion/react";
@@ -43,26 +43,137 @@ const itemVariants: Variants = {
         transition: { duration: 0.2 },
     },
 };
+type LanguageMenuProps = {
+    locale: string;
+    isOpen: boolean;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    onLocaleChange: (newLocale: string) => void;
+    mobile?: boolean;
+};
+
+function LanguageMenu({
+    locale,
+    isOpen,
+    setIsOpen,
+    onLocaleChange,
+    mobile = false,
+}: LanguageMenuProps) {
+    const triggerClassName = mobile
+        ? "flex items-center gap-2 text-sm font-bold uppercase text-neutral-900"
+        : "flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-500 hover:text-neutral-400";
+
+    const dropdownWrapperClassName = mobile
+        ? "absolute right-0 top-full z-[1003] mt-2 w-21 overflow-hidden rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
+        : "absolute right-0 top-full z-50 pt-2 w-21";
+
+    const dropdownInnerClassName = mobile
+        ? "space-y-1"
+        : "overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-lg space-y-1";
+
+    const optionClassName = mobile
+        ? "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase text-neutral-700 transition-colors hover:bg-neutral-100"
+        : "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase tracking-widest text-neutral-700 transition-colors hover:bg-neutral-100";
+
+    return (
+        <div
+            className="relative"
+            onClick={(e) => e.stopPropagation()}
+            onMouseEnter={!mobile ? () => setIsOpen(true) : undefined}
+            onMouseLeave={!mobile ? () => setIsOpen(false) : undefined}
+        >
+            <button
+                type="button"
+                onClick={mobile ? () => setIsOpen((prev) => !prev) : undefined}
+                className={triggerClassName}
+                aria-label="Open language menu"
+                aria-expanded={isOpen}
+            >
+                <Globe
+                    aria-hidden="true"
+                    size={mobile ? 20 : 16}
+                    className={mobile ? "text-neutral-900" : "text-neutral-500"}
+                />
+                {locale}
+            </button>
+
+            {isOpen && (
+                <div className={dropdownWrapperClassName}>
+                    <div className={dropdownInnerClassName}>
+                        <button
+                            type="button"
+                            onClick={() => onLocaleChange("en")}
+                            className={optionClassName}
+                        >
+                            <Image
+                                src="/ukicon.svg"
+                                alt="English flag"
+                                width={16}
+                                height={16}
+                            />
+                            EN
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => onLocaleChange("ar")}
+                            className={optionClassName}
+                        >
+                            <Image
+                                src="/arIcon.svg"
+                                alt="Arabic flag"
+                                width={16}
+                                height={16}
+                            />
+                            AR
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => onLocaleChange("tr")}
+                            className={optionClassName}
+                        >
+                            <Image
+                                src="/TrIcon.svg"
+                                alt="Turkish flag"
+                                width={16}
+                                height={16}
+                            />
+                            TR
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 export default function Navbar() {
-    // const t = useTranslations("Navigation");
-    // const locale = useLocale();
-    // const pathname = usePathname();
+    const locale = useLocale();
+    const pathname = usePathname();
+    const router = useRouter();
+
+    const t = useTranslations("nav.links");
 
     const LINKS = [
-        { label: "NEW SEASON", href: "/projects" },
-        { label: "TOP CLOTHING ", href: "/material-manufacturing" },
-        { label: "OUTERWEAR", href: "/contact" },
-        { label: "BOTTOM CLOTHING", href: "/" },
-        { label: " SET", href: "/" },
-        { label: " ACCESORIES", href: "/" },
-        { label: " SHOES", href: "/" },
-        { label: " DISCOUNT", href: "/" },
+        { label: t("one"), href: "#" },
+        { label: t("two"), href: "#" },
+        { label: t("three"), href: "#" },
+        { label: t("four"), href: "#" },
+        { label: t("five"), href: "#" },
+        { label: t("six"), href: "#" },
+        { label: t("seven"), href: "#" },
+        { label: t("eight"), href: "#" },
+        { label: t("nine"), href: "#" },
+        { label: t("ten"), href: "#" },
+        { label: t("eleven"), href: "#" },
+        { label: t("twelve"), href: "#" },
+        { label: t("thirteen"), href: "#" },
     ];
 
     const [isOpen, setIsOpen] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
     const [mounted, setMounted] = useState(false);
+    const [isLangOpen, setIsLangOpen] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -79,6 +190,32 @@ export default function Navbar() {
             document.body.style.overflow = "unset";
         };
     }, [isOpen]);
+
+    useEffect(() => {
+        const handleClickOutside = () => {
+            setIsLangOpen(false);
+        };
+
+        if (isLangOpen) {
+            document.addEventListener("click", handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener("click", handleClickOutside);
+        };
+    }, [isLangOpen]);
+
+    // Remove any existing locale prefix from the current pathname before switching locales.
+    const handleLocaleChange = (newLocale: string) => {
+        setIsLangOpen(false);
+
+        const normalizedPathname = pathname.replace(
+            /^\/(en|ar|tr)(?=\/|$)/,
+            ""
+        );
+
+        router.replace(normalizedPathname || "/", { locale: newLocale });
+    };
 
     return (
         // 1. Outer Shell: Handles Position, Background, Blur, and Border only.
@@ -98,7 +235,7 @@ export default function Navbar() {
 
                 {/* DESKTOP MENU */}
                 <div
-                    className="hidden gap-8 md:flex items-center"
+                    className="hidden gap-5 md:flex items-center"
                     onMouseLeave={() => setHoveredIndex(null)}
                 >
                     {LINKS.map((item, index) => (
@@ -106,7 +243,7 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onMouseEnter={() => setHoveredIndex(index)}
-                            className={`relative z-0 px-2 py-1 text-xs font-bold uppercase tracking-widest transition-colors ${
+                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase tracking-widest transition-colors ${
                                 hoveredIndex === index
                                     ? "text-white"
                                     : "text-neutral-500"
@@ -116,7 +253,7 @@ export default function Navbar() {
                             {hoveredIndex === index && (
                                 <motion.span
                                     layoutId="navbar-underline"
-                                    className="absolute -bottom-3 -left-4 -right-4 -top-3 -z-10 rounded-full bg-sky-950"
+                                    className="absolute bottom-0 -left-3 -right-3 top-0 -z-10 rounded-full bg-neutral-950"
                                     transition={{
                                         type: "spring",
                                         bounce: 0.2,
@@ -127,39 +264,22 @@ export default function Navbar() {
                         </Link>
                     ))}
 
-                    <Link
-                        // href={pathname}
-                        href={"/"}
-                        // locale={locale === "en" ? "ar" : "en"}
-                        className="text-sm font-bold uppercase tracking-widest text-neutral-500 hover:text-white flex items-center gap-1"
-                    >
-                        <Globe aria-label="language change" size={16} />
-                        {/* {locale === "en" ? "AR" : "EN"} */}
-                    </Link>
+                    <LanguageMenu
+                        locale={locale}
+                        isOpen={isLangOpen}
+                        setIsOpen={setIsLangOpen}
+                        onLocaleChange={handleLocaleChange}
+                    />
                 </div>
-
                 {/* MOBILE TOGGLE */}
-                <div className="md:hidden flex items-center gap-4">
-                    <Link
-                        // href={pathname}
-                        href={"/"}
-                        // locale={locale === "en" ? "ar" : "en"}
-                        className="text-neutral-900"
-                    >
-                        <Globe aria-label="language change" size={24} />
-                    </Link>
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="relative z-1002"
-                        aria-label="Toggle Menu"
-                    >
-                        <motion.div
-                            animate={{ rotate: isOpen ? 90 : 0 }}
-                            transition={{ duration: 0.2 }}
-                        >
-                            {isOpen ? <X size={28} /> : <MenuIcon size={28} />}
-                        </motion.div>
-                    </button>
+                <div className="md:hidden">
+                    <LanguageMenu
+                        locale={locale}
+                        isOpen={isLangOpen}
+                        setIsOpen={setIsLangOpen}
+                        onLocaleChange={handleLocaleChange}
+                        mobile
+                    />
                 </div>
             </MaxWidthWrapper>
             {/* MOBILE MENU OVERLAY */}
