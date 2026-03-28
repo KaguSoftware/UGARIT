@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-    --background: #ffffff;
+    --background: #e0e0e0;
     --foreground: #171717;
 }
 
@@ -12,8 +12,27 @@
     --font-mono: var(--font-geist-mono);
 }
 
+@media (prefers-color-scheme: dark) {
+}
+
 body {
     background: var(--background);
     color: var(--foreground);
     font-family: Arial, Helvetica, sans-serif;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 7px;
+    /* Keeps it thin */
+}
+
+/* invisible track of scrollbar */
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* 2. Style the moving handle */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: gray;
+    border-radius: 10px;
 }

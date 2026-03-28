@@ -1,26 +1,86 @@
 {
 	"footer": {
 		"first": {
-			"title": "Services",
-			"one": "Web Development",
-			"two": "Mobile Apps",
-			"three": "AI Solutions"
+			"title": "Company",
+			"one": "Our Branches",
+			"two": "About Us",
+			"three": "Contact Us"
 		},
 		"second": {
-			"title": "Company",
-			"one": "About Us",
-			"two": "Our Team",
-			"three": "Careers",
+			"title": "Information",
+			"one": "Subscription",
+			"two": "My Account",
+			"three": "My Orders",
 			"four": "Blog",
 			"five": "Contact"
 		},
 		"third": {
-			"title": "Resources",
-			"one": "Documentation",
-			"two": "Help Center",
-			"three": "Privacy Policy",
-			"four": "Terms of Service",
-			"five": "Support"
+			"title": "Popular Categories",
+			"one": "New Arrivals",
+			"two": "Upper Body Outfits",
+			"three": "Lower Body Outfits",
+			"four": "Shoes"
+		},
+		"icon": {
+			"one": "Instagram",
+			"oneLink": "https://instagram.com",
+			"onePath": "/icons/instagram.svg",
+			"two": "Whatsapp",
+			"twoLink": "https://whatsapp.com",
+			"twoPath": "/icons/whatsapp.svg",
+			"four": "Twitter",
+			"fourLink": "https://twitter.com",
+			"fourPath": "/icons/twitter.svg"
+		}
+	},
+	"nav": {
+		"links": {
+			"one": "New season",
+			"two": "T-shirt",
+			"three": "Sweats",
+			"four": "Tops",
+			"five": "Jacket",
+			"six": "Pants",
+			"seven": "Puffer",
+			"eight": "Jeans",
+			"nine": "Shorts",
+			"ten": "Set",
+			"eleven": "Accesories",
+			"twelve": "Shoes",
+			"thirteen": "Discount"
+		}
+	},
+	"Filters": {
+		"categoriesTitle": "Categories",
+		"category": {
+			"one": "Electronics",
+			"two": "Fashion",
+			"three": "Home & Garden",
+			"four": "Sports",
+			"five": "Health & Beauty",
+			"six": "Toys",
+			"seven": "Automotive",
+			"eight": "Books"
+		},
+		"sizeTitle": "Sizes",
+		"size": {
+			"one": "XS",
+			"two": "S",
+			"three": "M",
+			"four": "L",
+			"five": "XL",
+			"six": "XXL"
+		},
+		"spTitle": "Filters",
+		"sp": {
+			"one": "New Arrivals",
+			"two": "Discounted Products",
+			"three": "Free Shipment"
+		},
+		"Price": {
+			"title": "Price Range",
+			"currency": "$",
+			"separator": " - "
 		}
 	}
 }
