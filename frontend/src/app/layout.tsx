@@ -2,6 +2,8 @@ import { Geist, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
+import { Footer } from "../components/footer/footer";
+import Navbar from "../components/ui/navbar";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",

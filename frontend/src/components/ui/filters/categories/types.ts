@@ -1,14 +1,10 @@
-export interface categoriesSection {
 
-    links: categoriesLinks[];
+export type CategoryIdItem = {
+    id: string;
+};
 
-}
+export type CategoryGroup = {
+    ids: CategoryIdItem[];
+};
 
-export interface categoriesLinks {
-
-    label: string;
-    href: string;
-
-}
-
-export type categoriesTypes = categoriesSection[];
+export type categoriesTypes = CategoryGroup[];

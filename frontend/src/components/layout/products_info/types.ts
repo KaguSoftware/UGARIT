@@ -7,4 +7,8 @@ export interface Product {
     }[];
     current_price: string;
     before_discount_price: string;
+    item_description: string;
+    manken_height: string;
+    manken_kg: string;
+
 }
