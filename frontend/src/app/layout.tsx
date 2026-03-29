@@ -2,8 +2,6 @@ import { Geist, IBM_Plex_Sans_Arabic } from "next/font/google";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getLocale } from "next-intl/server";
-import { Footer } from "../components/footer/footer";
-import Navbar from "../components/ui/navbar";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -17,8 +15,8 @@ const ibmPlexSansArabic = IBM_Plex_Sans_Arabic({
 });
 
 export const metadata = {
-	title: "MAZ",
-	description: "Mohammed-Azzam Ahdab",
+	title: "UGARIT",
+	description: "UGARIT",
 };
 
 export default async function RootLayout({
