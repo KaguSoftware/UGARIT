@@ -4,3 +4,9 @@ export type Category = {
     moreLink: string;
     imageUrl: string;
 };
+export interface CategoryProps {
+    category: Category;
+}
+export interface Discover {
+    discover: string;
+}

@@ -1,86 +1,98 @@
 {
-	"footer": {
-		"first": {
-			"title": "Company",
-			"one": "Our Branches",
-			"two": "About Us",
-			"three": "Contact Us"
-		},
-		"second": {
-			"title": "Information",
-			"one": "Subscription",
-			"two": "My Account",
-			"three": "My Orders",
-			"four": "Blog",
-			"five": "Contact"
-		},
-		"third": {
-			"title": "Popular Categories",
-			"one": "New Arrivals",
-			"two": "Upper Body Outfits",
-			"three": "Lower Body Outfits",
-			"four": "Shoes"
-		},
-		"icon": {
-			"one": "Instagram",
-			"oneLink": "https://instagram.com",
-			"onePath": "/icons/instagram.svg",
-			"two": "Whatsapp",
-			"twoLink": "https://whatsapp.com",
-			"twoPath": "/icons/whatsapp.svg",
-			"four": "Twitter",
-			"fourLink": "https://twitter.com",
-			"fourPath": "/icons/twitter.svg"
-		}
-	},
-	"nav": {
-		"links": {
-			"one": "New season",
-			"two": "T-shirt",
-			"three": "Sweats",
-			"four": "Tops",
-			"five": "Jacket",
-			"six": "Pants",
-			"seven": "Puffer",
-			"eight": "Jeans",
-			"nine": "Shorts",
-			"ten": "Set",
-			"eleven": "Accesories",
-			"twelve": "Shoes",
-			"thirteen": "Discount"
-		}
-	},
-	"Filters": {
-		"categoriesTitle": "Categories",
-		"category": {
-			"one": "Electronics",
-			"two": "Fashion",
-			"three": "Home & Garden",
-			"four": "Sports",
-			"five": "Health & Beauty",
-			"six": "Toys",
-			"seven": "Automotive",
-			"eight": "Books"
-		},
-		"sizeTitle": "Sizes",
-		"size": {
-			"one": "XS",
-			"two": "S",
-			"three": "M",
-			"four": "L",
-			"five": "XL",
-			"six": "XXL"
-		},
-		"spTitle": "Filters",
-		"sp": {
-			"one": "New Arrivals",
-			"two": "Discounted Products",
-			"three": "Free Shipment"
-		},
-		"Price": {
-			"title": "Price Range",
-			"currency": "$",
-			"separator": " - "
-		}
-	}
+    "Products": {
+        "productCardTitle": {
+            "1": "hello",
+            "2": "my",
+            "3": "name",
+            "4": "is",
+            "5": "majed",
+            "6": "ahdab",
+            "7": "gang"
+        },
+        "addtocart": "Add To Cart"
+    },
+    "footer": {
+        "first": {
+            "title": "Company",
+            "one": "Our Branches",
+            "two": "About Us",
+            "three": "Contact Us"
+        },
+        "second": {
+            "title": "Information",
+            "one": "Subscription",
+            "two": "My Account",
+            "three": "My Orders",
+            "four": "Blog",
+            "five": "Contact"
+        },
+        "third": {
+            "title": "Popular Categories",
+            "one": "New Arrivals",
+            "two": "Upper Body Outfits",
+            "three": "Lower Body Outfits",
+            "four": "Shoes"
+        },
+        "icon": {
+            "one": "Instagram",
+            "oneLink": "https://instagram.com",
+            "onePath": "/icons/instagram.svg",
+            "two": "Whatsapp",
+            "twoLink": "https://whatsapp.com",
+            "twoPath": "/icons/whatsapp.svg",
+            "four": "Twitter",
+            "fourLink": "https://twitter.com",
+            "fourPath": "/icons/twitter.svg"
+        }
+    },
+    "nav": {
+        "links": {
+            "one": "New season",
+            "two": "T-shirt",
+            "three": "Sweats",
+            "four": "Tops",
+            "five": "Jacket",
+            "six": "Pants",
+            "seven": "Puffer",
+            "eight": "Jeans",
+            "nine": "Shorts",
+            "ten": "Set",
+            "eleven": "Accesories",
+            "twelve": "Shoes",
+            "thirteen": "Discount"
+        }
+    },
+    "Filters": {
+        "categoriesTitle": "Categories",
+        "category": {
+            "one": "Electronics",
+            "two": "Fashion",
+            "three": "Home & Garden",
+            "four": "Sports",
+            "five": "Health & Beauty",
+            "six": "Toys",
+            "seven": "Automotive",
+            "eight": "Books"
+        },
+        "sizeTitle": "Sizes",
+        "size": {
+            "one": "XS",
+            "two": "S",
+            "three": "M",
+            "four": "L",
+            "five": "XL",
+            "six": "XXL"
+        },
+        "spTitle": "Filters",
+        "sp": {
+            "one": "New Arrivals",
+            "two": "Discounted Products",
+            "three": "Free Shipment"
+        },
+        "Price": {
+            "title": "Price Range",
+            "currency": "$",
+            "separator": " - "
+        }
+    }
 }

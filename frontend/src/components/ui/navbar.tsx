@@ -154,14 +154,7 @@ export default function Navbar() {
 
     const t = useTranslations("nav.links");
 
-    const LINKS = [
-        { label: t("one"), href: "#" },
-        { label: t("two"), href: "#" },
-        { label: t("three"), href: "#" },
-        { label: t("four"), href: "#" },
-        { label: t("five"), href: "#" },
-        { label: t("six"), href: "#" },
-    ];
+    const LINKS = [{ label: t("one"), href: "#" }];
 
     const [isOpen, setIsOpen] = useState(false);
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
