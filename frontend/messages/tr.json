@@ -1,5 +1,147 @@
 {
-	"Index": {
-		"title": "Hello"
+	"Products": {
+		"productCardTitle": {
+			"1": "merhaba",
+			"2": "benim",
+			"3": "adım",
+			"4": "şudur",
+			"5": "majed",
+			"6": "ahdab",
+			"7": "çetesi"
+		},
+		"addtocart": "Sepete Ekle"
+	},
+	"footer": {
+		"first": {
+			"title": "Şirket",
+			"one": "Şubelerimiz",
+			"two": "Hakkımızda",
+			"three": "Bize Ulaşın"
+		},
+		"second": {
+			"title": "Bilgi",
+			"one": "Abonelik",
+			"two": "Hesabım",
+			"three": "Siparişlerim",
+			"four": "Blog",
+			"five": "İletişim"
+		},
+		"third": {
+			"title": "Popüler Kategoriler",
+			"one": "Yeni Gelenler",
+			"two": "Üst Giyim",
+			"three": "Alt Giyim",
+			"four": "Ayakkabı"
+		},
+		"icon": {
+			"one": "Instagram",
+			"oneLink": "https://instagram.com",
+			"onePath": "/icons/instagram.svg",
+			"two": "Whatsapp",
+			"twoLink": "https://whatsapp.com",
+			"twoPath": "/icons/whatsapp.svg",
+			"four": "Twitter",
+			"fourLink": "https://twitter.com",
+			"fourPath": "/icons/twitter.svg"
+		}
+	},
+	"Nav": {
+		"items": [
+			{
+				"title": "Ana Sayfa",
+				"href": "/"
+			},
+			{
+				"title": "Mağaza",
+				"href": "/products",
+				"sections": [
+					{
+						"title": "Kategoriler",
+						"links": [
+							{ "title": "Tişört", "href": "/t-shirt" },
+							{ "title": "Pantolon", "href": "/trousers" },
+							{ "title": "Ayakkabı", "href": "/shoe" }
+						]
+					},
+					{
+						"title": "Koleksiyonlar",
+						"links": [
+							{ "title": "Yeni Sezon", "href": "/new" },
+							{ "title": "İndirim", "href": "/discount" }
+						]
+					}
+				]
+			},
+			{
+				"title": "İletişim",
+				"href": "/contact"
+			},
+			{
+				"title": "Kaban",
+				"href": "/coat"
+			},
+			{
+				"title": "Sweatshirt",
+				"href": "/sweat"
+			},
+			{
+				"title": "İndirim",
+				"href": "/discount"
+			}
+		]
+	},
+	"Filters": {
+		"categoriesTitle": "Kategoriler",
+		"category": {
+			"one": "Elektronik",
+			"two": "Moda",
+			"three": "Ev & Bahçe",
+			"four": "Spor",
+			"five": "Sağlık & Güzellik",
+			"six": "Oyuncak",
+			"seven": "Otomotiv",
+			"eight": "Kitap"
+		},
+		"sizeTitle": "Bedenler",
+		"size": {
+			"one": "XS",
+			"two": "S",
+			"three": "M",
+			"four": "L",
+			"five": "XL",
+			"six": "XXL"
+		},
+		"spTitle": "Filtreler",
+		"sp": {
+			"one": "Yeni Gelenler",
+			"two": "İndirimli Ürünler",
+			"three": "Ücretsiz Kargo"
+		},
+		"Price": {
+			"title": "Fiyat Aralığı",
+			"currency": "₺",
+			"separator": " - "
+		}
+	},
+	"Category": {
+		"CategoryCardTitle": {
+			"1": "merhaba",
+			"2": "benim",
+			"3": "adım",
+			"4": "şudur",
+			"5": "majed",
+			"6": "ahdab"
+		},
+		"Discover": "Tümünü Keşfet"
+	},
+	"Contact": {
+		"title": "Bize Ulaşın",
+		"name": "İsim",
+		"email": "E-posta",
+		"details": "Proje Detayları",
+		"sending": "Gönderiliyor...",
+		"submit": "Teklif Gönder",
+		"success": "Mesaj başarıyla gönderildi!",
+		"error": "Mesaj gönderilemedi. Lütfen tekrar deneyin."
 	}
 }

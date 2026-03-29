@@ -28,6 +28,7 @@ export default function ProductCarousel({
 	}, [emblaApi]);
 
 	return (
+		// 1. Removed h-full here so the container can expand to fit the cards
 		<section className="w-full max-w-7xl mx-auto px-4 py-8 relative">
 			<div className="flex items-center justify-between mb-6">
 				<h2 className="text-2xl font-bold text-[#171717]">{title}</h2>
@@ -81,7 +82,8 @@ export default function ProductCarousel({
 					{products.map((product, index) => (
 						<div
 							key={product.id || index}
-							className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_25%] pl-4"
+							// 2. Changed mobile width to 60% so it looks like a portrait card and the next item peeks in
+							className="flex-[0_0_60%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_25%] pl-4"
 						>
 							<ProductCard product={product} />
 						</div>

@@ -1,5 +1,147 @@
 {
-	"Index": {
-		"title": "Hello"
+	"Products": {
+		"productCardTitle": {
+			"1": "مرحباً",
+			"2": "أنا",
+			"3": "اسمي",
+			"4": "هو",
+			"5": "ماجد",
+			"6": "أحدب",
+			"7": "عصابة"
+		},
+		"addtocart": "أضف إلى السلة"
+	},
+	"footer": {
+		"first": {
+			"title": "الشركة",
+			"one": "فروعنا",
+			"two": "من نحن",
+			"three": "اتصل بنا"
+		},
+		"second": {
+			"title": "معلومات",
+			"one": "الاشتراك",
+			"two": "حسابي",
+			"three": "طلباتي",
+			"four": "المدونة",
+			"five": "اتصل بنا"
+		},
+		"third": {
+			"title": "الفئات الشائعة",
+			"one": "وصل حديثاً",
+			"two": "ملابس علوية",
+			"three": "ملابس سفلية",
+			"four": "أحذية"
+		},
+		"icon": {
+			"one": "Instagram",
+			"oneLink": "https://instagram.com",
+			"onePath": "/icons/instagram.svg",
+			"two": "Whatsapp",
+			"twoLink": "https://whatsapp.com",
+			"twoPath": "/icons/whatsapp.svg",
+			"four": "Twitter",
+			"fourLink": "https://twitter.com",
+			"fourPath": "/icons/twitter.svg"
+		}
+	},
+	"Nav": {
+		"items": [
+			{
+				"title": "الرئيسية",
+				"href": "/"
+			},
+			{
+				"title": "المتجر",
+				"href": "/products",
+				"sections": [
+					{
+						"title": "الفئات",
+						"links": [
+							{ "title": "تيشيرت", "href": "/t-shirt" },
+							{ "title": "بناطيل", "href": "/trousers" },
+							{ "title": "أحذية", "href": "/shoe" }
+						]
+					},
+					{
+						"title": "تشكيلات",
+						"links": [
+							{ "title": "الموسم الجديد", "href": "/new" },
+							{ "title": "تخفيضات", "href": "/discount" }
+						]
+					}
+				]
+			},
+			{
+				"title": "اتصل بنا",
+				"href": "/contact"
+			},
+			{
+				"title": "معطف",
+				"href": "/coat"
+			},
+			{
+				"title": "سويت شيرت",
+				"href": "/sweat"
+			},
+			{
+				"title": "تخفيضات",
+				"href": "/discount"
+			}
+		]
+	},
+	"Filters": {
+		"categoriesTitle": "الفئات",
+		"category": {
+			"one": "إلكترونيات",
+			"two": "أزياء",
+			"three": "المنزل والحديقة",
+			"four": "رياضة",
+			"five": "الصحة والجمال",
+			"six": "ألعاب",
+			"seven": "سيارات",
+			"eight": "كتب"
+		},
+		"sizeTitle": "المقاسات",
+		"size": {
+			"one": "XS",
+			"two": "S",
+			"three": "M",
+			"four": "L",
+			"five": "XL",
+			"six": "XXL"
+		},
+		"spTitle": "تصفية",
+		"sp": {
+			"one": "وصل حديثاً",
+			"two": "منتجات مخفضة",
+			"three": "شحن مجاني"
+		},
+		"Price": {
+			"title": "نطاق السعر",
+			"currency": "$",
+			"separator": " - "
+		}
+	},
+	"Category": {
+		"CategoryCardTitle": {
+			"1": "مرحباً",
+			"2": "أنا",
+			"3": "اسمي",
+			"4": "هو",
+			"5": "ماجد",
+			"6": "أحدب"
+		},
+		"Discover": "استكشف الكل"
+	},
+	"Contact": {
+		"title": "اتصل بنا",
+		"name": "الاسم",
+		"email": "البريد الإلكتروني",
+		"details": "تفاصيل المشروع",
+		"sending": "جاري الإرسال...",
+		"submit": "إرسال الاقتراح",
+		"success": "تم الإرسال بنجاح!",
+		"error": "فشل الإرسال. يرجى المحاولة مرة أخرى."
 	}
 }

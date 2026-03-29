@@ -1,17 +1,20 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link, usePathname, useRouter } from "@/src/i18n/routing";
 import Image from "next/image";
 import { createPortal } from "react-dom";
-import { usePathname, useRouter } from "@/src/i18n/routing";
 import { useTranslations, useLocale } from "next-intl";
 import { motion, AnimatePresence, type Variants } from "motion/react";
 import { MenuIcon, X, ArrowRight, Globe, ChevronDown } from "lucide-react";
 
 import MaxWidthWrapper from "../ui/MaxWidthWrapper";
-import { NAV_ITEMS } from "./constants";
 import { LanguageMenuProps } from "./types";
+
+// Adding types so TypeScript knows what our JSON structure looks like
+type NavLink = { title: string; href: string };
+type NavSection = { title: string; links: NavLink[] };
+type NavItem = { title: string; href: string; sections?: NavSection[] };
 
 const menuVariants: Variants = {
 	initial: { x: "100%" },
@@ -105,7 +108,10 @@ export default function Navbar() {
 	const locale = useLocale();
 	const pathname = usePathname();
 	const router = useRouter();
-	const t = useTranslations();
+
+	// Grab the whole array from our JSON file
+	const tNav = useTranslations("Nav");
+	const navItems = tNav.raw("items") as NavItem[];
 
 	const [isMobileOpen, setIsMobileOpen] = useState(false);
 	const [isLangOpen, setIsLangOpen] = useState(false);
@@ -145,9 +151,9 @@ export default function Navbar() {
 
 				{/* DESKTOP NAV */}
 				<div className="hidden md:flex items-center justify-center gap-8 h-full">
-					{NAV_ITEMS.map((item, index) => (
+					{navItems.map((item, index) => (
 						<div
-							key={item.labelKey}
+							key={item.title}
 							className="relative h-full flex items-center"
 							onMouseEnter={() =>
 								item.sections && setActiveDropdown(index)
@@ -158,7 +164,7 @@ export default function Navbar() {
 								href={item.href}
 								className="flex items-center gap-1 py-2 text-sm font-bold uppercase tracking-widest text-neutral-500 transition-colors hover:text-neutral-900"
 							>
-								{t(item.labelKey)}
+								{item.title}
 								{item.sections && (
 									<ChevronDown
 										size={14}
@@ -178,27 +184,25 @@ export default function Navbar() {
 										<div className="bg-white rounded-2xl border border-neutral-100 shadow-2xl p-8 grid grid-cols-2 gap-10">
 											{item.sections.map((section) => (
 												<div
-													key={section.labelKey}
+													key={section.title}
 													className="flex flex-col gap-4"
 												>
 													<h4 className="text-xs font-black uppercase tracking-tighter text-neutral-400">
-														{t(section.labelKey)}
+														{section.title}
 													</h4>
 													<div className="flex flex-col gap-3">
 														{section.links.map(
 															(link) => (
 																<Link
 																	key={
-																		link.labelKey
+																		link.title
 																	}
 																	href={
 																		link.href
 																	}
 																	className="text-sm font-medium text-neutral-600 transition-colors hover:text-neutral-900 flex items-center group"
 																>
-																	{t(
-																		link.labelKey,
-																	)}
+																	{link.title}
 																	<ArrowRight
 																		size={
 																			14
@@ -263,9 +267,9 @@ export default function Navbar() {
 								className="fixed inset-0 z-40 bg-white px-6 pt-24 pb-8 flex flex-col"
 							>
 								<div className="flex flex-col gap-4">
-									{NAV_ITEMS.map((item) => (
+									{navItems.map((item) => (
 										<motion.div
-											key={item.labelKey}
+											key={item.title}
 											variants={itemVariants}
 										>
 											<Link
@@ -275,7 +279,7 @@ export default function Navbar() {
 												}
 												className="flex items-center justify-between border-b border-neutral-100 py-4 text-3xl font-black uppercase text-neutral-900"
 											>
-												{t(item.labelKey)}
+												{item.title}
 												<ArrowRight size={24} />
 											</Link>
 										</motion.div>
