@@ -61,15 +61,19 @@ function LanguageMenu({
     const triggerClassName = mobile
         ? "flex items-center gap-2 text-sm font-bold uppercase text-neutral-900"
         : "flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-500 hover:text-neutral-400";
+
     const dropdownWrapperClassName = mobile
         ? "absolute right-0 top-full z-[1003] mt-2 w-21 overflow-hidden rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
         : "absolute right-0 top-full z-50 pt-2 w-21";
+
     const dropdownInnerClassName = mobile
         ? "space-y-1"
         : "overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-lg space-y-1";
+
     const optionClassName = mobile
         ? "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase text-neutral-700 transition-colors hover:bg-neutral-100"
         : "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase tracking-widest text-neutral-700 transition-colors hover:bg-neutral-100";
+
     return (
         <div
             className="relative"
@@ -91,6 +95,7 @@ function LanguageMenu({
                 />
                 {locale}
             </button>
+
             {isOpen && (
                 <div className={dropdownWrapperClassName}>
                     <div className={dropdownInnerClassName}>
@@ -233,11 +238,10 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onMouseEnter={() => setHoveredIndex(index)}
-                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase whitespace-nowrap tracking-widest transition-colors ${
-                                hoveredIndex === index
+                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase whitespace-nowrap tracking-widest transition-colors ${hoveredIndex === index
                                     ? "text-white"
                                     : "text-neutral-500"
-                            }`}
+                                }`}
                         >
                             {item.label}
                             {hoveredIndex === index && (
@@ -271,21 +275,19 @@ export default function Navbar() {
                         aria-label={isOpen ? "Close menu" : "Open menu"}
                     >
                         <span
-                            className={`absolute transition-all duration-300 ease-in-out ${
-                                isOpen
+                            className={`absolute transition-all duration-300 ease-in-out ${isOpen
                                     ? "rotate-90 scale-75 opacity-0"
                                     : "rotate-0 scale-100 opacity-100"
-                            }`}
+                                }`}
                         >
                             <MenuIcon size={24} />
                         </span>
 
                         <span
-                            className={`absolute transition-all duration-300 ease-in-out ${
-                                isOpen
+                            className={`absolute transition-all duration-300 ease-in-out ${isOpen
                                     ? "rotate-0 scale-100 opacity-100"
                                     : "-rotate-90 scale-75 opacity-0"
-                            }`}
+                                }`}
                         >
                             <X size={24} />
                         </span>
