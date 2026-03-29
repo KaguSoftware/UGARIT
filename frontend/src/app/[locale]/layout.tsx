@@ -1,18 +1,25 @@
-import { notFound } from "next/navigation";
-import { routing } from "@/src/i18n/routing";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getLocale } from "next-intl/server";
+import Navbar from "@/src/components/ui/navbar";
+import { Footer } from "@/src/components/footer/footer";
 
 export default async function LocaleLayout({
-	children,
-	params,
+    children,
 }: {
-	children: React.ReactNode;
-	params: Promise<{ locale: string }>;
+    children: React.ReactNode;
 }) {
-	const { locale } = await params;
+    const locale = await getLocale();
+    const messages = await getMessages();
 
-	if (!routing.locales.includes(locale as (typeof routing.locales)[number])) {
-		notFound();
-	}
-
-	return children;
+    return (
+        <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"}>
+            <body>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <Navbar />
+                    {children}
+                    <Footer />
+                </NextIntlClientProvider>
+            </body>
+        </html>
+    );
 }

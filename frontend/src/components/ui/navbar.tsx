@@ -61,15 +61,19 @@ function LanguageMenu({
     const triggerClassName = mobile
         ? "flex items-center gap-2 text-sm font-bold uppercase text-neutral-900"
         : "flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-neutral-500 hover:text-neutral-400";
+
     const dropdownWrapperClassName = mobile
         ? "absolute right-0 top-full z-[1003] mt-2 w-21 overflow-hidden rounded-xl border border-neutral-200 bg-white p-2 shadow-lg"
         : "absolute right-0 top-full z-50 pt-2 w-21";
+
     const dropdownInnerClassName = mobile
         ? "space-y-1"
         : "overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-lg space-y-1";
+
     const optionClassName = mobile
         ? "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase text-neutral-700 transition-colors hover:bg-neutral-100"
         : "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-bold uppercase tracking-widest text-neutral-700 transition-colors hover:bg-neutral-100";
+
     return (
         <div
             className="relative"
@@ -91,6 +95,7 @@ function LanguageMenu({
                 />
                 {locale}
             </button>
+
             {isOpen && (
                 <div className={dropdownWrapperClassName}>
                     <div className={dropdownInnerClassName}>
