@@ -4,15 +4,20 @@ import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import { PRODUCTS } from "@/src/components/cards/ProductCard/constants";
 import ProductGrid from "@/src/components/productsGrid/products";
+import ProductCarousel from "@/src/components/carousel/ProductCarousel";
 
 export default function Home() {
-    return (
-        <main>
-            <MaxWidthWrapper>
-                <CategoryGrid categories={CATEGORIES} />
-                <ProductGrid products={PRODUCTS} />
-                <LocationCard />
-            </MaxWidthWrapper>
-        </main>
-    );
+	return (
+		<main>
+			<MaxWidthWrapper>
+				<CategoryGrid categories={CATEGORIES} />
+				<ProductCarousel
+					title="Featured Products"
+					products={PRODUCTS}
+				/>
+				<ProductGrid products={PRODUCTS} />
+				<LocationCard />
+			</MaxWidthWrapper>
+		</main>
+	);
 }

@@ -81,11 +81,9 @@ export default function ProductCarousel({
 					{products.map((product, index) => (
 						<div
 							key={product.id || index}
-							// This controls how many items show per view.
-							// 1 on mobile, 2 on small tablets, 4 on desktop.
 							className="flex-[0_0_100%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_25%] pl-4"
 						>
-							<ProductCard data={product} />
+							<ProductCard product={product} />
 						</div>
 					))}
 				</div>
