@@ -9,14 +9,15 @@ export default function LocationCard() {
             <div className="grid grid-cols-1 p-3 items-center md:grid-cols-3 gap-6 mx-auto my-30">
                 {LOCATIONS.map((location) => (
                     <Link
-                        className="h-30 rounded-xl flex flex-col justify-center bg-linear-to-b from-gray-50 to-gray-300  hover:from-white hover:to-gray-300 text-center items-center cursor-pointer shadow-xs hover:shadow-md transition-all duration-400 hover:scale-105"
+                        className="h-40 rounded-xl flex border-2 border-black shadow-black/20 flex-col justify-center bg-linear-to-b bg-white text-center items-center cursor-pointer shadow-md hover:shadow-md transition-all duration-400 hover:scale-105"
                         href={location.adressLink}
+                        key={location.adressName}
                     >
-                        <h3 className="text-lg font-bold text-gray-500 flex gap-3 ">
+                        <h3 className="text-lg font-bold text-black flex gap-3 ">
                             <MapPin />
                             {location.adressName}
                         </h3>
-                        <p className="text-gray-500 mt-1 hover:text-gray-400 text-sm">
+                        <p className="text-gray-600 mt-1 hover:text-gray-400 text-sm max-w-[95%]">
                             {location.exactLocName}
                         </p>
                     </Link>

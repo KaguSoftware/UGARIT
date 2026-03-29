@@ -36,13 +36,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 </button>
                 {/* the add to cart button*/}
                 <button className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out">
-                    <p className="text-white text-sm font-bold">
+                    <p className="text-white text-md font-bold">
                         {t(addToCart.addToCartText)}
                     </p>
                 </button>
             </div>
             <div className="text-center flex flex-col gap-1 m-3 px-2 bottom-0 ">
-                <h3 className="text-sm font-medium text-black group-hover:underline truncate">
+                <h3 className="text-md font-bold text-black group-hover:underline truncate">
                     {t(product.title)}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm">
