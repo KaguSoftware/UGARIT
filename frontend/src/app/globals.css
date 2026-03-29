@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+<<<<<<< HEAD
     --background: #f6f6f6;
     --foreground: #171717;
 }
@@ -11,6 +12,20 @@
     --font-sans: var(--font-geist-sans);
     --font-mono: var(--font-geist-mono);
 }
+=======
+	--background: #f6f6f6;
+	--foreground: #171717;
+}
+
+@theme inline {
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--font-sans: var(--font-geist-sans);
+	--font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {}
+>>>>>>> 0708e658c2358b7df546fbd167774340cc8f68a6
 
 body {
     background: var(--background);
@@ -30,6 +45,12 @@ body {
 
 /* 2. Style the moving handle */
 .custom-scrollbar::-webkit-scrollbar-thumb {
+<<<<<<< HEAD
     background: gray;
     border-radius: 10px;
 }
+=======
+	background: gray;
+	border-radius: 10px;
+}
+>>>>>>> 0708e658c2358b7df546fbd167774340cc8f68a6
