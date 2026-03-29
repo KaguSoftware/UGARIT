@@ -231,11 +231,10 @@ export default function Navbar() {
                             key={item.href}
                             href={item.href}
                             onMouseEnter={() => setHoveredIndex(index)}
-                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase whitespace-nowrap tracking-widest transition-colors ${
-                                hoveredIndex === index
+                            className={`relative z-0 py-4 text-sm font-bold duration-300 uppercase whitespace-nowrap tracking-widest transition-colors ${hoveredIndex === index
                                     ? "text-white"
                                     : "text-neutral-500"
-                            }`}
+                                }`}
                         >
                             {item.label}
                             {hoveredIndex === index && (
@@ -269,21 +268,19 @@ export default function Navbar() {
                         aria-label={isOpen ? "Close menu" : "Open menu"}
                     >
                         <span
-                            className={`absolute transition-all duration-300 ease-in-out ${
-                                isOpen
+                            className={`absolute transition-all duration-300 ease-in-out ${isOpen
                                     ? "rotate-90 scale-75 opacity-0"
                                     : "rotate-0 scale-100 opacity-100"
-                            }`}
+                                }`}
                         >
                             <MenuIcon size={24} />
                         </span>
 
                         <span
-                            className={`absolute transition-all duration-300 ease-in-out ${
-                                isOpen
+                            className={`absolute transition-all duration-300 ease-in-out ${isOpen
                                     ? "rotate-0 scale-100 opacity-100"
                                     : "-rotate-90 scale-75 opacity-0"
-                            }`}
+                                }`}
                         >
                             <X size={24} />
                         </span>

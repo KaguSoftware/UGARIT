@@ -94,5 +94,16 @@
             "currency": "$",
             "separator": " - "
         }
+    },
+    "Category": {
+        "CategoryCardTitle": {
+            "1": "hello",
+            "2": "my",
+            "3": "name",
+            "4": "is",
+            "5": "majed",
+            "6": "ahdab"
+        },
+        "Discover": "Discover All"
     }
 }

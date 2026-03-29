@@ -3,37 +3,37 @@ import { Category, Discover } from "./types";
 export const CATEGORIES: Category[] = [
     {
         id: 1,
-        title: "HELLO",
+        title: "Category.CategoryCardTitle.1",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
     {
         id: 2,
-        title: "MY",
+        title: "Category.CategoryCardTitle.2",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
     {
         id: 3,
-        title: "NAME",
+        title: "Category.CategoryCardTitle.3",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
     {
         id: 4,
-        title: "IS",
+        title: "Category.CategoryCardTitle.4",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
     {
         id: 5,
-        title: "MAJED",
+        title: "Category.CategoryCardTitle.5",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
     {
         id: 6,
-        title: "AHDAB",
+        title: "Category.CategoryCardTitle.6",
         moreLink: "/category/new",
         imageUrl: "/image1.jpeg",
     },
