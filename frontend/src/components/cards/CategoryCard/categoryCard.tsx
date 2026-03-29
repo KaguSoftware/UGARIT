@@ -12,7 +12,7 @@ const Cat = ({ category }: CategoryProps) => {
         return null;
     }
     return (
-        <div className="relative w-auto md:h-80 h-60 bg-white overflow-hidden group cursor-pointer rounded-lg shadow-sm hover:shadow-md">
+        <div className="relative w-auto md:h-90 h-60 bg-white overflow-hidden group cursor-pointer rounded-lg shadow-sm hover:shadow-md">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 <Image
                     src={category.imageUrl}

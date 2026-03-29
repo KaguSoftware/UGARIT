@@ -11,7 +11,6 @@ export default function Home() {
             <MaxWidthWrapper>
                 <CategoryGrid categories={CATEGORIES} />
                 <ProductGrid products={PRODUCTS} />
-
                 <LocationCard />
             </MaxWidthWrapper>
         </main>

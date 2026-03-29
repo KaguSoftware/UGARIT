@@ -7,7 +7,7 @@ interface CatGridProps {
 
 const CatGrid = ({ categories }: CatGridProps) => {
     return (
-        <div className="grid grid-cols-2 md:grid-cols-5 md:p-3 p-0 gap-2 z-0 ">
+        <div className="grid grid-cols-2 md:grid-cols-4 md:p-3 p-0 gap-5 z-0 ">
             {categories.map((category) => (
                 <Cat key={category.id} category={category} />
             ))}
