@@ -29,13 +29,25 @@ const menuVariants: Variants = {
         transition: {
             duration: 0.4,
             ease: [0.22, 1, 0.36, 1],
-            staggerChildren: 0.08,
         },
     },
     exit: {
         x: "-100%",
         transition: {
             duration: 0.3,
+        },
+    },
+};
+
+const mobileMenuContentVariants: Variants = {
+    initial: {},
+    animate: {
+        transition: {
+            staggerChildren: 0.08,
+        },
+    },
+    exit: {
+        transition: {
             staggerChildren: 0.05,
             staggerDirection: -1,
         },
@@ -405,24 +417,33 @@ export default function Navbar() {
                                 exit="exit"
                                 className="fixed inset-0 z-40 flex flex-col overflow-y-auto bg-white px-6 pb-8 pt-24"
                             >
-                                <div className="flex flex-col">
+                                <motion.div
+                                    variants={mobileMenuContentVariants}
+                                    initial="initial"
+                                    animate="animate"
+                                    exit="exit"
+                                    className="flex flex-col"
+                                >
                                     {navItems.map((item) => (
-                                        <motion.div
+                                        <div
                                             key={item.title}
-                                            variants={itemVariants}
                                             className="flex flex-col gap-2 border-b border-neutral-100 pb-6"
                                         >
-                                            <Link
-                                                href={item.href}
-                                                onClick={() => {
-                                                    setIsMobileOpen(false);
-                                                    setMobileSubmenuIndex(null);
-                                                }}
-                                                className="flex items-center justify-between border-b border-neutral-100  text-lg font-bold uppercase text-neutral-900"
-                                            >
-                                                {item.title}
-                                                <ArrowRight size={18} />
-                                            </Link>
+                                            <motion.div variants={itemVariants}>
+                                                <Link
+                                                    href={item.href}
+                                                    onClick={() => {
+                                                        setIsMobileOpen(false);
+                                                        setMobileSubmenuIndex(
+                                                            null
+                                                        );
+                                                    }}
+                                                    className="flex items-center justify-between border-b border-neutral-100  text-lg font-bold uppercase text-neutral-900"
+                                                >
+                                                    {item.title}
+                                                    <ArrowRight size={18} />
+                                                </Link>
+                                            </motion.div>
 
                                             {item.sections && (
                                                 <div className="flex flex-col gap-3">
@@ -434,43 +455,54 @@ export default function Navbar() {
                                                                 }
                                                                 className="flex flex-col "
                                                             >
-                                                                <h4 className="text-xs font-black uppercase tracking-tighter text-neutral-400">
+                                                                <motion.h4
+                                                                    variants={
+                                                                        itemVariants
+                                                                    }
+                                                                    className="text-xs font-black uppercase tracking-tighter text-neutral-400"
+                                                                >
                                                                     {
                                                                         section.title
                                                                     }
-                                                                </h4>
+                                                                </motion.h4>
 
                                                                 <div className="flex flex-col">
                                                                     {section.links.map(
                                                                         (
                                                                             link
                                                                         ) => (
-                                                                            <Link
+                                                                            <motion.div
                                                                                 key={
                                                                                     link.title
                                                                                 }
-                                                                                href={
-                                                                                    link.href
+                                                                                variants={
+                                                                                    itemVariants
                                                                                 }
-                                                                                onClick={() => {
-                                                                                    setIsMobileOpen(
-                                                                                        false
-                                                                                    );
-                                                                                    setMobileSubmenuIndex(
-                                                                                        null
-                                                                                    );
-                                                                                }}
-                                                                                className="flex items-center justify-between border-b border-neutral-100 py-3 text-lg font-bold uppercase text-neutral-900"
                                                                             >
-                                                                                {
-                                                                                    link.title
-                                                                                }
-                                                                                <ArrowRight
-                                                                                    size={
-                                                                                        18
+                                                                                <Link
+                                                                                    href={
+                                                                                        link.href
                                                                                     }
-                                                                                />
-                                                                            </Link>
+                                                                                    onClick={() => {
+                                                                                        setIsMobileOpen(
+                                                                                            false
+                                                                                        );
+                                                                                        setMobileSubmenuIndex(
+                                                                                            null
+                                                                                        );
+                                                                                    }}
+                                                                                    className="flex items-center justify-between border-b border-neutral-100 py-3 text-lg font-bold uppercase text-neutral-900"
+                                                                                >
+                                                                                    {
+                                                                                        link.title
+                                                                                    }
+                                                                                    <ArrowRight
+                                                                                        size={
+                                                                                            18
+                                                                                        }
+                                                                                    />
+                                                                                </Link>
+                                                                            </motion.div>
                                                                         )
                                                                     )}
                                                                 </div>
@@ -479,9 +511,9 @@ export default function Navbar() {
                                                     )}
                                                 </div>
                                             )}
-                                        </motion.div>
+                                        </div>
                                     ))}
-                                </div>
+                                </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>,
