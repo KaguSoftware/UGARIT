@@ -11,7 +11,6 @@ import { MenuIcon, X, ArrowRight, Globe, ChevronDown } from "lucide-react";
 import MaxWidthWrapper from "../ui/MaxWidthWrapper";
 import { LanguageMenuProps } from "./types";
 
-// Adding types so TypeScript knows what our JSON structure looks like
 type NavLink = { title: string; href: string };
 type NavSection = { title: string; links: NavLink[] };
 type NavItem = { title: string; href: string; sections?: NavSection[] };

@@ -4,13 +4,10 @@ import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
 async function getProduct(id: string) {
 	const res = await fetch(
 		`http://127.0.0.1:1337/api/products?filters[documentId][$eq]=${id}&populate=*`,
-		{
-			cache: "no-store",
-		},
+		{ cache: "no-store" },
 	);
 
 	if (!res.ok) return null;
-
 	const json = await res.json();
 	return json.data[0];
 }
@@ -36,6 +33,15 @@ export default async function ProductDetail({
 		: "/placeholder-image.jpg";
 
 	const allImages = strapiProduct.image || [];
+
+	const sizeOptions = [
+		{ label: "XS", isAvailable: strapiProduct.sizeXS },
+		{ label: "S", isAvailable: strapiProduct.sizeS },
+		{ label: "M", isAvailable: strapiProduct.sizeM },
+		{ label: "L", isAvailable: strapiProduct.sizeL },
+		{ label: "XL", isAvailable: strapiProduct.sizeXL },
+		{ label: "XXL", isAvailable: strapiProduct.sizeXXL },
+	];
 
 	return (
 		<main className="py-10 px-6">
@@ -75,30 +81,42 @@ export default async function ProductDetail({
 							₺{strapiProduct.price}
 						</p>
 					</div>
-					<h2 className="font-semibold text-xl mt-4">
-						Ürün Açıklaması
-					</h2>
-					<p className="text-gray-500 tracking-tight text-xl mt-2 max-w-200">
-						{strapiProduct.description || "Açıklama bulunamadı."}
-					</p>
+
+					{strapiProduct.description && (
+						<>
+							<h2 className="font-semibold text-xl mt-4">
+								Ürün Açıklaması
+							</h2>
+							<p className="text-gray-500 tracking-tight text-xl mt-2 max-w-200">
+								{strapiProduct.description}
+							</p>
+						</>
+					)}
+
 					<div className="flex gap-8 mt-4">
 						<div>
 							<h3 className="text-gray-700 font-bold tracking-tight text-lg">
 								BEDEN
 							</h3>
 							<div className="flex font-bold mt-2 gap-2">
-								<button className="h-10 w-10 border border-gray-400 rounded-lg hover:text-white hover:bg-gray-700 duration-150">
-									S
-								</button>
-								<button className="h-10 w-10 border border-gray-400 rounded-lg hover:text-white hover:bg-gray-700 duration-150 ">
-									M
-								</button>
-								<button className="h-10 w-10 border border-gray-400 rounded-lg hover:text-white hover:bg-gray-700 duration-150">
-									L
-								</button>
+								{sizeOptions.map((size) => (
+									<button
+										key={size.label}
+										disabled={!size.isAvailable}
+										className={`h-10 w-10 border rounded-lg duration-150 flex items-center justify-center
+                                            ${
+												size.isAvailable
+													? "border-gray-400 text-black hover:bg-black hover:text-white cursor-pointer"
+													: "border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed"
+											}`}
+									>
+										{size.label}
+									</button>
+								))}
 							</div>
 						</div>
 					</div>
+
 					<div className="flex flex-col gap-4 mt-6 font-bold">
 						<button className=" text-black bg-neutral-100 hover:bg-black hover:text-white rounded-xl duration-300 shadow-xl h-14">
 							SEPETE EKLE
@@ -108,24 +126,32 @@ export default async function ProductDetail({
 							WHATSAPPtan iletisime gec
 						</button>
 					</div>
-					{/* Hardcoded model sizing for now until we add it to Strapi */}
-					<div className="text-lg text-center md:text-left mt-4 ">
-						<h4 className="font-bold"> Mankenin Ölçüleri:</h4>
-						<p className="flex gap-2">
-							{" "}
-							<Ruler className="hover:fill-gray-400" /> Boy:
-							185cm{" "}
-						</p>
-						<p className="flex gap-2">
-							{" "}
-							<Weight className="hover:fill-gray-400" /> Kilo:
-							80kg
-						</p>
-						<p className="flex gap-2">
-							{" "}
-							<Shirt className="hover:fill-gray-400" /> Beden: L
-						</p>
-					</div>
+
+					{(strapiProduct.modelHeight ||
+						strapiProduct.modelWeight ||
+						strapiProduct.modelSize) && (
+						<div className="text-lg text-center md:text-left mt-4 ">
+							<h4 className="font-bold"> Mankenin Ölçüleri:</h4>
+							{strapiProduct.modelHeight && (
+								<p className="flex gap-2">
+									<Ruler className="hover:fill-gray-400" />{" "}
+									Boy: {strapiProduct.modelHeight}
+								</p>
+							)}
+							{strapiProduct.modelWeight && (
+								<p className="flex gap-2">
+									<Weight className="hover:fill-gray-400" />{" "}
+									Kilo: {strapiProduct.modelWeight}
+								</p>
+							)}
+							{strapiProduct.modelSize && (
+								<p className="flex gap-2">
+									<Shirt className="hover:fill-gray-400" />{" "}
+									Beden: {strapiProduct.modelSize}
+								</p>
+							)}
+						</div>
+					)}
 				</div>
 			</div>
 		</main>

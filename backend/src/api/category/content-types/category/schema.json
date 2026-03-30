@@ -1,55 +1,41 @@
 {
-  "kind": "collectionType",
-  "collectionName": "categories",
-  "info": {
-    "singularName": "category",
-    "pluralName": "categories",
-    "displayName": "Category"
-  },
-  "options": {
-    "draftAndPublish": true
-  },
-  "pluginOptions": {
-    "i18n": {
-      "localized": true
-    }
-  },
-  "attributes": {
-    "name": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
-    "slug": {
-      "type": "uid",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "targetField": "name"
-    },
-    "image": {
-      "type": "media",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "multiple": false,
-      "allowedTypes": [
-        "images",
-        "files"
-      ]
-    },
-    "products": {
-      "type": "relation",
-      "relation": "oneToMany",
-      "target": "api::product.product",
-      "mappedBy": "category"
-    }
-  }
+	"kind": "collectionType",
+	"collectionName": "categories",
+	"info": {
+		"singularName": "category",
+		"pluralName": "categories",
+		"displayName": "Category"
+	},
+	"options": {
+		"draftAndPublish": true
+	},
+	"pluginOptions": {
+		"i18n": { "localized": true }
+	},
+	"attributes": {
+		"name": {
+			"type": "string",
+			"pluginOptions": { "i18n": { "localized": true } }
+		},
+		"slug": {
+			"type": "uid",
+			"targetField": "name",
+			"pluginOptions": { "i18n": { "localized": true } }
+		},
+		"image": {
+			"type": "media",
+			"multiple": false,
+			"allowedTypes": ["images", "files"],
+			"pluginOptions": { "i18n": { "localized": true } }
+		},
+		"showInNavbar": { "type": "boolean", "default": true },
+		"isMegaMenu": { "type": "boolean", "default": false },
+		"megaMenuContent": { "type": "json" },
+		"products": {
+			"type": "relation",
+			"relation": "oneToMany",
+			"target": "api::product.product",
+			"mappedBy": "category"
+		}
+	}
 }
