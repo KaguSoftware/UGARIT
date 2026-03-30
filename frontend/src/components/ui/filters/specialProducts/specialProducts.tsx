@@ -8,7 +8,6 @@ export const Sp = () => {
     const t = useTranslations("Filters");
     const spList = SP_DATA[0].ids;
 
-
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
 
     const toggleSize = (id: string) => {
@@ -20,7 +19,7 @@ export const Sp = () => {
     };
 
     return (
-        <div className="p-6 pt-4 bg-white rounded-xl border border-slate-200 text-slate-900 shadow-lg max-w-64 ml-12 max-h-60 flex flex-col">
+        <div className="p-6 pt-4 w-full bg-white rounded-xl border border-slate-200 text-slate-900 shadow-lg max-w-64 max-h-60 flex flex-col">
             <div className="mb-6">
                 <h3 className="font-bold text-lg">{t("sizeTitle")}</h3>
             </div>

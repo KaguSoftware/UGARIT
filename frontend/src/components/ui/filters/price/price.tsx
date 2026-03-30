@@ -8,7 +8,9 @@ import { PriceRangeProps } from "./types";
 
 export const Price = ({ onValueChange, initialValues }: PriceRangeProps) => {
     const t = useTranslations("Filters.Price");
-    const [val, setVal] = useState(initialValues || [DATA.DEFAULT_MIN, DATA.DEFAULT_MAX]);
+    const [val, setVal] = useState(
+        initialValues || [DATA.DEFAULT_MIN, DATA.DEFAULT_MAX]
+    );
 
     const update = (v: number[]) => {
         setVal(v);
@@ -16,7 +18,7 @@ export const Price = ({ onValueChange, initialValues }: PriceRangeProps) => {
     };
 
     return (
-        <div className="p-6 pt-4 w-64 border border-slate-200 rounded-lg bg-white text-black shadow-lg ml-12">
+        <div className="p-6 pt-4 w-full  border border-slate-200 rounded-lg bg-white text-black shadow-lg">
             <div className="mb-6">
                 <h3 className="font-bold text-lg">{t("title")}</h3>
             </div>
@@ -37,9 +39,11 @@ export const Price = ({ onValueChange, initialValues }: PriceRangeProps) => {
                 </Slider.Root>
 
                 <span className="font-bold text-sm">
-                    {t("currency")}{val[0].toLocaleString()}
+                    {t("currency")}
+                    {val[0].toLocaleString()}
                     {t("separator")}
-                    {t("currency")}{val[1].toLocaleString()}
+                    {t("currency")}
+                    {val[1].toLocaleString()}
                 </span>
             </div>
         </div>
