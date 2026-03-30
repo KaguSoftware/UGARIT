@@ -133,5 +133,6 @@
         "submit": "Send Message",
         "success": "Message sent successfully!",
         "error": "Failed to send message. Please try again."
-    }
+    },
+    "Carousel": { "Title": "Featured products" }
 }
