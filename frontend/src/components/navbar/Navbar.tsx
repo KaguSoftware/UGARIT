@@ -387,14 +387,14 @@ export default function Navbar() {
                         initial={{ opacity: 0, y: -12 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -12 }}
-                        className="absolute left-0 top-full w-full border-t border-neutral-100 px-4 py-3 shadow-sm md:hidden"
+                        className="absolute left-0 top-full w-full border-t border-neutral-100 px-4 py-3 md:hidden"
                     >
                         <div className="mx-auto w-full max-w-sm">
                             <div className="relative flex justify-center">
                                 <input
                                     type="search"
                                     placeholder="Search"
-                                    className="h-12 w-[90%] rounded-2xl border border-neutral-200 bg-white/95 pl-4 pr-12 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
+                                    className="h-12 w-[90%] rounded-2xl border border-neutral-200 bg-white/96 pl-4 pr-12 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
                                 />
                                 <Search
                                     size={18}
