@@ -22,6 +22,22 @@ type NavLink = { title: string; href: string };
 type NavSection = { title: string; links: NavLink[] };
 type NavItem = { title: string; href: string; sections?: NavSection[] };
 
+type NavbarCategory = {
+    id?: number;
+    documentId?: string;
+    name?: string;
+    slug?: string;
+    showInNavbar?: boolean;
+    isMegaMenu?: boolean;
+    megaMenuContent?: unknown;
+    locale?: string;
+    image?: unknown;
+};
+
+type NavbarProps = {
+    strapiCategories?: NavbarCategory[];
+};
+
 const menuVariants: Variants = {
     initial: { x: "-100%" },
     animate: {
@@ -150,10 +166,11 @@ function LanguageMenu({
     );
 }
 
-export default function Navbar() {
+export default function Navbar({ strapiCategories = [] }: NavbarProps) {
     const locale = useLocale();
     const tNav = useTranslations("Nav");
     const navItems = tNav.raw("items") as NavItem[];
+    void strapiCategories;
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isLangOpen, setIsLangOpen] = useState(false);
