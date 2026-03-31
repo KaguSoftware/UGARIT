@@ -28,7 +28,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
                         />
                     </Link>
                 </div>
-                <div className=" flex justify-center w-full h-full">
+                <div className=" flex justify-center w-full md:p-3 p-1 h-full">
                     <div className="flex md:flex-col justify-between w-full p-1">
                         <h3 className="md:text-3xl text-xs font-bold text-black ">
                             {t(product.title)} this is a product title like
