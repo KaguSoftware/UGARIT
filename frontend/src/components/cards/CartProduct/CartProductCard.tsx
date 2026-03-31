@@ -12,7 +12,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
 
     return (
         <MaxWidthWrapper>
-            <div className="flex md:w-2/3 max-h-fit p-2 h-full w-full bg-black/2 rounded-2xl">
+            <div className="flex max-h-fit p-2 h-full w-full bg-black/2 rounded-2xl">
                 <div className="size-42 md:w-40 w-24 h-fit">
                     {/* yall will prolly say wtf , basically the dimentions dont change this way sorry that it looks ass */}
                     <Link
@@ -39,7 +39,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
                     </div>
                     <div className="flex gap-1">
                         <h2 className="text-black md:text-2xl self-center font-bold">
-                            {product.currentPrice}
+                            ₺{product.currentPrice}
                         </h2>
                         <button>
                             <Trash className="text-red-400 md:size-10 size-7" />

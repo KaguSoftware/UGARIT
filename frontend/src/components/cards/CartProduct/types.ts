@@ -2,7 +2,7 @@ export type cartProduct = {
     id: number;
     title: string;
     originalPrice: string;
-    currentPrice: string;
+    currentPrice: number;
     imageUrl: string;
     size: string;
 };
