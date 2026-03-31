@@ -15,6 +15,10 @@ export default function CartTandO() {
 
         return sum + price;
     }, 0);
+
+    const titlesString = CARTPRODUCTS.map((product) => t(product.title)).join(
+        ", "
+    );
     return (
         <MaxWidthWrapper>
             <div className="my-10 md:mt-2 items-center rounded-2xl flex flex-col md:grid-cols-3 bg-gray-200 gap-6 mx-auto md:p-8 p-3">
@@ -38,7 +42,7 @@ export default function CartTandO() {
                     </div>
                 </div>
                 <Link
-                    href="/"
+                    href={`https://wa.me/905372825347?text=${CARTTANDO.buttonlink}${titlesString}`}
                     className="flex bg-green-500 justify-center gap-3 md:text-xl text-[17px]  font-bold text-white p-3 rounded-full w-full"
                 >
                     {CARTTANDO.wabutton}

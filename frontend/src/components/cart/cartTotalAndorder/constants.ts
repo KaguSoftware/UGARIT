@@ -5,5 +5,5 @@ export const CARTTANDO: cartTandOType = {
     total: "Total: ",
     totalammount: 1234,
     wabutton: "Place order through whatsapp",
-    buttonlink: "string",
+    buttonlink: "I would like to order the following ",
 };
