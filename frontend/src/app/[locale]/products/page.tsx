@@ -1,11 +1,19 @@
 import { Filters } from "@/src/components/ui/filters/filters";
 import ProductGrid from "@/src/components/productsGrid/products";
-import { getStrapiMedia, getStrapiURL } from "@/src/lib/strapi";
 
 export const dynamic = "force-dynamic";
 
+const STRAPI_URL =
+	process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+
+function getMediaUrl(url?: string | null) {
+	if (!url) return "/mock-images/mockshirt.png";
+	if (url.startsWith("http")) return url;
+	return `${STRAPI_URL}${url}`;
+}
+
 async function getProducts() {
-	const res = await fetch(getStrapiURL("/api/products?populate=*"), {
+	const res = await fetch(`${STRAPI_URL}/api/products?populate=*`, {
 		cache: "no-store",
 	});
 
@@ -20,13 +28,15 @@ export default async function ProductList() {
 	const strapiResponse = await getProducts();
 
 	const formattedProducts = strapiResponse.data.map((item: any) => {
-		const imagePath = item.image?.[0]?.url || item.image?.url || null;
+		const imagePath = Array.isArray(item.image)
+			? item.image[0]?.url
+			: item.image?.url;
 
 		return {
 			id: item.documentId,
 			title: item.title,
 			price: item.price,
-			imageUrl: getStrapiMedia(imagePath),
+			imageUrl: getMediaUrl(imagePath),
 			category: item.category?.name || "Uncategorized",
 			slug: item.slug,
 		};

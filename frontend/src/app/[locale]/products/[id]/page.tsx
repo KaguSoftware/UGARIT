@@ -1,18 +1,25 @@
 import Image from "next/image";
 import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
-import { getStrapiMedia, getStrapiURL } from "@/src/lib/strapi";
+
+const STRAPI_URL =
+	process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+
+function getMediaUrl(url?: string | null) {
+	if (!url) return "/mock-images/mockshirt.png";
+	if (url.startsWith("http")) return url;
+	return `${STRAPI_URL}${url}`;
+}
 
 async function getProduct(id: string) {
 	const res = await fetch(
-		getStrapiURL(
-			`/api/products?filters[slug][$eq]=${encodeURIComponent(id)}&populate=*`,
-		),
+		`${STRAPI_URL}/api/products?filters[slug][$eq]=${encodeURIComponent(id)}&populate=*`,
 		{ cache: "no-store" },
 	);
 
 	if (!res.ok) return null;
+
 	const json = await res.json();
-	return json.data[0];
+	return json.data?.[0] || null;
 }
 
 export default async function ProductDetail({
@@ -31,7 +38,7 @@ export default async function ProductDetail({
 		);
 	}
 
-	const mainImageUrl = getStrapiMedia(strapiProduct.image?.[0]?.url);
+	const mainImageUrl = getMediaUrl(strapiProduct.image?.[0]?.url);
 	const allImages = strapiProduct.image || [];
 
 	const sizeOptions = [
@@ -46,7 +53,7 @@ export default async function ProductDetail({
 	return (
 		<main className="py-10 px-6">
 			<div className="md:grid md:grid-cols-2 grid-cols-1">
-				<div className="justify-items-center ">
+				<div className="justify-items-center">
 					<Image
 						className="object-cover w-auto md:h-screen rounded-2xl"
 						alt={strapiProduct.title || "Product Image"}
@@ -54,6 +61,7 @@ export default async function ProductDetail({
 						width={1000}
 						height={750}
 					/>
+
 					<div className="justify-items-center">
 						<p className="font-bold text-sm mt-6">
 							RENK SEÇENEKLERİ
@@ -63,7 +71,7 @@ export default async function ProductDetail({
 								<Image
 									key={index}
 									alt="gallery thumbnail"
-									src={getStrapiMedia(img.url)}
+									src={getMediaUrl(img.url)}
 									width={75}
 									height={75}
 									className="object-cover rounded-xl w-[75px] h-[75px]"
@@ -79,7 +87,7 @@ export default async function ProductDetail({
 					</h1>
 
 					<div className="flex items-center font-bold mt-2 gap-4">
-						<p className=" text-black text-4xl ">
+						<p className="text-black text-4xl">
 							₺{strapiProduct.price}
 						</p>
 					</div>
@@ -119,10 +127,11 @@ export default async function ProductDetail({
 					</div>
 
 					<div className="flex flex-col gap-4 mt-6 font-bold">
-						<button className=" text-black bg-neutral-100 hover:bg-black hover:text-white rounded-xl duration-300 shadow-xl h-14">
+						<button className="text-black bg-neutral-100 hover:bg-black hover:text-white rounded-xl duration-300 shadow-xl h-14">
 							SEPETE EKLE
 						</button>
-						<button className="text-white flex gap-4 items-center justify-center h-14 shadow-xl rounded-xl hover:bg-green-400 duration-300 bg-green-500 ">
+
+						<button className="text-white flex gap-4 items-center justify-center h-14 shadow-xl rounded-xl hover:bg-green-400 duration-300 bg-green-500">
 							<MessageCircle className="hover:fill-white duration-300 hover:text-green-600" />
 							WHATSAPPtan iletisime gec
 						</button>
@@ -131,20 +140,23 @@ export default async function ProductDetail({
 					{(strapiProduct.modelHeight ||
 						strapiProduct.modelWeight ||
 						strapiProduct.modelSize) && (
-						<div className="text-lg text-center md:text-left mt-4 ">
-							<h4 className="font-bold"> Mankenin Ölçüleri:</h4>
+						<div className="text-lg text-center md:text-left mt-4">
+							<h4 className="font-bold">Mankenin Ölçüleri:</h4>
+
 							{strapiProduct.modelHeight && (
 								<p className="flex gap-2">
 									<Ruler className="hover:fill-gray-400" />
 									Boy: {strapiProduct.modelHeight}
 								</p>
 							)}
+
 							{strapiProduct.modelWeight && (
 								<p className="flex gap-2">
 									<Weight className="hover:fill-gray-400" />
 									Kilo: {strapiProduct.modelWeight}
 								</p>
 							)}
+
 							{strapiProduct.modelSize && (
 								<p className="flex gap-2">
 									<Shirt className="hover:fill-gray-400" />

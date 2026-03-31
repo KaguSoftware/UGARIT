@@ -3,23 +3,27 @@ import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductGrid from "@/src/components/productsGrid/products";
 import ProductCarousel from "@/src/components/carousel/ProductCarousel";
-import { getStrapiMedia, getStrapiURL } from "@/src/lib/strapi";
 
 export const dynamic = "force-dynamic";
+
+const STRAPI_URL =
+	process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+
+function getMediaUrl(url?: string | null) {
+	if (!url) return "/mock-images/mockshirt.png";
+	if (url.startsWith("http")) return url;
+	return `${STRAPI_URL}${url}`;
+}
 
 async function getFeaturedProducts() {
 	try {
 		const res = await fetch(
-			getStrapiURL(
-				"/api/products?filters[isFeatured][$eq]=true&populate=*",
-			),
+			`${STRAPI_URL}/api/products?filters[isFeatured][$eq]=true`,
 			{ cache: "no-store" },
 		);
-
 		if (!res.ok) return { data: [] };
 		return await res.json();
-	} catch (error) {
-		console.error("Failed to fetch featured products", error);
+	} catch {
 		return { data: [] };
 	}
 }
@@ -27,14 +31,12 @@ async function getFeaturedProducts() {
 async function getHomepageCategories(locale: string) {
 	try {
 		const res = await fetch(
-			getStrapiURL(`/api/categories?populate=*&locale=${locale}`),
+			`${STRAPI_URL}/api/categories?locale=${locale}&populate=*`,
 			{ cache: "no-store" },
 		);
-
 		if (!res.ok) return { data: [] };
 		return await res.json();
-	} catch (error) {
-		console.error("Failed to fetch homepage categories", error);
+	} catch {
 		return { data: [] };
 	}
 }
@@ -60,7 +62,7 @@ export default async function Home({
 			id: item.documentId,
 			title: item.title,
 			price: item.price,
-			imageUrl: getStrapiMedia(imagePath),
+			imageUrl: getMediaUrl(imagePath),
 			category: item.category?.name || "Uncategorized",
 			slug: item.slug,
 		};
@@ -69,20 +71,18 @@ export default async function Home({
 	const homepageCategories = categoriesResponse.data.map((item: any) => ({
 		id: item.id,
 		title: item.name,
-		moreLink: `/products?category=${item.slug}`,
-		imageUrl: getStrapiMedia(item.image?.url),
+		moreLink: `/categories/${item.slug}`,
+		imageUrl: getMediaUrl(item.image?.url),
 	}));
 
 	return (
 		<main>
 			<MaxWidthWrapper>
 				<CategoryGrid categories={homepageCategories} />
-
 				<ProductCarousel
 					title="Featured Products"
 					products={featuredProducts}
 				/>
-
 				<ProductGrid products={featuredProducts} />
 				<LocationCard />
 			</MaxWidthWrapper>

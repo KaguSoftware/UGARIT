@@ -161,7 +161,7 @@ export default function Navbar({
 		.filter((cat) => cat.showInNavbar)
 		.map((cat) => ({
 			title: cat.name,
-			href: `/products?category=${cat.slug}`,
+			href: `/categories/${cat.slug}`,
 			sections:
 				cat.isMegaMenu && cat.megaMenuContent
 					? cat.megaMenuContent
