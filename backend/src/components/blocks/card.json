@@ -1,0 +1,34 @@
+{
+  "collectionName": "components_blocks_cards",
+  "info": {
+    "displayName": "card"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "currentPrice": {
+      "type": "decimal",
+      "required": true
+    },
+    "priceBeforeDiscount": {
+      "type": "decimal"
+    },
+    "favorite": {
+      "type": "boolean",
+      "default": false
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": true,
+      "allowedTypes": [
+        "images",
+        "files"
+      ]
+    }
+  },
+  "config": {}
+}

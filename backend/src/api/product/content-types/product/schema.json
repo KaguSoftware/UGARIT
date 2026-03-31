@@ -1,31 +1,39 @@
 {
-  "kind": "collectionType",
-  "collectionName": "products",
-  "info": {
-    "singularName": "product",
-    "pluralName": "products",
-    "displayName": "Product"
-  },
-  "options": {
-    "draftAndPublish": true
-  },
-  "pluginOptions": {},
-  "attributes": {
-    "title": {
-      "type": "string"
-    },
-    "image": {
-      "type": "media",
-      "multiple": true,
-      "allowedTypes": [
-        "images",
-        "files",
-        "videos",
-        "audios"
-      ]
-    },
-    "price": {
-      "type": "decimal"
-    }
-  }
+	"kind": "collectionType",
+	"collectionName": "products",
+	"info": {
+		"singularName": "product",
+		"pluralName": "products",
+		"displayName": "Product"
+	},
+	"options": {
+		"draftAndPublish": true
+	},
+	"attributes": {
+		"title": { "type": "string" },
+		"slug": { "type": "uid", "targetField": "title" },
+		"price": { "type": "decimal" },
+		"description": { "type": "text" },
+		"isFeatured": { "type": "boolean", "default": false },
+		"modelHeight": { "type": "string" },
+		"modelWeight": { "type": "string" },
+		"modelSize": { "type": "string" },
+		"image": {
+			"type": "media",
+			"multiple": true,
+			"allowedTypes": ["images", "files", "videos", "audios"]
+		},
+		"category": {
+			"type": "relation",
+			"relation": "manyToOne",
+			"target": "api::category.category",
+			"inversedBy": "products"
+		},
+		"sizeXS": { "type": "boolean", "default": false },
+		"sizeS": { "type": "boolean", "default": false },
+		"sizeM": { "type": "boolean", "default": false },
+		"sizeL": { "type": "boolean", "default": false },
+		"sizeXL": { "type": "boolean", "default": false },
+		"sizeXXL": { "type": "boolean", "default": false }
+	}
 }
