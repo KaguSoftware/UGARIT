@@ -3,7 +3,7 @@ import { CARTPRODUCTS } from "@/src/components/cards/CartProduct/constants";
 
 export default function CartPage() {
     return (
-        <main>
+        <main className="p-4">
             <CartProductGrid cartproducts={CARTPRODUCTS} />
         </main>
     );
