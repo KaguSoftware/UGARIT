@@ -4,14 +4,16 @@ import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductGrid from "@/src/components/productsGrid/products";
 import ProductCarousel from "@/src/components/carousel/ProductCarousel";
-import UserPage from "@/src/components/UserPage/Userpage";
+import { getStrapiMedia, getStrapiURL } from "@/src/lib/strapi";
 
 export const dynamic = "force-dynamic";
 
 async function getFeaturedProducts() {
 	try {
 		const res = await fetch(
-			"http://127.0.0.1:1337/api/products?filters[isFeatured][$eq]=true&populate=*",
+			getStrapiURL(
+				"/api/products?filters[isFeatured][$eq]=true&populate=*",
+			),
 			{ cache: "no-store" },
 		);
 		if (!res.ok) return { data: [] };
@@ -26,15 +28,15 @@ export default async function Home() {
 	const strapiResponse = await getFeaturedProducts();
 
 	const featuredProducts = strapiResponse.data.map((item: any) => {
-		const imageUrl = item.image?.[0]?.url
-			? `http://127.0.0.1:1337${item.image[0].url}`
-			: "/placeholder-image.jpg";
+		const imagePath = Array.isArray(item.image)
+			? item.image[0]?.url
+			: item.image?.url;
 
 		return {
 			id: item.documentId,
 			title: item.title,
 			price: item.price,
-			imageUrl: imageUrl,
+			imageUrl: getStrapiMedia(imagePath),
 			category: item.category?.name || "Uncategorized",
 			slug: item.slug,
 		};
@@ -43,16 +45,12 @@ export default async function Home() {
 	return (
 		<main>
 			<MaxWidthWrapper>
-				{/* Note: Categories are still hardcoded here, we can fix this next! */}
 				<CategoryGrid categories={CATEGORIES} />
-
-				{/* Pass your real Strapi data into the carousel and grid */}
 				<ProductCarousel
 					title="Featured Products"
 					products={featuredProducts}
 				/>
 				<ProductGrid products={featuredProducts} />
-
 				<LocationCard />
 			</MaxWidthWrapper>
 		</main>

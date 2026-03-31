@@ -1,9 +1,12 @@
 import Image from "next/image";
 import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
+import { getStrapiMedia, getStrapiURL } from "@/src/lib/strapi";
 
 async function getProduct(id: string) {
 	const res = await fetch(
-		`http://127.0.0.1:1337/api/products?filters[slug][$eq]=${id}&populate=*`,
+		getStrapiURL(
+			`/api/products?filters[slug][$eq]=${encodeURIComponent(id)}&populate=*`,
+		),
 		{ cache: "no-store" },
 	);
 
@@ -28,10 +31,7 @@ export default async function ProductDetail({
 		);
 	}
 
-	const mainImageUrl = strapiProduct.image?.[0]?.url
-		? `http://127.0.0.1:1337${strapiProduct.image[0].url}`
-		: "/placeholder-image.jpg";
-
+	const mainImageUrl = getStrapiMedia(strapiProduct.image?.[0]?.url);
 	const allImages = strapiProduct.image || [];
 
 	const sizeOptions = [
@@ -63,7 +63,7 @@ export default async function ProductDetail({
 								<Image
 									key={index}
 									alt="gallery thumbnail"
-									src={`http://127.0.0.1:1337${img.url}`}
+									src={getStrapiMedia(img.url)}
 									width={75}
 									height={75}
 									className="object-cover rounded-xl w-[75px] h-[75px]"
@@ -72,10 +72,12 @@ export default async function ProductDetail({
 						</div>
 					</div>
 				</div>
+
 				<div className="px-6">
 					<h1 className="text-3xl tracking-tighter font-bold md:mt-0 mt-4 max-w-200">
 						{strapiProduct.title}
 					</h1>
+
 					<div className="flex items-center font-bold mt-2 gap-4">
 						<p className=" text-black text-4xl ">
 							₺{strapiProduct.price}
@@ -103,12 +105,11 @@ export default async function ProductDetail({
 									<button
 										key={size.label}
 										disabled={!size.isAvailable}
-										className={`h-10 w-10 border rounded-lg duration-150 flex items-center justify-center
-                                            ${
-												size.isAvailable
-													? "border-gray-400 text-black hover:bg-black hover:text-white cursor-pointer"
-													: "border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed"
-											}`}
+										className={`h-10 w-10 border rounded-lg duration-150 flex items-center justify-center ${
+											size.isAvailable
+												? "border-gray-400 text-black hover:bg-black hover:text-white cursor-pointer"
+												: "border-gray-200 text-gray-300 bg-gray-50 cursor-not-allowed"
+										}`}
 									>
 										{size.label}
 									</button>
@@ -134,19 +135,19 @@ export default async function ProductDetail({
 							<h4 className="font-bold"> Mankenin Ölçüleri:</h4>
 							{strapiProduct.modelHeight && (
 								<p className="flex gap-2">
-									<Ruler className="hover:fill-gray-400" />{" "}
+									<Ruler className="hover:fill-gray-400" />
 									Boy: {strapiProduct.modelHeight}
 								</p>
 							)}
 							{strapiProduct.modelWeight && (
 								<p className="flex gap-2">
-									<Weight className="hover:fill-gray-400" />{" "}
+									<Weight className="hover:fill-gray-400" />
 									Kilo: {strapiProduct.modelWeight}
 								</p>
 							)}
 							{strapiProduct.modelSize && (
 								<p className="flex gap-2">
-									<Shirt className="hover:fill-gray-400" />{" "}
+									<Shirt className="hover:fill-gray-400" />
 									Beden: {strapiProduct.modelSize}
 								</p>
 							)}

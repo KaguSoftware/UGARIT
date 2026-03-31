@@ -15,10 +15,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
 	if (!product) {
 		return null;
 	}
-
 	return (
 		<Link
-			href={`/products/${product.id}`}
+			href={`/products/${product.slug || product.id}`}
 			className="block w-full overflow-hidden rounded-2xl bg-white shadow-md group/card"
 		>
 			<div className="group relative w-auto cursor-pointer overflow-hidden rounded-t-2xl min-h-60 md:min-h-90">
@@ -26,12 +25,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
 					src={product.imageUrl}
 					alt={product.title}
 					fill
+					unoptimized
 					className="rounded-t-2xl object-cover transition-transform duration-300 group-hover/card:scale-105"
 				/>
-
 				<button
 					onClick={(e) => {
-						e.preventDefault(); // stops the card link from triggering
+						e.preventDefault();
 						setIsLiked(!isLiked);
 					}}
 					className="absolute top-3 right-3 z-10 transition-transform hover:scale-110"
