@@ -1,5 +1,8 @@
 import Image from "next/image";
 import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
+import { notFound } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 const STRAPI_URL =
 	process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
@@ -10,9 +13,35 @@ function getMediaUrl(url?: string | null) {
 	return `${STRAPI_URL}${url}`;
 }
 
-async function getProduct(id: string) {
+function extractImageUrl(image: any) {
+	if (!image) return "/mock-images/mockshirt.png";
+
+	if (Array.isArray(image)) {
+		return extractImageUrl(image[0]);
+	}
+
+	if (typeof image === "string") {
+		return getMediaUrl(image);
+	}
+
+	if (image.url) {
+		return getMediaUrl(image.url);
+	}
+
+	if (image.data) {
+		return extractImageUrl(image.data);
+	}
+
+	if (image.attributes?.url) {
+		return getMediaUrl(image.attributes.url);
+	}
+
+	return "/mock-images/mockshirt.png";
+}
+
+async function getProduct(slug: string, locale: string) {
 	const res = await fetch(
-		`${STRAPI_URL}/api/products?filters[slug][$eq]=${encodeURIComponent(id)}&populate=*`,
+		`${STRAPI_URL}/api/products?filters[slug][$eq]=${encodeURIComponent(slug)}&locale=${locale}&populate=*`,
 		{ cache: "no-store" },
 	);
 
@@ -25,21 +54,23 @@ async function getProduct(id: string) {
 export default async function ProductDetail({
 	params,
 }: {
-	params: Promise<{ id: string }>;
+	params: Promise<{ locale: string; slug: string }>;
 }) {
-	const id = (await params).id;
-	const strapiProduct = await getProduct(id);
+	const { locale, slug } = await params;
+
+	const strapiProduct = await getProduct(slug, locale);
 
 	if (!strapiProduct) {
-		return (
-			<main className="text-center py-20 text-xl font-bold">
-				Product not found
-			</main>
-		);
+		notFound();
 	}
 
-	const mainImageUrl = getMediaUrl(strapiProduct.image?.[0]?.url);
-	const allImages = strapiProduct.image || [];
+	const mainImageUrl = extractImageUrl(strapiProduct.image);
+
+	const allImages = Array.isArray(strapiProduct.image)
+		? strapiProduct.image
+		: strapiProduct.image
+			? [strapiProduct.image]
+			: [];
 
 	const sizeOptions = [
 		{ label: "XS", isAvailable: strapiProduct.sizeXS },
@@ -60,6 +91,7 @@ export default async function ProductDetail({
 						src={mainImageUrl}
 						width={1000}
 						height={750}
+						unoptimized
 					/>
 
 					<div className="justify-items-center">
@@ -71,10 +103,11 @@ export default async function ProductDetail({
 								<Image
 									key={index}
 									alt="gallery thumbnail"
-									src={getMediaUrl(img.url)}
+									src={extractImageUrl(img)}
 									width={75}
 									height={75}
-									className="object-cover rounded-xl w-18.75 h-18.75"
+									unoptimized
+									className="object-cover rounded-xl w-[75px] h-[75px]"
 								/>
 							))}
 						</div>
