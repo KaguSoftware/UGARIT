@@ -162,5 +162,11 @@
             "last": "Ahdab",
             "email": "majed.ahdab@example.com"
         }
+    },
+    "CartTO": {
+        "summary": "Cart Summary",
+        "total": "Total: ",
+        "wabutton": "Place order through whatsapp",
+        "buttonlink": "I would like to order the following "
     }
 }

@@ -1,9 +1,9 @@
 import { cartTandOType } from "./types";
 
 export const CARTTANDO: cartTandOType = {
-    summary: "Order summary ",
-    total: "Total: ",
+    summary: "CartTO.summary",
+    total: "CartTO.total",
     totalammount: 1234,
-    wabutton: "Place order through whatsapp",
-    buttonlink: "I would like to order the following ",
+    wabutton: "CartTO.wabutton",
+    buttonlink: "CartTO.buttonlink",
 };
