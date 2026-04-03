@@ -1,11 +1,5 @@
-export type cartProduct = {
-    id: number;
-    title: string;
-    originalPrice: string;
-    currentPrice: number;
-    imageUrl: string;
-    size: string;
-};
+import { CartItem } from "@/src/types/cart";
+
 export interface cartProductCardProps {
-    product: cartProduct;
+	product: CartItem;
 }
