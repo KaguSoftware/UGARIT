@@ -7,14 +7,17 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
 import { ProductCardProps } from "./types";
 import { addToCart } from "./constants";
+import { addToCart as addToCartAction } from "@/src/lib/cart-actions";
 
 const ProductCard = ({ product }: ProductCardProps) => {
 	const t = useTranslations();
 	const [isLiked, setIsLiked] = useState(false);
+	const [isAdding, setIsAdding] = useState(false);
 
 	if (!product) {
 		return null;
 	}
+
 	return (
 		<Link
 			href={`/products/${product.slug}`}
@@ -45,15 +48,37 @@ const ProductCard = ({ product }: ProductCardProps) => {
 				</button>
 
 				<button
-					onClick={(e) => {
+					onClick={async (e) => {
 						e.preventDefault();
-						// cart logic here later
-						console.log("Added to cart!");
+						if (isAdding) return;
+
+						setIsAdding(true);
+
+						// Using "M" as a default size for the quick-add button
+						// Make sure product.documentId and product.price match your current types
+						const result = await addToCartAction(
+							product.documentId,
+							"M",
+							1,
+							Number(product.price),
+							product.title,
+							product.slug,
+							product.imageUrl,
+						);
+
+						if (result.success) {
+							console.log("Added to cart successfully!");
+						} else {
+							console.error(result.error);
+						}
+
+						setIsAdding(false);
 					}}
-					className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover/card:translate-y-0 transition-transform duration-300 ease-in-out"
+					disabled={isAdding}
+					className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover/card:translate-y-0 transition-transform duration-300 ease-in-out disabled:opacity-70"
 				>
 					<p className="text-white text-md font-bold">
-						{t(addToCart.addToCartText)}
+						{isAdding ? "..." : t(addToCart.addToCartText)}
 					</p>
 				</button>
 			</div>

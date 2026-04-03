@@ -127,3 +127,28 @@ export async function addToCart(
 		return { success: false, error: "Could not connect to database." };
 	}
 }
+
+export async function removeFromCart(documentId: string) {
+	const deleteUrl = `http://localhost:1337/api/cart-items/${documentId}`;
+
+	try {
+		const response = await fetch(deleteUrl, {
+			method: "DELETE",
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			console.error("Failed to delete item from Strapi");
+			return { success: false, error: "Failed to delete item" };
+		}
+
+		// Refresh the cart pages so the item disappears instantly
+		revalidatePath("/cart");
+		revalidatePath("/[locale]/cart", "page");
+
+		return { success: true };
+	} catch (error) {
+		console.error("Network error deleting item:", error);
+		return { success: false, error: "Could not connect to database" };
+	}
+}
