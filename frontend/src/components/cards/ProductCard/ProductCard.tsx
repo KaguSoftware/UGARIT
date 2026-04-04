@@ -2,15 +2,17 @@
 
 import Image from "next/image";
 import { Heart } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
+import { ToggleLikeProductAction } from "@/src/app/actions";
 import { ProductCardProps } from "./types";
 import { addToCart } from "./constants";
 
 const ProductCard = ({ product }: ProductCardProps) => {
     const t = useTranslations();
-    const [isLiked, setIsLiked] = useState(false);
+    const [isLiked, setIsLiked] = useState(Boolean(product?.isLiked));
+    const [isPending, startTransition] = useTransition();
 
     if (!product) {
         return null;
@@ -29,11 +31,35 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     className="rounded-t-2xl object-cover transition-transform duration-300 group-hover/card:scale-105"
                 />
                 <button
+                    type="button"
                     onClick={(e) => {
                         e.preventDefault();
-                        setIsLiked(!isLiked);
+                        e.stopPropagation();
+
+                        if (isPending) return;
+
+                        const previousLiked = isLiked;
+                        setIsLiked(!previousLiked);
+
+                        startTransition(async () => {
+                            const result = await ToggleLikeProductAction(
+                                product.id
+                            );
+
+                            if (!result?.success) {
+                                setIsLiked(previousLiked);
+                                console.error(
+                                    result?.errorMessage ||
+                                        "Failed to update liked product."
+                                );
+                            } else {
+                                setIsLiked(result.liked);
+                            }
+                        });
                     }}
-                    className="absolute top-3 right-3 z-10 transition-transform hover:scale-110"
+                    disabled={isPending}
+                    aria-label={isLiked ? "Unlike product" : "Like product"}
+                    className="absolute top-3 right-3 z-10 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-70"
                 >
                     <Heart
                         className={`w-6 h-6 transition-colors duration-200 ${
@@ -45,6 +71,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                 </button>
 
                 <button
+                    type="button"
                     onClick={(e) => {
                         e.preventDefault();
                         // cart logic here later

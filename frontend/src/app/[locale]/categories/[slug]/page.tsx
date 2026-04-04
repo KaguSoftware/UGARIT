@@ -1,3 +1,4 @@
+import { cookies } from "next/headers";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductGrid from "@/src/components/productsGrid/products";
 import ProductFiltersForm from "@/src/components/ui/filters/ProductFiltersForm";
@@ -13,6 +14,31 @@ function getMediaUrl(url?: string | null) {
     if (!url) return "/mock-images/mockshirt.png";
     if (url.startsWith("http")) return url;
     return `${STRAPI_URL}${url}`;
+}
+
+function extractLinkedAuthUserId(entry: any): number | null {
+    const candidates = [
+        entry?.authUser,
+        entry?.auth_user,
+        entry?.user,
+        entry?.users_permissions_user,
+    ];
+
+    for (const candidate of candidates) {
+        if (typeof candidate === "number") {
+            return candidate;
+        }
+
+        if (
+            candidate &&
+            typeof candidate === "object" &&
+            typeof candidate.id === "number"
+        ) {
+            return candidate.id;
+        }
+    }
+
+    return null;
 }
 
 function buildProductsQuery({
@@ -117,6 +143,59 @@ async function getProducts(
     return res.json();
 }
 
+async function getJwtFromCookie() {
+    const cookieStore = await cookies();
+    return cookieStore.get("jwt")?.value ?? null;
+}
+
+async function getLikedProductIds(jwt: string) {
+    try {
+        const meRes = await fetch(`${STRAPI_URL}/api/users/me`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${jwt}`,
+            },
+            cache: "no-store",
+        });
+
+        if (!meRes.ok) return [] as Array<string | number>;
+
+        const me = await meRes.json();
+
+        const userDbRes = await fetch(`${STRAPI_URL}/api/userdbs?populate=*`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${jwt}`,
+                "Content-Type": "application/json",
+            },
+            cache: "no-store",
+        });
+
+        if (!userDbRes.ok) return [] as Array<string | number>;
+
+        const userDbJson = await userDbRes.json();
+        const entries = Array.isArray(userDbJson?.data) ? userDbJson.data : [];
+
+        const entry = entries.find(
+            (item: any) => extractLinkedAuthUserId(item) === me.id
+        );
+
+        const likedProducts =
+            entry?.likedProducts ?? entry?.liked_products ?? [];
+
+        if (Array.isArray(likedProducts)) {
+            return likedProducts
+                .map((product: any) => product?.documentId ?? product?.id)
+                .filter(Boolean);
+        }
+
+        return [] as Array<string | number>;
+    } catch (error) {
+        console.error("Failed to fetch liked products", error);
+        return [] as Array<string | number>;
+    }
+}
+
 export default async function CategoryPage({
     params,
     searchParams,
@@ -137,6 +216,8 @@ export default async function CategoryPage({
     if (!category) notFound();
 
     const productsResponse = await getProducts(locale, slug, filters);
+    const jwt = await getJwtFromCookie();
+    const likedProductIds = jwt ? await getLikedProductIds(jwt) : [];
 
     const formattedProducts = productsResponse.data.map((item: any) => ({
         id: item.documentId,
@@ -158,7 +239,10 @@ export default async function CategoryPage({
                     </div>
 
                     <div>
-                        <ProductGrid products={formattedProducts} />
+                        <ProductGrid
+                            products={formattedProducts}
+                            likedProductIds={likedProductIds}
+                        />
                     </div>
                 </div>
             </div>

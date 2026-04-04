@@ -1,29 +1,35 @@
 {
-  "kind": "collectionType",
-  "collectionName": "userdbs",
-  "info": {
-    "singularName": "userdb",
-    "pluralName": "userdbs",
-    "displayName": "userdb"
-  },
-  "options": {
-    "draftAndPublish": true
-  },
-  "pluginOptions": {},
-  "attributes": {
-    "email": {
-      "type": "string",
-      "required": true
+    "kind": "collectionType",
+    "collectionName": "userdbs",
+    "info": {
+        "singularName": "userdb",
+        "pluralName": "userdbs",
+        "displayName": "userdb"
     },
-    "pass": {
-      "type": "password",
-      "private": true,
-      "required": true,
-      "minLength": 8
+    "options": {
+        "draftAndPublish": true
     },
-    "name": {
-      "type": "string",
-      "required": true
+    "pluginOptions": {},
+    "attributes": {
+        "email": {
+            "type": "string",
+            "required": true
+        },
+        "username": {
+            "type": "string",
+            "required": true
+        },
+        "authUser": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "plugin::users-permissions.user",
+            "inversedBy": "profile"
+        },
+        "likedProducts": {
+            "type": "relation",
+            "relation": "manyToMany",
+            "target": "api::product.product",
+            "inversedBy": "likedByUsers"
+        }
     }
-  }
 }
