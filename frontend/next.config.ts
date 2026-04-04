@@ -4,9 +4,18 @@ import createNextIntlPlugin from "next-intl/plugin";
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
-    turbopack: {
-        root: __dirname,
-    },
+	turbopack: {
+		root: __dirname,
+	},
+	images: {
+		remotePatterns: [
+			{
+				protocol: "http",
+				hostname: "localhost",
+				port: "1337",
+			},
+		],
+	},
 };
 
 export default withNextIntl(nextConfig);
