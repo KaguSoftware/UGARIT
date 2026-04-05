@@ -27,6 +27,40 @@ async function getStrapiHeaders(includeJson = false) {
     };
 }
 
+async function getEntityIdByDocumentId(
+    collection: string,
+    documentId: string,
+    label: string
+) {
+    try {
+        const response = await fetch(
+            `${STRAPI_URL}/api/${collection}?filters[documentId][$eq]=${encodeURIComponent(
+                documentId
+            )}&fields[0]=id&pagination[pageSize]=1`,
+            {
+                headers: await getStrapiHeaders(),
+                cache: "no-store",
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            console.error(
+                `Strapi rejected ${label} lookup by documentId:`,
+                JSON.stringify(data, null, 2)
+            );
+            return null;
+        }
+
+        const entry = Array.isArray(data?.data) ? data.data[0] : null;
+        return typeof entry?.id === "number" ? entry.id : null;
+    } catch (error) {
+        console.error(`Failed to resolve ${label} id from documentId:`, error);
+        return null;
+    }
+}
+
 export async function getCartSessionId() {
     const cookieStore = await cookies();
     return cookieStore.get("cartSessionId")?.value ?? null;
@@ -133,6 +167,29 @@ export async function addToCart(
         return { success: false, error: "Could not get cart session" };
     }
 
+    const cartId =
+        typeof cart?.id === "number"
+            ? cart.id
+            : cart?.documentId
+            ? await getEntityIdByDocumentId("carts", cart.documentId, "cart")
+            : null;
+
+    const productId = await getEntityIdByDocumentId(
+        "products",
+        productDocumentId,
+        "product"
+    );
+
+    if (!cartId || !productId) {
+        console.error("Could not resolve relation ids for cart item", {
+            cartId,
+            cartDocumentId: cart?.documentId,
+            productDocumentId,
+            productId,
+        });
+        return { success: false, error: "Failed to save item." };
+    }
+
     // send the new item to Strapi
     const createItemUrl = `${STRAPI_URL}/api/cart-items`;
 
@@ -148,8 +205,8 @@ export async function addToCart(
                     titleSnapshot: title,
                     slugSnapshot: slug,
                     imageSnapshot: imageUrl,
-                    cart: cart.documentId,
-                    product: productDocumentId,
+                    cart: cartId,
+                    product: productId,
                     publishedAt: new Date().toISOString(),
                 },
             }),
