@@ -150,7 +150,7 @@
     "User": {
         "userpage": {
             "welcome": "Welcome",
-            "liked": "Go to like products ",
+            "liked": "Go to liked products ",
             "cart": "Go to cart",
             "user": { "show": "Show user info", "hide": "Hide user info" },
             "name": "Name",
