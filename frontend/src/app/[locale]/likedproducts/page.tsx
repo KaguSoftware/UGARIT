@@ -3,7 +3,18 @@ import ProductGrid from "@/src/components/productsGrid/products";
 import type { Product } from "@/src/components/cards/ProductCard/types";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 
-const STRAPI_URL = "http://localhost:1337";
+const STRAPI_URL =
+    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
+    "http://localhost:1337";
+
+if (
+    !process.env.NEXT_PUBLIC_STRAPI_URL &&
+    process.env.NODE_ENV === "production"
+) {
+    console.warn(
+        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
+    );
+}
 
 type RawProduct = {
     id?: number | string;
@@ -373,6 +384,7 @@ function getRawLikedProducts(entry: UserDbEntry | null) {
 
     return [] as RawProduct[];
 }
+
 async function fetchFullLikedProduct(
     jwt: string,
     product: RawProduct

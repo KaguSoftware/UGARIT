@@ -8,7 +8,17 @@ import { Filters } from "@/src/components/ui/filters/filters";
 export const dynamic = "force-dynamic";
 
 const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL || "http://localhost:1337";
+    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
+    "http://localhost:1337";
+
+if (
+    !process.env.NEXT_PUBLIC_STRAPI_URL &&
+    process.env.NODE_ENV === "production"
+) {
+    console.warn(
+        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
+    );
+}
 
 function getMediaUrl(url?: string | null) {
     if (!url) return "/mock-images/mockshirt.png";

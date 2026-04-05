@@ -14,7 +14,18 @@ const LoginUserSchema = z.object({
     password: z.string().min(8),
 });
 
-const STRAPI_URL = "http://localhost:1337";
+const STRAPI_URL =
+    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
+    "http://localhost:1337";
+
+if (
+    !process.env.NEXT_PUBLIC_STRAPI_URL &&
+    process.env.NODE_ENV === "production"
+) {
+    console.warn(
+        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
+    );
+}
 
 type StrapiAuthUser = {
     id: number;

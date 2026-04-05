@@ -4,6 +4,19 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 
+const STRAPI_URL =
+    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
+    "http://localhost:1337";
+
+if (
+    !process.env.NEXT_PUBLIC_STRAPI_URL &&
+    process.env.NODE_ENV === "production"
+) {
+    console.warn(
+        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
+    );
+}
+
 export async function getCartSessionId() {
     const cookieStore = await cookies();
     return cookieStore.get("cartSessionId")?.value ?? null;
@@ -36,7 +49,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
     }
 
     //look for an existing cart
-    const searchUrl = `http://localhost:1337/api/carts?filters[sessionId][$eq]=${encodeURIComponent(
+    const searchUrl = `${STRAPI_URL}/api/carts?filters[sessionId][$eq]=${encodeURIComponent(
         resolvedCartSessionId
     )}&populate[cart_items][populate]=*`;
 
@@ -60,7 +73,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
         }
 
         // if there is no cart
-        const createUrl = "http://localhost:1337/api/carts";
+        const createUrl = `${STRAPI_URL}/api/carts`;
         const createResponse = await fetch(createUrl, {
             method: "POST",
             headers: {
@@ -112,7 +125,7 @@ export async function addToCart(
     }
 
     // send the new item to Strapi
-    const createItemUrl = "http://localhost:1337/api/cart-items";
+    const createItemUrl = `${STRAPI_URL}/api/cart-items`;
 
     try {
         const response = await fetch(createItemUrl, {
@@ -157,7 +170,7 @@ export async function addToCart(
 }
 
 export async function removeFromCart(documentId: string) {
-    const deleteUrl = `http://localhost:1337/api/cart-items/${documentId}`;
+    const deleteUrl = `${STRAPI_URL}/api/cart-items/${documentId}`;
 
     try {
         const response = await fetch(deleteUrl, {
