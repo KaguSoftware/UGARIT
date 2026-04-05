@@ -174,18 +174,14 @@ export async function addToCart(
             ? await getEntityIdByDocumentId("carts", cart.documentId, "cart")
             : null;
 
-    const productId = await getEntityIdByDocumentId(
-        "products",
-        productDocumentId,
-        "product"
-    );
+    const productRelationValue = productDocumentId;
 
-    if (!cartId || !productId) {
+    if (!cartId || !productRelationValue) {
         console.error("Could not resolve relation ids for cart item", {
             cartId,
             cartDocumentId: cart?.documentId,
             productDocumentId,
-            productId,
+            productRelationValue,
         });
         return { success: false, error: "Failed to save item." };
     }
@@ -206,7 +202,7 @@ export async function addToCart(
                     slugSnapshot: slug,
                     imageSnapshot: imageUrl,
                     cart_item: cartId,
-                    product: productId,
+                    product: productRelationValue,
                     publishedAt: new Date().toISOString(),
                 },
             }),
