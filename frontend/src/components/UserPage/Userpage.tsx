@@ -1,7 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { USERPAGE } from "./constants";
 import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
@@ -30,7 +30,7 @@ export default function UserPage() {
     const [showInfo, setShowInfo] = useState(false);
     const [user, setUser] = useState<StrapiUser | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<ReactNode>(null);
     const t = useTranslations();
 
     useEffect(() => {
@@ -62,7 +62,17 @@ export default function UserPage() {
             return;
         }
 
-        setError("No logged-in user found.");
+        setError(
+            <div className="flex flex-col items-center gap-3">
+                <p>No logged-in user found.</p>
+                <Link
+                    href="/signin"
+                    className="rounded-lg bg-white px-4 py-2 text-center w-full border-2 transition text-xl"
+                >
+                    Sign in
+                </Link>
+            </div>
+        );
         setLoading(false);
     }, []);
 
