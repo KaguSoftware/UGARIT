@@ -30,11 +30,14 @@ async function getStrapiHeaders(includeJson = false) {
 async function getEntityIdByDocumentId(
     collection: string,
     documentId: string,
-    label: string
+    label: string,
+    locale = "all"
 ) {
     try {
         const response = await fetch(
-            `${STRAPI_URL}/api/${collection}?filters[documentId][$eq]=${encodeURIComponent(
+            `${STRAPI_URL}/api/${collection}?locale=${encodeURIComponent(
+                locale
+            )}&filters[documentId][$eq]=${encodeURIComponent(
                 documentId
             )}&fields[0]=id&pagination[pageSize]=1`,
             {
@@ -156,7 +159,8 @@ export async function addToCart(
     unitPrice: number,
     title: string,
     slug: string,
-    imageUrl: string
+    imageUrl: string,
+    currentLocale: string
 ) {
     // make sure the cookie exists before creating or fetching a cart
     const cartSessionId = await ensureCartSessionId();
@@ -174,14 +178,19 @@ export async function addToCart(
             ? await getEntityIdByDocumentId("carts", cart.documentId, "cart")
             : null;
 
-    const productRelationValue = productDocumentId;
+    const productRelationValue = await getEntityIdByDocumentId(
+        "products",
+        productDocumentId,
+        "product",
+        currentLocale
+    );
 
     if (!cartId || !productRelationValue) {
         console.error("Could not resolve relation ids for cart item", {
             cartId,
             cartDocumentId: cart?.documentId,
             productDocumentId,
-            productRelationValue,
+            productId: productRelationValue,
         });
         return { success: false, error: "Failed to save item." };
     }
@@ -203,6 +212,7 @@ export async function addToCart(
                     imageSnapshot: imageUrl,
                     cart_item: cartId,
                     product: productRelationValue,
+                    locale: currentLocale,
                     publishedAt: new Date().toISOString(),
                 },
             }),
