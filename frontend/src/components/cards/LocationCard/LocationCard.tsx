@@ -6,10 +6,10 @@ import { MapPin } from "lucide-react";
 export default function LocationCard() {
     return (
         <MaxWidthWrapper>
-            <div className="grid grid-cols-1 p-3 items-center md:grid-cols-3 gap-6 mx-auto my-30">
+            <div className="grid items-center gap-6 mx-auto my-30">
                 {LOCATIONS.map((location) => (
                     <Link
-                        className="h-40 rounded-xl flex border-2 border-black shadow-black/20 flex-col justify-center bg-linear-to-b bg-white text-center items-center cursor-pointer shadow-md hover:shadow-md transition-all duration-400 hover:scale-105"
+                        className="h-60 rounded-xl flex border-2 border-black shadow-black/20 flex-col justify-center bg-linear-to-b bg-white text-center items-center cursor-pointer shadow-md hover:shadow-md transition-all duration-400 hover:scale-105"
                         href={location.adressLink}
                         key={location.adressName}
                     >

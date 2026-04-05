@@ -156,6 +156,12 @@
       "relation": "oneToMany",
       "target": "api::cart-item.cart-item",
       "mappedBy": "product"
+    },
+    "likedByUsers": {
+      "type": "relation",
+      "relation": "manyToMany",
+      "target": "api::userdb.userdb",
+      "inversedBy": "likedProducts"
     }
   }
 }

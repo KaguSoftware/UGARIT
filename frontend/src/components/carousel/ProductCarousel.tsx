@@ -10,6 +10,7 @@ import ProductCard from "@/src/components/cards/ProductCard/ProductCard";
 export default function ProductCarousel({
     title,
     products,
+    likedProductIds = [],
 }: ProductCarouselProps) {
     const locale = useLocale();
     const isRtl = locale === "ar";
@@ -104,7 +105,16 @@ export default function ProductCarousel({
                             // 2. Changed mobile width to 80% so it looks like a portrait card and the next item peeks in
                             className="flex-[0_0_60%] min-w-0 sm:flex-[0_0_50%] lg:flex-[0_0_20%] pl-4 flex"
                         >
-                            <ProductCard product={product} />
+                            <ProductCard
+                                product={{
+                                    ...product,
+                                    isLiked: likedProductIds.some(
+                                        (likedId: string | number) =>
+                                            String(likedId) ===
+                                            String(product.id)
+                                    ),
+                                }}
+                            />
                         </div>
                     ))}
                 </div>

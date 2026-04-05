@@ -1,11 +1,12 @@
 "use client";
+
 import MaxWidthWrapper from "../ui/MaxWidthWrapper";
 import { useEffect, useState, type ChangeEvent } from "react";
+import { useActionState } from "react";
 import { SIGNUP } from "./constants";
 import type { SignupFormData } from "./types";
 import { Link, useRouter } from "@/src/i18n/routing";
 import { CreateUserAction } from "@/src/app/actions";
-import { useActionState } from "react";
 
 export default function Signup() {
     const INITIAL_STATE = {
@@ -25,15 +26,6 @@ export default function Signup() {
         name: "",
     });
 
-    function handleChange(event: ChangeEvent<HTMLInputElement>) {
-        const { name, value } = event.target;
-
-        setForm((currentForm) => ({
-            ...currentForm,
-            [name]: value,
-        }));
-    }
-
     const [formState, formAction] = useActionState(
         CreateUserAction,
         INITIAL_STATE
@@ -49,6 +41,15 @@ export default function Signup() {
         return () => clearTimeout(timeout);
     }, [formState?.successMessage, router]);
 
+    function handleChange(event: ChangeEvent<HTMLInputElement>) {
+        const { name, value } = event.target;
+
+        setForm((currentForm) => ({
+            ...currentForm,
+            [name]: value,
+        }));
+    }
+
     const nameErrors = formState?.ZodError?.name;
     const emailErrors = formState?.ZodError?.email;
     const passErrors = formState?.ZodError?.password;
@@ -56,7 +57,7 @@ export default function Signup() {
     return (
         <MaxWidthWrapper>
             <form
-                className="w-full flex flex-col h-200 justify-center  items-center text-black"
+                className="w-full flex flex-col h-200 justify-center items-center text-black"
                 action={formAction}
             >
                 <div className="bg-white shadow-xl justify-between rounded-2xl border-2 flex flex-col gap-5 p-5 py-12 md:p-10">
@@ -76,9 +77,7 @@ export default function Signup() {
                         </div>
                     )}
 
-                    <label htmlFor="name" className="">
-                        {SIGNUP.nameTitle}
-                    </label>
+                    <label htmlFor="name">{SIGNUP.nameTitle}</label>
                     <input
                         id="name"
                         name="name"
@@ -91,13 +90,12 @@ export default function Signup() {
                     {nameErrors?.[0] && (
                         <p className="text-red-500 text-sm">{nameErrors[0]}</p>
                     )}
-                    <label htmlFor="email" className="">
-                        {SIGNUP.emailTitle}
-                    </label>
+
+                    <label htmlFor="email">{SIGNUP.emailTitle}</label>
                     <input
                         id="email"
                         name="email"
-                        type="text"
+                        type="email"
                         placeholder={SIGNUP.emailPlaceholder}
                         value={form.email}
                         onChange={handleChange}
@@ -106,6 +104,7 @@ export default function Signup() {
                     {emailErrors?.[0] && (
                         <p className="text-red-500 text-sm">{emailErrors[0]}</p>
                     )}
+
                     <label htmlFor="password">{SIGNUP.passwordTitle}</label>
                     <input
                         id="password"
@@ -119,14 +118,16 @@ export default function Signup() {
                     {passErrors?.[0] && (
                         <p className="text-red-500 text-sm">{passErrors[0]}</p>
                     )}
+
                     <button
                         type="submit"
                         className="w-full text-white rounded-2xl p-2 bg-gray-700"
                     >
                         {SIGNUP.signup}
                     </button>
+
                     <Link
-                        href={"/signin"}
+                        href="/signin"
                         className="w-full text-gray-500 mt-3 hover:text-gray-800 rounded-2xl text-center"
                     >
                         {SIGNUP.link}

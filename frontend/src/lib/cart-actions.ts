@@ -5,150 +5,178 @@ import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
 
 export async function getCartSessionId() {
-	const cookieStore = await cookies();
-	let cartSessionId = cookieStore.get("cartSessionId")?.value;
-
-	// missing cookie handler
-	if (!cartSessionId) {
-		cartSessionId = randomUUID();
-
-		cookieStore.set("cartSessionId", cartSessionId, {
-			httpOnly: true,
-			sameSite: "lax",
-			secure: process.env.NODE_ENV === "production",
-			path: "/",
-			maxAge: 60 * 60 * 24 * 30, //30 days if you're slow (sorry)
-		});
-	}
-
-	return cartSessionId;
+    const cookieStore = await cookies();
+    return cookieStore.get("cartSessionId")?.value ?? null;
 }
 
-export async function getOrCreateCart() {
-	const cartSessionId = await getCartSessionId();
+export async function ensureCartSessionId() {
+    const cookieStore = await cookies();
+    let cartSessionId = cookieStore.get("cartSessionId")?.value;
 
-	//look for an existing cart
-	const searchUrl = `http://localhost:1337/api/carts?filters[sessionId][$eq]=${cartSessionId}&populate[cart_items][populate]=*`;
+    if (!cartSessionId) {
+        cartSessionId = randomUUID();
 
-	try {
-		const searchResponse = await fetch(searchUrl, {
-			cache: "no-store",
-		});
-		const searchData = await searchResponse.json();
+        cookieStore.set("cartSessionId", cartSessionId, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 30,
+        });
+    }
 
-		// return cart if it exists
-		if (searchData?.data && searchData.data.length > 0) {
-			return searchData.data[0];
-		}
+    return cartSessionId;
+}
 
-		// if there is no cart
-		const createUrl = "http://localhost:1337/api/carts";
-		const createResponse = await fetch(createUrl, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				data: {
-					sessionId: cartSessionId,
-					cartStatus: "active",
-					publishedAt: new Date().toISOString(),
-				},
-			}),
-			cache: "no-store",
-		});
+export async function getOrCreateCart(cartSessionId?: string) {
+    const resolvedCartSessionId = cartSessionId ?? (await getCartSessionId());
 
-		const newData = await createResponse.json();
-		return newData.data;
-	} catch (error) {
-		console.error("Failed to get or create cart:", error);
-		return null;
-	}
+    if (!resolvedCartSessionId) {
+        return null;
+    }
+
+    //look for an existing cart
+    const searchUrl = `http://localhost:1337/api/carts?filters[sessionId][$eq]=${encodeURIComponent(
+        resolvedCartSessionId
+    )}&populate[cart_items][populate]=*`;
+
+    try {
+        const searchResponse = await fetch(searchUrl, {
+            cache: "no-store",
+        });
+        const searchData = await searchResponse.json();
+
+        if (!searchResponse.ok) {
+            console.error(
+                "Strapi rejected cart lookup:",
+                JSON.stringify(searchData, null, 2)
+            );
+            return null;
+        }
+
+        // return cart if it exists
+        if (searchData?.data && searchData.data.length > 0) {
+            return searchData.data[0];
+        }
+
+        // if there is no cart
+        const createUrl = "http://localhost:1337/api/carts";
+        const createResponse = await fetch(createUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                data: {
+                    sessionId: resolvedCartSessionId,
+                    cartStatus: "active",
+                    publishedAt: new Date().toISOString(),
+                },
+            }),
+            cache: "no-store",
+        });
+
+        const newData = await createResponse.json();
+
+        if (!createResponse.ok) {
+            console.error(
+                "Strapi rejected cart creation:",
+                JSON.stringify(newData, null, 2)
+            );
+            return null;
+        }
+
+        return newData.data ?? null;
+    } catch (error) {
+        console.error("Failed to get or create cart:", error);
+        return null;
+    }
 }
 
 export async function addToCart(
-	productDocumentId: string,
-	size: string,
-	quantity: number,
-	unitPrice: number,
-	title: string,
-	slug: string,
-	imageUrl: string,
+    productDocumentId: string,
+    size: string,
+    quantity: number,
+    unitPrice: number,
+    title: string,
+    slug: string,
+    imageUrl: string
 ) {
-	// get the current cart
-	const cart = await getOrCreateCart();
+    // make sure the cookie exists before creating or fetching a cart
+    const cartSessionId = await ensureCartSessionId();
+    const cart = await getOrCreateCart(cartSessionId);
 
-	if (!cart) {
-		console.error("No cart found or created.");
-		return { success: false, error: "Could not get cart session" };
-	}
+    if (!cart) {
+        console.error("No cart found or created for session:", cartSessionId);
+        return { success: false, error: "Could not get cart session" };
+    }
 
-	// send the new item to Strapi
-	const createItemUrl = "http://localhost:1337/api/cart-items";
+    // send the new item to Strapi
+    const createItemUrl = "http://localhost:1337/api/cart-items";
 
-	try {
-		const response = await fetch(createItemUrl, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			body: JSON.stringify({
-				data: {
-					quantity: quantity,
-					size: size,
-					unitPrice: unitPrice,
-					titleSnapshot: title,
-					slugSnapshot: slug,
-					imageSnapshot: imageUrl,
-					cart_item: cart.documentId,
-					product: productDocumentId,
-					publishedAt: new Date().toISOString(),
-				},
-			}),
-			cache: "no-store",
-		});
+    try {
+        const response = await fetch(createItemUrl, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                data: {
+                    quantity: quantity,
+                    size: size,
+                    unitPrice: unitPrice,
+                    titleSnapshot: title,
+                    slugSnapshot: slug,
+                    imageSnapshot: imageUrl,
+                    cart_item: cart.documentId,
+                    product: productDocumentId,
+                    publishedAt: new Date().toISOString(),
+                },
+            }),
+            cache: "no-store",
+        });
 
-		if (!response.ok) {
-			const errorData = await response.json();
-			console.error(
-				"Strapi rejected the cart item:",
-				JSON.stringify(errorData, null, 2),
-			);
-			return { success: false, error: "Failed to save item." };
-		}
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error(
+                "Strapi rejected the cart item:",
+                JSON.stringify(errorData, null, 2)
+            );
+            return { success: false, error: "Failed to save item." };
+        }
 
-		// tell Next.js to refresh the cart
-		revalidatePath("/cart");
-		revalidatePath("/[locale]/cart", "page");
+        // tell Next.js to refresh the cart
+        revalidatePath("/cart");
+        revalidatePath("/[locale]/cart", "page");
 
-		return { success: true };
-	} catch (error) {
-		console.error("Network error adding to cart:", error);
-		return { success: false, error: "Could not connect to database." };
-	}
+        return { success: true };
+    } catch (error) {
+        console.error("Network error adding to cart:", error);
+        return { success: false, error: "Could not connect to database." };
+    }
 }
 
 export async function removeFromCart(documentId: string) {
-	const deleteUrl = `http://localhost:1337/api/cart-items/${documentId}`;
+    const deleteUrl = `http://localhost:1337/api/cart-items/${documentId}`;
 
-	try {
-		const response = await fetch(deleteUrl, {
-			method: "DELETE",
-			cache: "no-store",
-		});
+    try {
+        const response = await fetch(deleteUrl, {
+            method: "DELETE",
+            cache: "no-store",
+        });
 
-		if (!response.ok) {
-			console.error("Failed to delete item from Strapi");
-			return { success: false, error: "Failed to delete item" };
-		}
+        if (!response.ok) {
+            console.error("Failed to delete item from Strapi");
+            return { success: false, error: "Failed to delete item" };
+        }
 
-		// Refresh the cart pages so the item disappears instantly
-		revalidatePath("/cart");
-		revalidatePath("/[locale]/cart", "page");
+        // Refresh the cart pages so the item disappears instantly
+        revalidatePath("/cart");
+        revalidatePath("/[locale]/cart", "page");
 
-		return { success: true };
-	} catch (error) {
-		console.error("Network error deleting item:", error);
-		return { success: false, error: "Could not connect to database" };
-	}
+        return { success: true };
+    } catch (error) {
+        console.error("Network error deleting item:", error);
+        return { success: false, error: "Could not connect to database" };
+    }
 }

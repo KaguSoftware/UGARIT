@@ -4,8 +4,8 @@ export const LOCATIONS: Locationtype[] = [
     {
         id: 1,
         adressName: "Bayrampasha",
-        adressLink: "https://share.google/qmtrbUzY90rv0E7CL",
-        exactLocName: "Beshiktash meydan bus stop no3",
-        map: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d48126.11537106119!2d28.655043148364275!3d41.071567309611126!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x14b558a17c714861%3A0xb632fa60041dc786!2sAkbat%C4%B1%20AVM!5e0!3m2!1sen!2str!4v1774795821373!5m2!1sen!2str",
+        adressLink: "https://maps.app.goo.gl/r9CY4j7iZD1CxytC9?g_st=ic",
+        exactLocName: "",
+        map: "https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d3010.7884373662628!2d28.886544876040528!3d41.008003571350564!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNDHCsDAwJzI4LjgiTiAyOMKwNTMnMjAuOCJF!5e0!3m2!1sen!2str!4v1775408919830!5m2!1sen!2str",
     },
 ];
