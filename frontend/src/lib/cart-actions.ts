@@ -17,6 +17,16 @@ if (
     );
 }
 
+async function getStrapiHeaders(includeJson = false) {
+    const cookieStore = await cookies();
+    const jwt = cookieStore.get("jwt")?.value;
+
+    return {
+        ...(includeJson ? { "Content-Type": "application/json" } : {}),
+        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+    };
+}
+
 export async function getCartSessionId() {
     const cookieStore = await cookies();
     return cookieStore.get("cartSessionId")?.value ?? null;
@@ -55,6 +65,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
 
     try {
         const searchResponse = await fetch(searchUrl, {
+            headers: await getStrapiHeaders(),
             cache: "no-store",
         });
         const searchData = await searchResponse.json();
@@ -76,9 +87,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
         const createUrl = `${STRAPI_URL}/api/carts`;
         const createResponse = await fetch(createUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getStrapiHeaders(true),
             body: JSON.stringify({
                 data: {
                     sessionId: resolvedCartSessionId,
@@ -130,9 +139,7 @@ export async function addToCart(
     try {
         const response = await fetch(createItemUrl, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: await getStrapiHeaders(true),
             body: JSON.stringify({
                 data: {
                     quantity: quantity,
@@ -175,6 +182,7 @@ export async function removeFromCart(documentId: string) {
     try {
         const response = await fetch(deleteUrl, {
             method: "DELETE",
+            headers: await getStrapiHeaders(),
             cache: "no-store",
         });
 
