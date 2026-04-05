@@ -205,7 +205,7 @@ export async function addToCart(
                     titleSnapshot: title,
                     slugSnapshot: slug,
                     imageSnapshot: imageUrl,
-                    cart: cartId,
+                    cart_item: cartId,
                     product: productId,
                     publishedAt: new Date().toISOString(),
                 },
