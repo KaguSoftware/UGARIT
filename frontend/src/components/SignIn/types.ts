@@ -7,6 +7,7 @@ export interface Signin {
     passwordPlaceholder: string;
     signin: string;
     link: string;
+    redirecting: string;
 }
 
 export interface SigninFormData {

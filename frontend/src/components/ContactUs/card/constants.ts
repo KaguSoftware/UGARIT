@@ -1,29 +1,34 @@
-import { LucideIcon, MailIcon, MessageCircleIcon, PhoneCallIcon } from "lucide-react";
+import {
+    LucideIcon,
+    MailIcon,
+    MessageCircleIcon,
+    PhoneCallIcon,
+} from "lucide-react";
 import { Card } from "./types";
 
 export const CARDCONTACT: Card[] = [
     {
         id: 1,
-        title: "Call Us",
+        title: "contactCard.call.title",
         icon: PhoneCallIcon,
-        desc: "+905123456789",
-        button: "call",
-        link: ""
+        desc: "+905372825347",
+        button: "contactCard.call.button",
+        link: "tel:+905372825347",
     },
     {
         id: 2,
-        title: "Chat Us",
+        title: "contactCard.chat.title",
         icon: MessageCircleIcon,
-        desc: "Send a message on WhatsApp",
-        button: "send a message",
-        link: ""
+        desc: "contactCard.chat.desc",
+        button: "contactCard.chat.button",
+        link: "https://api.whatsapp.com/send/?phone=905372825347",
     },
     {
         id: 3,
-        title: "Ask a Question",
+        title: "contactCard.question.title",
         icon: MailIcon,
-        desc: "Fill out our form and we'll get back to you",
-        button: "fill in the form",
-        link: ""
-    }
-]
+        desc: "contactCard.question.desc",
+        button: "contactCard.question.button",
+        link: "/contact",
+    },
+];

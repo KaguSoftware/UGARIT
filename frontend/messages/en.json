@@ -90,7 +90,8 @@
                     }
                 ]
             }
-        ]
+        ],
+        "searchPlaceholder": "Search"
     },
     "Filters": {
         "categoriesTitle": "Categories",
@@ -121,9 +122,12 @@
         },
         "Price": {
             "title": "Price Range",
-            "currency": "$",
+            "currency": "₺",
             "separator": " - "
-        }
+        },
+        "show": "Show Filters",
+        "hide": "Hide Filters",
+        "sort": "Sort by"
     },
     "Category": {
         "CategoryCardTitle": {
@@ -168,5 +172,45 @@
         "total": "Total: ",
         "wabutton": "Place order through whatsapp",
         "buttonlink": "I would like to order the following "
+    },
+    "signin": {
+        "title": "Sign In",
+        "desc": "Welcome back",
+        "emailTitle": "Email",
+        "emailPlaceholder": "Enter your email",
+        "passwordTitle": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "signin": "Sign In",
+        "link": "Don't have an account? Sign up",
+        "redirecting": "Redirecting..."
+    },
+    "signup": {
+        "title": "Sign Up",
+        "desc": "Welcome",
+        "nameTitle": "Username",
+        "namePlaceholder": "Enter your username",
+        "emailTitle": "Email",
+        "emailPlaceholder": "Enter your email",
+        "passwordTitle": "Password",
+        "passwordPlaceholder": "Enter your password",
+        "signup": "Sign Up",
+        "link": "Already have an account? Sign in",
+        "redirecting": "Redirecting..."
+    },
+    "contactCard": {
+        "call": {
+            "title": "Call Us",
+            "button": "Call"
+        },
+        "chat": {
+            "title": "Chat Us",
+            "desc": "Send a message on WhatsApp",
+            "button": "Send a message"
+        },
+        "question": {
+            "title": "Ask a Question",
+            "desc": "Fill out our form and we'll get back to you",
+            "button": "Fill in the form"
+        }
     }
 }

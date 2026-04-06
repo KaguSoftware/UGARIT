@@ -9,9 +9,9 @@ import { CartItem } from "@/src/types/cart";
 interface CartTandOProps {
     cartItems: CartItem[];
 }
-
 export default function CartTandO({ cartItems = [] }: CartTandOProps) {
     const t = useTranslations();
+    const Cartwhatsapbuttontext = CARTTANDO.buttonlink;
 
     // Calculate real total based on database price and quantity
     const total = cartItems.reduce((sum, item) => {
@@ -49,7 +49,9 @@ export default function CartTandO({ cartItems = [] }: CartTandOProps) {
                     </div>
                 </div>
                 <Link
-                    href={`https://wa.me/905372825347?text=${CARTTANDO.buttonlink} ${titlesString}`}
+                    href={`https://wa.me/905372825347?text=${t(
+                        Cartwhatsapbuttontext
+                    )}:${titlesString}`}
                     target="_blank"
                     className="flex bg-green-500 justify-center gap-3 md:text-xl text-[17px] font-bold text-white p-3 rounded-full w-full hover:bg-green-600 transition-colors"
                 >

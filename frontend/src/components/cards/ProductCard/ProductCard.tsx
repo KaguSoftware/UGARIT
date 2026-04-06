@@ -92,7 +92,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     {product.title}
                 </h3>
                 <div className="flex justify-center items-center gap-2 text-sm">
-                    <h2 className="text-black font-bold">{product.price}</h2>
+                    <h2 className="text-black font-bold">{product.price}₺</h2>
                 </div>
             </div>
         </Link>

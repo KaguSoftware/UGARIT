@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { SIGNUP } from "./constants";
 import type { SignupFormData } from "./types";
 import { Link, useRouter } from "@/src/i18n/routing";
+import { useTranslations } from "next-intl";
 import { CreateUserAction } from "@/src/app/actions";
 
 export default function Signup() {
@@ -19,6 +20,7 @@ export default function Signup() {
     };
 
     const router = useRouter();
+    const t = useTranslations();
 
     const [form, setForm] = useState<SignupFormData>({
         email: "",
@@ -62,12 +64,13 @@ export default function Signup() {
             >
                 <div className="bg-white shadow-xl justify-between rounded-2xl border-2 flex flex-col gap-5 p-5 py-12 md:p-10">
                     <h1 className="text-center justify-end text-6xl flex flex-col gap-4 ">
-                        {SIGNUP.title} <p className="text-xl">{SIGNUP.desc}</p>
+                        {t(SIGNUP.title)}{" "}
+                        <p className="text-xl">{t(SIGNUP.desc)}</p>
                     </h1>
 
                     {formState?.successMessage && (
                         <div className="w-full rounded-xl border border-green-300 bg-green-100 p-3 text-center text-green-800">
-                            {formState.successMessage} Redirecting...
+                            {formState.successMessage} {t("signup.redirecting")}
                         </div>
                     )}
 
@@ -77,12 +80,12 @@ export default function Signup() {
                         </div>
                     )}
 
-                    <label htmlFor="name">{SIGNUP.nameTitle}</label>
+                    <label htmlFor="name">{t(SIGNUP.nameTitle)}</label>
                     <input
                         id="name"
                         name="name"
                         type="text"
-                        placeholder={SIGNUP.namePlaceholder}
+                        placeholder={t(SIGNUP.namePlaceholder)}
                         value={form.name}
                         onChange={handleChange}
                         className="md:w-100 w-80 border p-2 border-gray-200"
@@ -91,12 +94,12 @@ export default function Signup() {
                         <p className="text-red-500 text-sm">{nameErrors[0]}</p>
                     )}
 
-                    <label htmlFor="email">{SIGNUP.emailTitle}</label>
+                    <label htmlFor="email">{t(SIGNUP.emailTitle)}</label>
                     <input
                         id="email"
                         name="email"
                         type="email"
-                        placeholder={SIGNUP.emailPlaceholder}
+                        placeholder={t(SIGNUP.emailPlaceholder)}
                         value={form.email}
                         onChange={handleChange}
                         className="md:w-100 w-80 border p-2 border-gray-200"
@@ -105,12 +108,12 @@ export default function Signup() {
                         <p className="text-red-500 text-sm">{emailErrors[0]}</p>
                     )}
 
-                    <label htmlFor="password">{SIGNUP.passwordTitle}</label>
+                    <label htmlFor="password">{t(SIGNUP.passwordTitle)}</label>
                     <input
                         id="password"
                         name="password"
                         type="password"
-                        placeholder={SIGNUP.passwordPlaceholder}
+                        placeholder={t(SIGNUP.passwordPlaceholder)}
                         value={form.password}
                         onChange={handleChange}
                         className="md:w-100 w-80 border p-2 border-gray-200"
@@ -123,14 +126,14 @@ export default function Signup() {
                         type="submit"
                         className="w-full text-white rounded-2xl p-2 bg-gray-700"
                     >
-                        {SIGNUP.signup}
+                        {t(SIGNUP.signup)}
                     </button>
 
                     <Link
                         href="/signin"
                         className="w-full text-gray-500 mt-3 hover:text-gray-800 rounded-2xl text-center"
                     >
-                        {SIGNUP.link}
+                        {t(SIGNUP.link)}
                     </Link>
                 </div>
             </form>

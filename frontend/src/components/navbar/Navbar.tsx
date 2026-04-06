@@ -20,6 +20,7 @@ import MaxWidthWrapper from "../ui/MaxWidthWrapper";
 import CartProductGrid from "../cart/cartproducts";
 import { CartItem } from "@/src/types/cart";
 import { LanguageMenuProps } from "./types";
+import { searchPlaceholder } from "./constants";
 
 type NavLink = { title: string; href: string };
 type NavSection = { title: string; links: NavLink[] };
@@ -121,18 +122,22 @@ function LanguageMenu({
                 className={triggerClassName}
             >
                 <Globe size={mobile ? 20 : 16} />
-                {locale}
+                {!mobile && locale}
             </button>
 
             {isOpen && (
                 <div
                     className={
                         mobile
-                            ? "absolute right-0 top-full z-1003 mt-2 w-24 overflow-hidden rounded-xl p-2 shadow-lg"
-                            : "absolute right-0 top-full z-50 w-24 pt-2"
+                            ? `absolute top-full z-1003 mt-2 w-24 overflow-hidden rounded-xl p-2 ${
+                                  locale === "ar" ? "left-0" : "right-0"
+                              }`
+                            : `absolute top-full z-50 w-24 pt-2 ${
+                                  locale === "ar" ? "left-0" : "right-0"
+                              }`
                     }
                 >
-                    <div className="space-y-1 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2 shadow-lg">
+                    <div className="space-y-1 overflow-hidden rounded-2xl border border-neutral-200 bg-white p-2">
                         {["en", "ar", "tr"].map((lang) => (
                             <button
                                 key={lang}
@@ -320,6 +325,7 @@ export default function Navbar({
                         </div>
                     </Link>
                     <LanguageMenu
+                        locale={locale}
                         isOpen={isLangOpen}
                         setIsOpen={setIsLangOpen}
                         onLocaleChange={handleLocaleChange}
@@ -408,7 +414,7 @@ export default function Navbar({
                     <div className="relative w-130 max-w-xs">
                         <input
                             type="search"
-                            placeholder="Search"
+                            placeholder={tNav(searchPlaceholder)}
                             className="h-11 w-full rounded-full border border-neutral-400 bg-white/50 pl-5 pr-12 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
                         />
                         <Search
@@ -447,7 +453,9 @@ export default function Navbar({
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 8 }}
-                                    className="absolute right-0 top-full z-50 pt-5"
+                                    className={`absolute top-full z-50 pt-5 ${
+                                        locale === "ar" ? "left-0" : "right-0"
+                                    }`}
                                 >
                                     <div className="py-5 rounded-2xl border border-neutral-200 bg-white shadow-2xl">
                                         <div className="max-h-90 overflow-y-auto">
@@ -482,7 +490,7 @@ export default function Navbar({
                             <div className="relative flex justify-center">
                                 <input
                                     type="search"
-                                    placeholder="Search"
+                                    placeholder={tNav(searchPlaceholder)}
                                     className="h-12 w-[90%] rounded-2xl border border-neutral-200 bg-white/96 pl-4 pr-12 text-sm text-neutral-900 outline-none transition-colors placeholder:text-neutral-400 focus:border-neutral-400"
                                 />
                                 <Search
