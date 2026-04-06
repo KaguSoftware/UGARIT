@@ -59,15 +59,11 @@ function getBaseUrl() {
 }
 
 function getApiToken() {
-    const token = process.env.STRAPI_LOCALIZATION_TOKEN;
+    return process.env.STRAPI_LOCALIZATION_TOKEN?.trim() || null;
+}
 
-    if (!token) {
-        throw new Error(
-            "Missing STRAPI_LOCALIZATION_TOKEN environment variable for localized product sync."
-        );
-    }
-
-    return token;
+function hasLocalizationSyncConfig() {
+    return Boolean(getBaseUrl() && getApiToken());
 }
 
 function makeSlug(slug: string | null | undefined, locale: string) {
@@ -104,10 +100,18 @@ function wait(ms: number) {
 }
 
 async function strapiRequest<T>(path: string, init?: RequestInit): Promise<T> {
+    const token = getApiToken();
+
+    if (!token) {
+        throw new Error(
+            "Missing STRAPI_LOCALIZATION_TOKEN environment variable for localized product sync."
+        );
+    }
+
     const response = await fetch(`${getBaseUrl()}${path}`, {
         ...init,
         headers: {
-            Authorization: `Bearer ${getApiToken()}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
             ...(init?.headers ?? {}),
         },
@@ -151,6 +155,13 @@ async function upsertLocaleVersion(
 
 async function syncProductLocalesFromSource(source: ProductDoc) {
     if (!source.documentId) return;
+
+    if (!hasLocalizationSyncConfig()) {
+        console.warn(
+            "Skipping localized product sync: missing STRAPI base URL or STRAPI_LOCALIZATION_TOKEN."
+        );
+        return;
+    }
 
     const sourceData = await fetchSourceProduct(source.documentId);
 
@@ -219,7 +230,10 @@ function scheduleLocaleSync(source: ProductDoc) {
     const timeout = setTimeout(() => {
         syncedDocuments.delete(documentId);
         void syncProductLocalesFromSource(snapshot).catch((error) => {
-            console.error("Localized product sync failed:", error);
+            console.error(
+                `Localized product sync failed for ${documentId}:`,
+                error
+            );
         });
     }, SYNC_DELAY_MS);
 
