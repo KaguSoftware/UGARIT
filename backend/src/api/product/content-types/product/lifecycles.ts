@@ -51,6 +51,7 @@ type LocalizedProductData = {
 
 function getBaseUrl() {
     return (
+        process.env.NEXT_PUBLIC_STRAPI_URL ||
         process.env.STRAPI_BASE_URL ||
         process.env.PUBLIC_URL ||
         process.env.STRAPI_ADMIN_BACKEND_URL ||
