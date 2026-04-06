@@ -4,27 +4,11 @@ import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductGrid from "@/src/components/productsGrid/products";
 import ProductCarousel from "@/src/components/carousel/ProductCarousel";
-
-export const dynamic = "force-dynamic";
-
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
-
-function getMediaUrl(url?: string | null) {
-    if (!url) return "/image1.jpeg";
-    if (url.startsWith("http")) return url;
-    return `${STRAPI_URL}${url}`;
-}
+import {
+    getStrapiMedia,
+    strapiPrivateFetch,
+    strapiPublicFetch,
+} from "@/src/lib/strapi";
 
 function extractImageUrl(image: any) {
     if (!image) return "/image1.jpeg";
@@ -34,11 +18,11 @@ function extractImageUrl(image: any) {
     }
 
     if (typeof image === "string") {
-        return getMediaUrl(image);
+        return getStrapiMedia(image);
     }
 
     if (image.url) {
-        return getMediaUrl(image.url);
+        return getStrapiMedia(image.url);
     }
 
     if (image.data) {
@@ -46,46 +30,32 @@ function extractImageUrl(image: any) {
     }
 
     if (image.attributes?.url) {
-        return getMediaUrl(image.attributes.url);
+        return getStrapiMedia(image.attributes.url);
     }
 
     return "/image1.jpeg";
 }
 
-function extractLinkedAuthUserId(entry: any): number | null {
-    const candidates = [
-        entry?.authUser,
-        entry?.auth_user,
-        entry?.user,
-        entry?.users_permissions_user,
-    ];
-
-    for (const candidate of candidates) {
-        if (typeof candidate === "number") {
-            return candidate;
-        }
-
-        if (
-            candidate &&
-            typeof candidate === "object" &&
-            typeof candidate.id === "number"
-        ) {
-            return candidate.id;
-        }
-    }
-
-    return null;
-}
-
-async function getFeaturedProducts() {
+async function getFeaturedProducts(locale: string) {
     try {
-        const res = await fetch(
-            `${STRAPI_URL}/api/products?filters[isFeatured][$eq]=true&populate=*`,
-            { cache: "no-store" }
-        );
-
-        if (!res.ok) return { data: [] };
-        return await res.json();
+        return await strapiPublicFetch<{ data: any[] }>("/api/products", {
+            query: {
+                locale,
+                filters: {
+                    isFeatured: {
+                        $eq: true,
+                    },
+                },
+                fields: ["documentId", "title", "price", "slug"],
+                populate: {
+                    image: { fields: ["url"] },
+                    category: { fields: ["name"] },
+                },
+                sort: ["title:asc"],
+            },
+            revalidate: 300,
+            tags: [`homepage:${locale}:featured-products`],
+        });
     } catch (error) {
         console.error("Failed to fetch featured products", error);
         return { data: [] };
@@ -94,13 +64,18 @@ async function getFeaturedProducts() {
 
 async function getHomepageCategories(locale: string) {
     try {
-        const res = await fetch(
-            `${STRAPI_URL}/api/categories?locale=${locale}&populate[image]=true`,
-            { cache: "no-store" }
-        );
-
-        if (!res.ok) return { data: [] };
-        return await res.json();
+        return await strapiPublicFetch<{ data: any[] }>("/api/categories", {
+            query: {
+                locale,
+                fields: ["documentId", "name", "slug"],
+                populate: {
+                    image: { fields: ["url"] },
+                },
+                sort: ["name:asc"],
+            },
+            revalidate: 300,
+            tags: [`homepage:${locale}:categories`],
+        });
     } catch (error) {
         console.error("Failed to fetch homepage categories", error);
         return { data: [] };
@@ -114,38 +89,98 @@ async function getJwtFromCookie() {
 
 async function getLikedProductIds(jwt: string) {
     try {
-        const meRes = await fetch(`${STRAPI_URL}/api/users/me`, {
-            method: "GET",
+        const me = await strapiPrivateFetch<{ id: number }>("/api/users/me", {
             headers: {
                 Authorization: `Bearer ${jwt}`,
             },
-            cache: "no-store",
         });
 
-        if (!meRes.ok) return [] as Array<string | number>;
+        const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
+            "/api/userdbs",
+            {
+                query: {
+                    filters: {
+                        email: {
+                            $eq: undefined,
+                        },
+                    },
+                    pagination: { pageSize: 1 },
+                    fields: ["email", "username", "documentId"],
+                    populate: {
+                        likedProducts: { fields: ["documentId", "id"] },
+                    },
+                },
+                headers: {
+                    Authorization: `Bearer ${jwt}`,
+                    "Content-Type": "application/json",
+                },
+            }
+        ).catch(async () => {
+            const meFull = await strapiPrivateFetch<{
+                id: number;
+                email?: string;
+                username?: string;
+            }>("/api/users/me", {
+                headers: {
+                    Authorization: `Bearer ${jwt}`,
+                },
+            });
 
-        const me = await meRes.json();
+            const queries = [
+                meFull.email
+                    ? {
+                          filters: {
+                              email: {
+                                  $eq: meFull.email,
+                              },
+                          },
+                      }
+                    : null,
+                meFull.username
+                    ? {
+                          filters: {
+                              username: {
+                                  $eq: meFull.username,
+                              },
+                          },
+                      }
+                    : null,
+            ].filter(Boolean) as Array<Record<string, any>>;
 
-        const userDbRes = await fetch(`${STRAPI_URL}/api/userdbs?populate=*`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
+            for (const query of queries) {
+                const response = await strapiPrivateFetch<{ data?: any[] }>(
+                    "/api/userdbs",
+                    {
+                        query: {
+                            ...query,
+                            pagination: { pageSize: 1 },
+                            fields: ["email", "username", "documentId"],
+                            populate: {
+                                likedProducts: {
+                                    fields: ["documentId", "id"],
+                                },
+                            },
+                        },
+                        headers: {
+                            Authorization: `Bearer ${jwt}`,
+                            "Content-Type": "application/json",
+                        },
+                    }
+                );
+
+                if (Array.isArray(response?.data) && response.data[0]) {
+                    return response;
+                }
+            }
+
+            return { data: [] };
         });
 
-        if (!userDbRes.ok) return [] as Array<string | number>;
+        const entry = Array.isArray(userDbJson?.data)
+            ? userDbJson.data[0]
+            : null;
 
-        const userDbJson = await userDbRes.json();
-        const entries = Array.isArray(userDbJson?.data) ? userDbJson.data : [];
-
-        const entry = entries.find(
-            (item: any) => extractLinkedAuthUserId(item) === me.id
-        );
-
-        const likedProducts =
-            entry?.likedProducts ?? entry?.liked_products ?? [];
+        const likedProducts = entry?.likedProducts ?? [];
 
         if (Array.isArray(likedProducts)) {
             return likedProducts
@@ -168,17 +203,12 @@ export default async function Home({
     const { locale } = await params;
 
     const [productsResponse, categoriesResponse] = await Promise.all([
-        getFeaturedProducts(),
+        getFeaturedProducts(locale),
         getHomepageCategories(locale),
     ]);
 
     const jwt = await getJwtFromCookie();
     const likedProductIds = jwt ? await getLikedProductIds(jwt) : [];
-
-    console.log(
-        "STRAPI CATEGORIES:",
-        JSON.stringify(categoriesResponse.data, null, 2)
-    );
 
     const featuredProducts = productsResponse.data.map((item: any) => ({
         id: item.documentId,
@@ -190,7 +220,7 @@ export default async function Home({
     }));
 
     const homepageCategories = categoriesResponse.data.map((item: any) => ({
-        id: item.id || item.documentId,
+        id: item.documentId || item.id,
         title: item.name,
         moreLink: `/categories/${item.slug}`,
         imageUrl: extractImageUrl(item.image),

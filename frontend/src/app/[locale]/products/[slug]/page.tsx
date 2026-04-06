@@ -6,26 +6,7 @@ import { PRODUCTPAGE } from "./constants";
 import { getTranslations } from "next-intl/server";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import AddToCartSection from "./AddToCartSection";
-
-export const dynamic = "force-dynamic";
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
-
-function getMediaUrl(url?: string | null) {
-    if (!url) return "/mock-images/mockshirt.png";
-    if (url.startsWith("http")) return url;
-    return `${STRAPI_URL}${url}`;
-}
+import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
 
 function extractImageUrl(image: any) {
     if (!image) return "/mock-images/mockshirt.png";
@@ -35,11 +16,11 @@ function extractImageUrl(image: any) {
     }
 
     if (typeof image === "string") {
-        return getMediaUrl(image);
+        return getStrapiMedia(image);
     }
 
     if (image.url) {
-        return getMediaUrl(image.url);
+        return getStrapiMedia(image.url);
     }
 
     if (image.data) {
@@ -47,7 +28,7 @@ function extractImageUrl(image: any) {
     }
 
     if (image.attributes?.url) {
-        return getMediaUrl(image.attributes.url);
+        return getStrapiMedia(image.attributes.url);
     }
 
     return "/mock-images/mockshirt.png";
@@ -57,18 +38,49 @@ function normalizeProduct(product: any) {
     return product?.attributes ?? product;
 }
 
+function buildProductPopulate() {
+    return {
+        image: { fields: ["url"] },
+        localizations: { fields: ["slug", "locale"] },
+    };
+}
+
 async function getProduct(slug: string, locale: string) {
     try {
-        const res = await fetch(
-            `${STRAPI_URL}/api/products?filters[slug][$eq]=${encodeURIComponent(
-                slug
-            )}&locale=${locale}&populate=*`,
-            { cache: "no-store" }
+        const json = await strapiPublicFetch<{ data?: any[] }>(
+            "/api/products",
+            {
+                query: {
+                    locale,
+                    filters: {
+                        slug: {
+                            $eq: slug,
+                        },
+                    },
+                    fields: [
+                        "documentId",
+                        "title",
+                        "slug",
+                        "price",
+                        "description",
+                        "sizeXS",
+                        "sizeS",
+                        "sizeM",
+                        "sizeL",
+                        "sizeXL",
+                        "sizeXXL",
+                        "modelHeight",
+                        "modelWeight",
+                        "modelSize",
+                        "locale",
+                    ],
+                    populate: buildProductPopulate(),
+                },
+                revalidate: 300,
+                tags: [`product:${locale}:${slug}`],
+            }
         );
 
-        if (!res.ok) return null;
-
-        const json = await res.json();
         return json.data?.[0] || null;
     } catch (error) {
         console.error("getProduct failed:", error);
@@ -78,16 +90,40 @@ async function getProduct(slug: string, locale: string) {
 
 async function findProductAcrossLocales(slug: string) {
     try {
-        const res = await fetch(
-            `${STRAPI_URL}/api/products?filters[slug][$eq]=${encodeURIComponent(
-                slug
-            )}&locale=all&populate[localizations][fields][0]=slug&populate[localizations][fields][1]=locale&populate=*`,
-            { cache: "no-store" }
+        const json = await strapiPublicFetch<{ data?: any[] }>(
+            "/api/products",
+            {
+                query: {
+                    locale: "all",
+                    filters: {
+                        slug: {
+                            $eq: slug,
+                        },
+                    },
+                    fields: [
+                        "documentId",
+                        "title",
+                        "slug",
+                        "price",
+                        "description",
+                        "sizeXS",
+                        "sizeS",
+                        "sizeM",
+                        "sizeL",
+                        "sizeXL",
+                        "sizeXXL",
+                        "modelHeight",
+                        "modelWeight",
+                        "modelSize",
+                        "locale",
+                    ],
+                    populate: buildProductPopulate(),
+                },
+                revalidate: 300,
+                tags: [`product:any-locale:${slug}`],
+            }
         );
 
-        if (!res.ok) return null;
-
-        const json = await res.json();
         return json.data?.[0] || null;
     } catch (error) {
         console.error("findProductAcrossLocales failed:", error);

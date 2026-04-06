@@ -1,58 +1,57 @@
 import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import ProductGrid from "@/src/components/productsGrid/products";
 import { notFound } from "next/navigation";
 import { Filters } from "@/src/components/ui/filters/filters";
+import {
+    getStrapiMedia,
+    strapiPrivateFetch,
+    strapiPublicFetch,
+} from "@/src/lib/strapi";
 
-export const dynamic = "force-dynamic";
-
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
+function appendFields(params: URLSearchParams, key: string, fields: string[]) {
+    fields.forEach((field, index) => {
+        params.append(`${key}[fields][${index}]`, field);
+    });
 }
 
-function getMediaUrl(url?: string | null) {
-    if (!url) return "/mock-images/mockshirt.png";
-    if (url.startsWith("http")) return url;
-    return `${STRAPI_URL}${url}`;
+function buildFieldPopulate(fields: string[]) {
+    return {
+        fields,
+    };
 }
 
-function extractLinkedAuthUserId(entry: any): number | null {
-    const candidates = [
-        entry?.authUser,
-        entry?.auth_user,
-        entry?.user,
-        entry?.users_permissions_user,
-    ];
+function normalizeFilters(searchParams: {
+    min?: string;
+    max?: string;
+    size?: string | string[];
+    sort?: string;
+    featured?: string | string[];
+}) {
+    const normalizeList = (value?: string | string[]) => {
+        const values = Array.isArray(value) ? value : value ? [value] : [];
 
-    for (const candidate of candidates) {
-        if (typeof candidate === "number") {
-            return candidate;
-        }
+        return values
+            .flatMap((item) => String(item).split(","))
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .sort();
+    };
 
-        if (
-            candidate &&
-            typeof candidate === "object" &&
-            typeof candidate.id === "number"
-        ) {
-            return candidate.id;
-        }
-    }
-
-    return null;
+    return {
+        min: searchParams.min ?? "",
+        max: searchParams.max ?? "",
+        sort: searchParams.sort ?? "",
+        size: normalizeList(searchParams.size),
+        featured: normalizeList(searchParams.featured),
+    };
 }
 
 function buildProductsQuery({
     locale,
     categorySlug,
     searchParams,
+    sizeOnly = false,
 }: {
     locale: string;
     categorySlug?: string;
@@ -63,10 +62,34 @@ function buildProductsQuery({
         sort?: string;
         featured?: string | string[];
     };
+    sizeOnly?: boolean;
 }) {
     const params = new URLSearchParams();
-    params.set("populate", "*");
     params.set("locale", locale);
+
+    const baseFields = sizeOnly
+        ? ["sizeXS", "sizeS", "sizeM", "sizeL", "sizeXL", "sizeXXL"]
+        : [
+              "documentId",
+              "title",
+              "price",
+              "slug",
+              "sizeXS",
+              "sizeS",
+              "sizeM",
+              "sizeL",
+              "sizeXL",
+              "sizeXXL",
+          ];
+
+    baseFields.forEach((field, index) => {
+        params.append(`fields[${index}]`, field);
+    });
+
+    if (!sizeOnly) {
+        appendFields(params, "populate[image]", ["url"]);
+        appendFields(params, "populate[category]", ["name", "slug"]);
+    }
 
     if (categorySlug) {
         params.set("filters[category][slug][$eq]", categorySlug);
@@ -151,33 +174,50 @@ function buildProductsQuery({
         );
     });
 
-    switch (searchParams.sort) {
-        case "price-asc":
-            params.append("sort[0]", "price:asc");
-            break;
-        case "price-desc":
-            params.append("sort[0]", "price:desc");
-            break;
-        case "title-asc":
-            params.append("sort[0]", "title:asc");
-            break;
+    if (!sizeOnly) {
+        switch (searchParams.sort) {
+            case "price-asc":
+                params.append("sort[0]", "price:asc");
+                break;
+            case "price-desc":
+                params.append("sort[0]", "price:desc");
+                break;
+            case "title-asc":
+                params.append("sort[0]", "title:asc");
+                break;
+        }
     }
 
     return params.toString();
 }
 
 async function getCategory(slug: string, locale: string) {
-    const res = await fetch(
-        `${STRAPI_URL}/api/categories?filters[slug][$eq]=${encodeURIComponent(
-            slug
-        )}&locale=${locale}&populate=*`,
-        { cache: "no-store" }
+    const getCachedCategory = unstable_cache(
+        async () => {
+            const json = await strapiPublicFetch<{ data?: any[] }>(
+                "/api/categories",
+                {
+                    query: {
+                        locale,
+                        filters: {
+                            slug: {
+                                $eq: slug,
+                            },
+                        },
+                        fields: ["name", "slug"],
+                    },
+                    revalidate: 300,
+                    tags: [`category:${locale}:${slug}`],
+                }
+            );
+
+            return json.data?.[0] || null;
+        },
+        ["category-page-category", locale, slug],
+        { revalidate: 300, tags: [`category:${locale}:${slug}`] }
     );
 
-    if (!res.ok) return null;
-
-    const json = await res.json();
-    return json.data?.[0] || null;
+    return getCachedCategory();
 }
 
 async function getProducts(
@@ -189,20 +229,62 @@ async function getProducts(
         size?: string | string[];
         sort?: string;
         featured?: string | string[];
+    },
+    options?: {
+        sizeOnly?: boolean;
     }
 ) {
-    const query = buildProductsQuery({
-        locale,
-        categorySlug: slug,
-        searchParams,
-    });
+    const normalizedFilters = normalizeFilters(searchParams);
+    const sizeOnly = Boolean(options?.sizeOnly);
 
-    const res = await fetch(`${STRAPI_URL}/api/products?${query}`, {
-        cache: "no-store",
-    });
+    const getCachedProducts = unstable_cache(
+        async () => {
+            const json = await strapiPublicFetch<{ data: any[] }>(
+                "/api/products",
+                {
+                    query: Object.fromEntries(
+                        new URLSearchParams(
+                            buildProductsQuery({
+                                locale,
+                                categorySlug: slug,
+                                searchParams,
+                                sizeOnly,
+                            })
+                        )
+                    ),
+                    revalidate: 120,
+                    tags: [
+                        `products:${locale}:${slug}`,
+                        `products:${locale}:${slug}:${
+                            sizeOnly ? "sizes" : "grid"
+                        }`,
+                    ],
+                }
+            );
 
-    if (!res.ok) return { data: [] };
-    return res.json();
+            return json;
+        },
+        [
+            "category-page-products",
+            locale,
+            slug,
+            sizeOnly ? "sizes" : "grid",
+            normalizedFilters.min,
+            normalizedFilters.max,
+            normalizedFilters.sort,
+            normalizedFilters.size.join("|"),
+            normalizedFilters.featured.join("|"),
+        ],
+        {
+            revalidate: 120,
+            tags: [
+                `products:${locale}:${slug}`,
+                `products:${locale}:${slug}:${sizeOnly ? "sizes" : "grid"}`,
+            ],
+        }
+    );
+
+    return getCachedProducts();
 }
 
 function getAvailableSizes(products: any[] = []) {
@@ -229,43 +311,69 @@ async function getJwtFromCookie() {
 
 async function getLikedProductIds(jwt: string) {
     try {
-        const meRes = await fetch(`${STRAPI_URL}/api/users/me`, {
-            method: "GET",
+        const me = await strapiPrivateFetch<{
+            email?: string;
+            username?: string;
+        }>("/api/users/me", {
             headers: {
                 Authorization: `Bearer ${jwt}`,
             },
-            cache: "no-store",
         });
 
-        if (!meRes.ok) return [] as Array<string | number>;
+        const queries = [
+            me.email
+                ? {
+                      filters: {
+                          email: {
+                              $eq: me.email,
+                          },
+                      },
+                  }
+                : null,
+            me.username
+                ? {
+                      filters: {
+                          username: {
+                              $eq: me.username,
+                          },
+                      },
+                  }
+                : null,
+        ].filter(Boolean) as Array<Record<string, any>>;
 
-        const me = await meRes.json();
+        for (const query of queries) {
+            const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
+                "/api/userdbs",
+                {
+                    query: {
+                        ...query,
+                        pagination: { pageSize: 1 },
+                        fields: ["email", "username", "documentId"],
+                        populate: {
+                            likedProducts: buildFieldPopulate([
+                                "documentId",
+                                "id",
+                            ]),
+                        },
+                    },
+                    headers: {
+                        Authorization: `Bearer ${jwt}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-        const userDbRes = await fetch(`${STRAPI_URL}/api/userdbs?populate=*`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
-        });
+            const entry = Array.isArray(userDbJson?.data)
+                ? userDbJson.data[0]
+                : null;
 
-        if (!userDbRes.ok) return [] as Array<string | number>;
+            const likedProducts = entry?.likedProducts ?? [];
 
-        const userDbJson = await userDbRes.json();
-        const entries = Array.isArray(userDbJson?.data) ? userDbJson.data : [];
-
-        const entry = entries.find(
-            (item: any) => extractLinkedAuthUserId(item) === me.id
-        );
-
-        const likedProducts =
-            entry?.likedProducts ?? entry?.liked_products ?? [];
-
-        if (Array.isArray(likedProducts)) {
-            return likedProducts
-                .map((product: any) => product?.documentId ?? product?.id)
-                .filter(Boolean);
+            if (Array.isArray(likedProducts)) {
+                return likedProducts
+                    .map((product: any) => product?.documentId ?? product?.id)
+                    .filter(Boolean);
+            }
         }
 
         return [] as Array<string | number>;
@@ -291,14 +399,25 @@ export default async function CategoryPage({
     const { locale, slug } = await params;
     const filters = await searchParams;
 
-    const category = await getCategory(slug, locale);
+    const [category, productsResponse, sizeOptionsResponse] = await Promise.all(
+        [
+            getCategory(slug, locale),
+            getProducts(locale, slug, filters),
+            getProducts(
+                locale,
+                slug,
+                {
+                    ...filters,
+                    size: undefined,
+                    sort: undefined,
+                },
+                { sizeOnly: true }
+            ),
+        ]
+    );
+
     if (!category) notFound();
 
-    const productsResponse = await getProducts(locale, slug, filters);
-    const sizeOptionsResponse = await getProducts(locale, slug, {
-        ...filters,
-        size: undefined,
-    });
     const availableSizes = getAvailableSizes(sizeOptionsResponse.data);
     const jwt = await getJwtFromCookie();
     const likedProductIds = jwt ? await getLikedProductIds(jwt) : [];
@@ -307,7 +426,7 @@ export default async function CategoryPage({
         id: item.documentId,
         title: item.title,
         price: item.price,
-        imageUrl: getMediaUrl(item.image?.[0]?.url || item.image?.url),
+        imageUrl: getStrapiMedia(item.image?.[0]?.url || item.image?.url),
         category: item.category?.name || "Uncategorized",
         slug: item.slug,
     }));

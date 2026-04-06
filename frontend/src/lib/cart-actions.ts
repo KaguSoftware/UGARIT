@@ -3,19 +3,40 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
+import { strapiPrivateFetch } from "@/src/lib/strapi";
 
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
+type StrapiEntity<T> = {
+    id?: number;
+    documentId?: string;
+    attributes?: T;
+} & T;
 
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
+type StrapiCollectionResponse<T> = {
+    data?: Array<StrapiEntity<T>>;
+};
+
+type StrapiSingleResponse<T> = {
+    data?: StrapiEntity<T> | null;
+};
+
+type CartItemSnapshot = {
+    quantity?: number;
+    size?: string;
+    unitPrice?: number;
+    titleSnapshot?: string;
+    slugSnapshot?: string;
+    imageSnapshot?: string;
+    product?: unknown;
+};
+
+type CartEntity = {
+    sessionId?: string;
+    cartStatus?: string;
+    cart_items?:
+        | Array<StrapiEntity<CartItemSnapshot>>
+        | { data?: Array<StrapiEntity<CartItemSnapshot>> }
+        | null;
+};
 
 async function getStrapiHeaders(includeJson = false) {
     const cookieStore = await cookies();
@@ -34,27 +55,21 @@ async function getEntityIdByDocumentId(
     locale = "all"
 ) {
     try {
-        const response = await fetch(
-            `${STRAPI_URL}/api/${collection}?locale=${encodeURIComponent(
-                locale
-            )}&filters[documentId][$eq]=${encodeURIComponent(
-                documentId
-            )}&fields[0]=id&pagination[pageSize]=1`,
-            {
-                headers: await getStrapiHeaders(),
-                cache: "no-store",
-            }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            console.error(
-                `Strapi rejected ${label} lookup by documentId:`,
-                JSON.stringify(data, null, 2)
-            );
-            return null;
-        }
+        const data = await strapiPrivateFetch<
+            StrapiCollectionResponse<Record<string, never>>
+        >(`/api/${collection}`, {
+            query: {
+                locale,
+                filters: {
+                    documentId: {
+                        $eq: documentId,
+                    },
+                },
+                fields: ["id"],
+                pagination: { pageSize: 1 },
+            },
+            headers: await getStrapiHeaders(),
+        });
 
         const entry = Array.isArray(data?.data) ? data.data[0] : null;
         return typeof entry?.id === "number" ? entry.id : null;
@@ -95,34 +110,46 @@ export async function getOrCreateCart(cartSessionId?: string) {
         return null;
     }
 
-    //look for an existing cart
-    const searchUrl = `${STRAPI_URL}/api/carts?filters[sessionId][$eq]=${encodeURIComponent(
-        resolvedCartSessionId
-    )}&populate[cart_items][populate]=*`;
-
     try {
-        const searchResponse = await fetch(searchUrl, {
+        const searchData = await strapiPrivateFetch<
+            StrapiCollectionResponse<CartEntity>
+        >("/api/carts", {
+            query: {
+                filters: {
+                    sessionId: {
+                        $eq: resolvedCartSessionId,
+                    },
+                },
+                fields: ["sessionId", "cartStatus", "documentId"],
+                populate: {
+                    cart_items: {
+                        fields: [
+                            "quantity",
+                            "size",
+                            "unitPrice",
+                            "titleSnapshot",
+                            "slugSnapshot",
+                            "imageSnapshot",
+                        ],
+                        populate: {
+                            product: {
+                                fields: ["documentId", "slug", "title"],
+                            },
+                        },
+                    },
+                },
+                pagination: { pageSize: 1 },
+            },
             headers: await getStrapiHeaders(),
-            cache: "no-store",
         });
-        const searchData = await searchResponse.json();
 
-        if (!searchResponse.ok) {
-            console.error(
-                "Strapi rejected cart lookup:",
-                JSON.stringify(searchData, null, 2)
-            );
-            return null;
-        }
-
-        // return cart if it exists
         if (searchData?.data && searchData.data.length > 0) {
             return searchData.data[0];
         }
 
-        // if there is no cart
-        const createUrl = `${STRAPI_URL}/api/carts`;
-        const createResponse = await fetch(createUrl, {
+        const newData = await strapiPrivateFetch<
+            StrapiSingleResponse<CartEntity>
+        >("/api/carts", {
             method: "POST",
             headers: await getStrapiHeaders(true),
             body: JSON.stringify({
@@ -132,18 +159,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
                     publishedAt: new Date().toISOString(),
                 },
             }),
-            cache: "no-store",
         });
-
-        const newData = await createResponse.json();
-
-        if (!createResponse.ok) {
-            console.error(
-                "Strapi rejected cart creation:",
-                JSON.stringify(newData, null, 2)
-            );
-            return null;
-        }
 
         return newData.data ?? null;
     } catch (error) {
@@ -195,41 +211,29 @@ export async function addToCart(
         return { success: false, error: "Failed to save item." };
     }
 
-    // send the new item to Strapi
-    const createItemUrl = `${STRAPI_URL}/api/cart-items`;
-
     try {
-        const response = await fetch(createItemUrl, {
-            method: "POST",
-            headers: await getStrapiHeaders(true),
-            body: JSON.stringify({
-                data: {
-                    quantity: quantity,
-                    size: size,
-                    unitPrice: unitPrice,
-                    titleSnapshot: title,
-                    slugSnapshot: slug,
-                    imageSnapshot: imageUrl,
-                    cart_item: cartId,
-                    product: productRelationValue,
-                    locale: currentLocale,
-                    publishedAt: new Date().toISOString(),
-                },
-            }),
-            cache: "no-store",
-        });
+        await strapiPrivateFetch<StrapiSingleResponse<CartItemSnapshot>>(
+            "/api/cart-items",
+            {
+                method: "POST",
+                headers: await getStrapiHeaders(true),
+                body: JSON.stringify({
+                    data: {
+                        quantity,
+                        size,
+                        unitPrice,
+                        titleSnapshot: title,
+                        slugSnapshot: slug,
+                        imageSnapshot: imageUrl,
+                        cart_item: cartId,
+                        product: productRelationValue,
+                        locale: currentLocale,
+                        publishedAt: new Date().toISOString(),
+                    },
+                }),
+            }
+        );
 
-        const responseData = await response.json();
-
-        if (!response.ok) {
-            console.error(
-                "Strapi rejected the cart item:",
-                JSON.stringify(responseData, null, 2)
-            );
-            return { success: false, error: "Failed to save item." };
-        }
-
-        // tell Next.js to refresh the cart
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
 
@@ -241,21 +245,12 @@ export async function addToCart(
 }
 
 export async function removeFromCart(documentId: string) {
-    const deleteUrl = `${STRAPI_URL}/api/cart-items/${documentId}`;
-
     try {
-        const response = await fetch(deleteUrl, {
+        await strapiPrivateFetch(`/api/cart-items/${documentId}`, {
             method: "DELETE",
             headers: await getStrapiHeaders(),
-            cache: "no-store",
         });
 
-        if (!response.ok) {
-            console.error("Failed to delete item from Strapi");
-            return { success: false, error: "Failed to delete item" };
-        }
-
-        // Refresh the cart pages so the item disappears instantly
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
 

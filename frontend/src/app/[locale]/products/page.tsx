@@ -1,50 +1,15 @@
 import { cookies } from "next/headers";
 import ProductGrid from "@/src/components/productsGrid/products";
+import {
+    getStrapiMedia,
+    strapiPrivateFetch,
+    strapiPublicFetch,
+} from "@/src/lib/strapi";
 
-export const dynamic = "force-dynamic";
-
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
-
-function getMediaUrl(url?: string | null) {
-    if (!url) return "/mock-images/mockshirt.png";
-    if (url.startsWith("http")) return url;
-    return `${STRAPI_URL}${url}`;
-}
-
-function extractLinkedAuthUserId(entry: any): number | null {
-    const candidates = [
-        entry?.authUser,
-        entry?.auth_user,
-        entry?.user,
-        entry?.users_permissions_user,
-    ];
-
-    for (const candidate of candidates) {
-        if (typeof candidate === "number") {
-            return candidate;
-        }
-
-        if (
-            candidate &&
-            typeof candidate === "object" &&
-            typeof candidate.id === "number"
-        ) {
-            return candidate.id;
-        }
-    }
-
-    return null;
+function appendFields(params: URLSearchParams, key: string, fields: string[]) {
+    fields.forEach((field, index) => {
+        params.append(`${key}[fields][${index}]`, field);
+    });
 }
 
 function buildProductsQuery({
@@ -61,8 +26,14 @@ function buildProductsQuery({
     };
 }) {
     const params = new URLSearchParams();
-    params.set("populate", "*");
     params.set("locale", locale);
+
+    ["documentId", "title", "price", "slug"].forEach((field, index) => {
+        params.append(`fields[${index}]`, field);
+    });
+
+    appendFields(params, "populate[image]", ["url"]);
+    appendFields(params, "populate[category]", ["name"]);
 
     if (searchParams.min) {
         params.set("filters[price][$gte]", searchParams.min);
@@ -101,7 +72,7 @@ function buildProductsQuery({
             break;
     }
 
-    return params.toString();
+    return Object.fromEntries(params.entries());
 }
 
 async function getProducts(
@@ -114,14 +85,16 @@ async function getProducts(
         featured?: string;
     }
 ) {
-    const query = buildProductsQuery({ locale, searchParams });
-
-    const res = await fetch(`${STRAPI_URL}/api/products?${query}`, {
-        cache: "no-store",
-    });
-
-    if (!res.ok) return { data: [] };
-    return res.json();
+    try {
+        return await strapiPublicFetch<{ data: any[] }>("/api/products", {
+            query: buildProductsQuery({ locale, searchParams }),
+            revalidate: 120,
+            tags: [`products:list:${locale}`],
+        });
+    } catch (error) {
+        console.error("Failed to fetch products", error);
+        return { data: [] };
+    }
 }
 
 async function getJwtFromCookie() {
@@ -131,43 +104,68 @@ async function getJwtFromCookie() {
 
 async function getLikedProductIds(jwt: string) {
     try {
-        const meRes = await fetch(`${STRAPI_URL}/api/users/me`, {
-            method: "GET",
+        const me = await strapiPrivateFetch<{
+            email?: string;
+            username?: string;
+        }>("/api/users/me", {
             headers: {
                 Authorization: `Bearer ${jwt}`,
             },
-            cache: "no-store",
         });
 
-        if (!meRes.ok) return [] as Array<string | number>;
+        const queries = [
+            me.email
+                ? {
+                      filters: {
+                          email: {
+                              $eq: me.email,
+                          },
+                      },
+                  }
+                : null,
+            me.username
+                ? {
+                      filters: {
+                          username: {
+                              $eq: me.username,
+                          },
+                      },
+                  }
+                : null,
+        ].filter(Boolean) as Array<Record<string, any>>;
 
-        const me = await meRes.json();
+        for (const query of queries) {
+            const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
+                "/api/userdbs",
+                {
+                    query: {
+                        ...query,
+                        pagination: { pageSize: 1 },
+                        fields: ["email", "username", "documentId"],
+                        populate: {
+                            likedProducts: {
+                                fields: ["documentId", "id"],
+                            },
+                        },
+                    },
+                    headers: {
+                        Authorization: `Bearer ${jwt}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
 
-        const userDbRes = await fetch(`${STRAPI_URL}/api/userdbs?populate=*`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
-        });
+            const entry = Array.isArray(userDbJson?.data)
+                ? userDbJson.data[0]
+                : null;
 
-        if (!userDbRes.ok) return [] as Array<string | number>;
+            const likedProducts = entry?.likedProducts ?? [];
 
-        const userDbJson = await userDbRes.json();
-        const entries = Array.isArray(userDbJson?.data) ? userDbJson.data : [];
-
-        const entry = entries.find(
-            (item: any) => extractLinkedAuthUserId(item) === me.id
-        );
-
-        const likedProducts =
-            entry?.likedProducts ?? entry?.liked_products ?? [];
-
-        if (Array.isArray(likedProducts)) {
-            return likedProducts
-                .map((product: any) => product?.documentId ?? product?.id)
-                .filter(Boolean);
+            if (Array.isArray(likedProducts)) {
+                return likedProducts
+                    .map((product: any) => product?.documentId ?? product?.id)
+                    .filter(Boolean);
+            }
         }
 
         return [] as Array<string | number>;
@@ -201,7 +199,7 @@ export default async function ProductList({
         id: item.documentId,
         title: item.title,
         price: item.price,
-        imageUrl: getMediaUrl(item.image?.[0]?.url || item.image?.url),
+        imageUrl: getStrapiMedia(item.image?.[0]?.url || item.image?.url),
         category: item.category?.name || "Uncategorized",
         slug: item.slug,
     }));

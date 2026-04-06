@@ -2,19 +2,7 @@ import { cookies } from "next/headers";
 import ProductGrid from "@/src/components/productsGrid/products";
 import type { Product } from "@/src/components/cards/ProductCard/types";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
-
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
+import { getStrapiMedia, strapiPrivateFetch } from "@/src/lib/strapi";
 
 type RawProduct = {
     id?: number | string;
@@ -35,29 +23,11 @@ type UserDbEntry = {
     username?: string | null;
     email?: string | null;
     likedProducts?: RawProduct[] | { data?: unknown } | null;
-    liked_products?: RawProduct[] | { data?: unknown } | null;
-    authUser?: { id?: number } | number | { data?: unknown } | null;
-    auth_user?: { id?: number } | number | { data?: unknown } | null;
-    user?: { id?: number } | number | { data?: unknown } | null;
-    users_permissions_user?:
-        | { id?: number }
-        | number
-        | { data?: unknown }
-        | null;
     attributes?: {
         documentId?: string;
         username?: string | null;
         email?: string | null;
         likedProducts?: RawProduct[] | { data?: unknown } | null;
-        liked_products?: RawProduct[] | { data?: unknown } | null;
-        authUser?: { id?: number } | number | { data?: unknown } | null;
-        auth_user?: { id?: number } | number | { data?: unknown } | null;
-        user?: { id?: number } | number | { data?: unknown } | null;
-        users_permissions_user?:
-            | { id?: number }
-            | number
-            | { data?: unknown }
-            | null;
     };
 };
 
@@ -93,26 +63,6 @@ function normalizeUserDbEntry(entry: UserDbEntry) {
             normalizedEntry.likedProducts ??
             entry.likedProducts ??
             normalizedEntry.attributes?.likedProducts,
-        liked_products:
-            normalizedEntry.liked_products ??
-            entry.liked_products ??
-            normalizedEntry.attributes?.liked_products,
-        authUser:
-            normalizedEntry.authUser ??
-            entry.authUser ??
-            normalizedEntry.attributes?.authUser,
-        auth_user:
-            normalizedEntry.auth_user ??
-            entry.auth_user ??
-            normalizedEntry.attributes?.auth_user,
-        user:
-            normalizedEntry.user ??
-            entry.user ??
-            normalizedEntry.attributes?.user,
-        users_permissions_user:
-            normalizedEntry.users_permissions_user ??
-            entry.users_permissions_user ??
-            normalizedEntry.attributes?.users_permissions_user,
     };
 }
 
@@ -148,141 +98,94 @@ function unwrapRelationArray(value: unknown): RawProduct[] {
     return [];
 }
 
-function unwrapRelationUserId(value: unknown): number | null {
-    if (typeof value === "number") {
-        return value;
-    }
-
-    if (value && typeof value === "object") {
-        const record = value as {
-            id?: number;
-            data?: unknown;
-            attributes?: { id?: number };
-        };
-
-        if (typeof record.id === "number") {
-            return record.id;
-        }
-
-        if (record.data && typeof record.data === "object") {
-            const relationData = record.data as {
-                id?: number;
-                attributes?: { id?: number };
-            };
-
-            if (typeof relationData.id === "number") {
-                return relationData.id;
-            }
-
-            if (typeof relationData.attributes?.id === "number") {
-                return relationData.attributes.id;
-            }
-        }
-
-        if (typeof record.attributes?.id === "number") {
-            return record.attributes.id;
-        }
-    }
-
-    return null;
-}
-
-function extractLinkedAuthUserId(entry: UserDbEntry): number | null {
-    const normalizedEntry = normalizeUserDbEntry(entry);
-    const candidates = [
-        normalizedEntry.authUser,
-        normalizedEntry.auth_user,
-        normalizedEntry.user,
-        normalizedEntry.users_permissions_user,
-    ];
-
-    for (const candidate of candidates) {
-        const id = unwrapRelationUserId(candidate);
-
-        if (id !== null) {
-            return id;
-        }
-    }
-
-    return null;
-}
-
 async function getJwtFromCookie() {
     const cookieStore = await cookies();
     return cookieStore.get("jwt")?.value ?? null;
 }
 
 async function getAuthenticatedUser(jwt: string): Promise<AuthUser | null> {
-    const response = await fetch(`${STRAPI_URL}/api/users/me`, {
-        method: "GET",
-        headers: {
-            Authorization: `Bearer ${jwt}`,
-        },
-        cache: "no-store",
-    });
-
-    if (!response.ok) {
+    try {
+        return await strapiPrivateFetch<AuthUser>("/api/users/me", {
+            headers: {
+                Authorization: `Bearer ${jwt}`,
+            },
+        });
+    } catch {
         return null;
     }
-
-    return (await response.json()) as AuthUser;
 }
 
 async function getUserDb(
     jwt: string,
-    authUserId: number,
+    _authUserId: number,
     authUserEmail?: string,
     authUsername?: string
 ): Promise<UserDbEntry | null> {
     try {
-        const response = await fetch(`${STRAPI_URL}/api/userdbs?populate=*`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-                "Content-Type": "application/json",
-            },
-            cache: "no-store",
-        });
+        const queries = [
+            authUserEmail
+                ? {
+                      filters: {
+                          email: {
+                              $eq: authUserEmail,
+                          },
+                      },
+                  }
+                : null,
+            authUsername
+                ? {
+                      filters: {
+                          username: {
+                              $eq: authUsername,
+                          },
+                      },
+                  }
+                : null,
+        ].filter(Boolean) as Array<Record<string, any>>;
 
-        if (!response.ok) {
-            return null;
+        for (const query of queries) {
+            const json = await strapiPrivateFetch<{ data?: UserDbEntry[] }>(
+                "/api/userdbs",
+                {
+                    query: {
+                        ...query,
+                        pagination: { pageSize: 1 },
+                        fields: ["documentId", "username", "email"],
+                        populate: {
+                            likedProducts: {
+                                fields: [
+                                    "id",
+                                    "documentId",
+                                    "title",
+                                    "slug",
+                                    "price",
+                                ],
+                                populate: {
+                                    image: { fields: ["url"] },
+                                    category: { fields: ["name"] },
+                                },
+                            },
+                        },
+                    },
+                    headers: {
+                        Authorization: `Bearer ${jwt}`,
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const entry = Array.isArray(json?.data) ? json.data[0] : null;
+
+            if (entry) {
+                return normalizeUserDbEntry(entry);
+            }
         }
 
-        const json = await response.json();
-        const entries = Array.isArray(json?.data)
-            ? (json.data as UserDbEntry[])
-            : [];
-        const normalizedEntries = entries.map(normalizeUserDbEntry);
-
-        return (
-            normalizedEntries.find((entry) => {
-                const linkedAuthUserId = extractLinkedAuthUserId(entry);
-
-                if (linkedAuthUserId === authUserId) {
-                    return true;
-                }
-
-                if (authUserEmail && entry.email === authUserEmail) {
-                    return true;
-                }
-
-                if (authUsername && entry.username === authUsername) {
-                    return true;
-                }
-
-                return false;
-            }) ?? null
-        );
+        return null;
     } catch (error) {
         console.error("Failed to fetch user profile", error);
         return null;
     }
-}
-
-function getMediaUrl(url?: string | null) {
-    if (!url) return "/image1.jpeg";
-    if (url.startsWith("http")) return url;
-    return `${STRAPI_URL}${url}`;
 }
 
 function extractImageUrl(image: unknown): string {
@@ -293,7 +196,7 @@ function extractImageUrl(image: unknown): string {
     }
 
     if (typeof image === "string") {
-        return getMediaUrl(image);
+        return getStrapiMedia(image);
     }
 
     if (typeof image === "object") {
@@ -328,15 +231,15 @@ function extractImageUrl(image: unknown): string {
             imageRecord.attributes?.formats?.thumbnail?.url;
 
         if (formatUrl) {
-            return getMediaUrl(formatUrl);
+            return getStrapiMedia(formatUrl);
         }
 
         if (imageRecord.url) {
-            return getMediaUrl(imageRecord.url);
+            return getStrapiMedia(imageRecord.url);
         }
 
         if (imageRecord.attributes?.url) {
-            return getMediaUrl(imageRecord.attributes.url);
+            return getStrapiMedia(imageRecord.attributes.url);
         }
 
         if (imageRecord.data) {
@@ -360,108 +263,18 @@ function getRawLikedProducts(entry: UserDbEntry | null) {
         return directLikedProducts;
     }
 
-    const directLikedProductsAlt = Array.isArray(normalizedEntry.liked_products)
-        ? normalizedEntry.liked_products
-        : [];
-
-    if (directLikedProductsAlt.length > 0) {
-        return directLikedProductsAlt;
-    }
-
     const likedProducts = unwrapRelationArray(normalizedEntry.likedProducts);
 
     if (likedProducts.length > 0) {
         return likedProducts;
     }
 
-    const likedProductsAlt = unwrapRelationArray(
-        normalizedEntry.liked_products
-    );
-
-    if (likedProductsAlt.length > 0) {
-        return likedProductsAlt;
-    }
-
     return [] as RawProduct[];
 }
 
-async function fetchFullLikedProduct(
-    jwt: string,
-    product: RawProduct
-): Promise<RawProduct> {
-    const productId = product.id;
-    const productDocumentId = product.documentId;
-
-    const urls = [
-        productDocumentId
-            ? `${STRAPI_URL}/api/products/${productDocumentId}?populate=*`
-            : null,
-        productId ? `${STRAPI_URL}/api/products/${productId}?populate=*` : null,
-        productDocumentId
-            ? `${STRAPI_URL}/api/products?filters[documentId][$eq]=${productDocumentId}&populate=*`
-            : null,
-    ].filter((url): url is string => Boolean(url));
-
-    if (urls.length === 0) {
-        return product;
-    }
-
-    for (const url of urls) {
-        try {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                    "Content-Type": "application/json",
-                },
-                cache: "no-store",
-            });
-
-            if (!response.ok) {
-                continue;
-            }
-
-            const json = await response.json();
-            const data = Array.isArray(json?.data) ? json.data[0] : json?.data;
-
-            if (!data || typeof data !== "object") {
-                continue;
-            }
-
-            if ("attributes" in data && data.attributes) {
-                const record = data as {
-                    id?: number | string;
-                    documentId?: string;
-                    attributes?: Record<string, unknown>;
-                };
-
-                return {
-                    ...product,
-                    id: record.id ?? product.id,
-                    documentId: record.documentId ?? product.documentId,
-                    ...(record.attributes ?? {}),
-                } as RawProduct;
-            }
-
-            return {
-                ...product,
-                ...(data as RawProduct),
-            };
-        } catch (error) {
-            console.error("Failed to fetch full liked product", error);
-        }
-    }
-
-    return product;
-}
-
-async function getLikedProducts(entry: UserDbEntry | null, jwt: string) {
+async function getLikedProducts(entry: UserDbEntry | null) {
     const rawProducts = getRawLikedProducts(entry);
-    const fullProducts = await Promise.all(
-        rawProducts.map((product) => fetchFullLikedProduct(jwt, product))
-    );
-
-    return fullProducts.map(normalizeLikedProduct);
+    return rawProducts.map(normalizeLikedProduct);
 }
 
 function normalizeLikedProduct(product: RawProduct): Product {
@@ -473,7 +286,7 @@ function normalizeLikedProduct(product: RawProduct): Product {
                 ? product.price
                 : Number(product.price ?? 0),
         imageUrl: extractImageUrl(
-            product.imageUrl ?? product.image ?? product.images
+            product.image ?? product.images ?? product.imageUrl
         ),
         category:
             typeof product.category === "string"
@@ -517,7 +330,7 @@ export default async function Page() {
         authUser.username
     );
 
-    const likedProducts = await getLikedProducts(userDb, jwt);
+    const likedProducts = await getLikedProducts(userDb);
 
     return (
         <MaxWidthWrapper>

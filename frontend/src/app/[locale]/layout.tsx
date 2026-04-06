@@ -5,29 +5,28 @@ import { getMessages } from "next-intl/server";
 import { getOrCreateCart } from "@/src/lib/cart-actions";
 import { CartItem } from "@/src/types/cart";
 import { Toaster } from "react-hot-toast";
-
-const STRAPI_URL =
-    process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-    "http://localhost:1337";
-
-if (
-    !process.env.NEXT_PUBLIC_STRAPI_URL &&
-    process.env.NODE_ENV === "production"
-) {
-    console.warn(
-        "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
-    );
-}
+import { strapiPublicFetch } from "@/src/lib/strapi";
 
 async function getNavbarCategories() {
     try {
-        const res = await fetch(
-            `${STRAPI_URL}/api/categories?filters[showInNavbar][$eq]=true`,
-            { cache: "no-store" }
+        const json = await strapiPublicFetch<{ data?: any[] }>(
+            "/api/categories",
+            {
+                query: {
+                    filters: {
+                        showInNavbar: {
+                            $eq: true,
+                        },
+                    },
+                    fields: ["name", "slug"],
+                    sort: ["name:asc"],
+                },
+                revalidate: 300,
+                tags: ["navbar-categories"],
+            }
         );
-        if (!res.ok) return [];
-        const json = await res.json();
-        return json.data;
+
+        return json.data ?? [];
     } catch (error) {
         console.error("Failed to fetch categories", error);
         return [];
@@ -49,7 +48,12 @@ export default async function LocaleLayout({
         getOrCreateCart(),
     ]);
 
-    const rawItems = cartData?.cart_items || [];
+    const rawItems = Array.isArray(cartData?.cart_items)
+        ? cartData.cart_items
+        : Array.isArray(cartData?.cart_items?.data)
+        ? cartData.cart_items.data
+        : [];
+
     const formattedCartItems: CartItem[] = rawItems.map((item: any) => ({
         documentId: item.documentId,
         productDocumentId: item.product?.documentId || "",
