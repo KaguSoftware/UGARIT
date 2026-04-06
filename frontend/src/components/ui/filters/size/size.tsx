@@ -1,21 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SIZE_DATA } from "./constants";
 
-export const Size = () => {
+type SizeProps = {
+    availableSizes?: string[];
+    selectedSize?: string | string[];
+};
+
+export const Size = ({ availableSizes = [], selectedSize }: SizeProps) => {
     const t = useTranslations("Filters");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const sizeList = SIZE_DATA[0].ids;
 
-    const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+    const visibleSizes = useMemo(() => {
+        if (!availableSizes.length) return sizeList;
+        return sizeList.filter((item) => {
+            const sizeLabel = String(t(item.id));
+            return availableSizes.includes(sizeLabel);
+        });
+    }, [availableSizes, sizeList, t]);
+
+    const [activeSizes, setActiveSizes] = useState<string[]>(
+        Array.isArray(selectedSize)
+            ? selectedSize
+            : selectedSize
+            ? [selectedSize]
+            : []
+    );
+
+    useEffect(() => {
+        setActiveSizes(
+            Array.isArray(selectedSize)
+                ? selectedSize
+                : selectedSize
+                ? [selectedSize]
+                : []
+        );
+    }, [selectedSize]);
 
     const toggleSize = (id: string) => {
-        setSelectedSizes((prev) =>
-            prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id]
-        );
+        const sizeLabel = String(t(id));
+        const nextSizes = activeSizes.includes(sizeLabel)
+            ? activeSizes.filter((size) => size !== sizeLabel)
+            : [...activeSizes, sizeLabel];
+
+        setActiveSizes(nextSizes);
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("size");
+        nextSizes.forEach((size) => params.append("size", size));
+
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.refresh();
     };
 
     return (
@@ -25,15 +66,15 @@ export const Size = () => {
             </div>
 
             <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
-                {sizeList.map((item) => (
-                    <label // 3. Changed to label for better accessibility
+                {visibleSizes.map((item) => (
+                    <label
                         key={item.id}
                         className="flex items-center gap-3 w-full cursor-pointer group"
                     >
                         <input
                             type="checkbox"
                             className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            checked={selectedSizes.includes(item.id)}
+                            checked={activeSizes.includes(String(t(item.id)))}
                             onChange={() => toggleSize(item.id)}
                         />
                         <span className="text-slate-700 group-hover:text-blue-600 font-medium transition-colors">

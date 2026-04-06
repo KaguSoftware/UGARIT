@@ -1,11 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Categories } from "./categories/categories";
 import { Price } from "./price/price";
 import { Size } from "./size/size";
 import { Sp } from "./specialProducts/specialProducts";
+import { useTranslations } from "next-intl";
 
-export const Filters = () => {
+type FiltersProps = {
+    initialValues?: {
+        min?: string;
+        max?: string;
+        size?: string | string[];
+        sort?: string;
+        featured?: string | string[];
+    };
+    availableSizes?: string[];
+};
+
+export const Filters = ({
+    initialValues,
+    availableSizes = [],
+}: FiltersProps) => {
     const [isOpen, setIsOpen] = useState(false);
     useEffect(() => {
         const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -24,6 +38,7 @@ export const Filters = () => {
             mediaQuery.removeEventListener("change", listener);
         };
     }, []);
+    const t = useTranslations();
 
     return (
         <div className="flex flex-col gap-4 p-6 ">
@@ -33,23 +48,30 @@ export const Filters = () => {
                     onClick={() => setIsOpen((prev) => !prev)}
                     className="w-35 rounded-md border bg-white p-4 py-2"
                 >
-                    {isOpen ? "Hide Filters" : "Show Filters"}
+                    {isOpen ? t("Filters.hide") : t("Filters.show")}
                 </button>
 
                 <button
                     type="button"
                     className="shrink-0 self-start w-fit rounded-md border bg-white px-4 py-2"
                 >
-                    sort by
+                    {t("Filters.sort")}
                 </button>
             </div>
 
             {isOpen && (
                 <div className="flex w-full flex-col items-center gap-6">
-                    <Categories />
-                    <Size />
-                    <Sp />
-                    <Price />
+                    <Size
+                        availableSizes={availableSizes}
+                        selectedSize={initialValues?.size}
+                    />
+                    <Sp initialValue={initialValues?.featured} />
+                    <Price
+                        initialValues={[
+                            Number(initialValues?.min ?? 0),
+                            Number(initialValues?.max ?? 1000),
+                        ]}
+                    />
                 </div>
             )}
         </div>

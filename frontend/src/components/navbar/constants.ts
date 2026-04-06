@@ -31,3 +31,4 @@ export const NAV_ITEMS: NavItem[] = [
         href: "/discount",
     },
 ];
+export const searchPlaceholder = "searchPlaceholder";

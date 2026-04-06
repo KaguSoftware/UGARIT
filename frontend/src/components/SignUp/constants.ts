@@ -1,14 +1,15 @@
 import type { Signup } from "./types";
 
 export const SIGNUP: Signup = {
-    title: "Sign Up",
-    desc: "Welcome",
-    nameTitle: "Username",
-    namePlaceholder: "Enter your username",
-    emailTitle: "Email",
-    emailPlaceholder: "Enter your email",
-    passwordTitle: "Password",
-    passwordPlaceholder: "Enter your password",
-    signup: "Sign up",
-    link: "Already have an account? Sign in",
+    title: "signup.title",
+    desc: "signup.desc",
+    nameTitle: "signup.nameTitle",
+    namePlaceholder: "signup.namePlaceholder",
+    emailTitle: "signup.emailTitle",
+    emailPlaceholder: "signup.emailPlaceholder",
+    passwordTitle: "signup.passwordTitle",
+    passwordPlaceholder: "signup.passwordPlaceholder",
+    signup: "signup.signup",
+    link: "signup.link",
+    redirecting: "signup.redirecting",
 };

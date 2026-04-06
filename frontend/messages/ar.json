@@ -1,147 +1,221 @@
 {
-	"Products": {
-		"productCardTitle": {
-			"1": "مرحباً",
-			"2": "أنا",
-			"3": "اسمي",
-			"4": "هو",
-			"5": "ماجد",
-			"6": "أحدب",
-			"7": "عصابة"
-		},
-		"addtocart": "أضف إلى السلة"
-	},
-	"footer": {
-		"first": {
-			"title": "الشركة",
-			"one": "فروعنا",
-			"two": "من نحن",
-			"three": "اتصل بنا"
-		},
-		"second": {
-			"title": "معلومات",
-			"one": "الاشتراك",
-			"two": "حسابي",
-			"three": "طلباتي",
-			"four": "المدونة",
-			"five": "اتصل بنا"
-		},
-		"third": {
-			"title": "الفئات الشائعة",
-			"one": "وصل حديثاً",
-			"two": "ملابس علوية",
-			"three": "ملابس سفلية",
-			"four": "أحذية"
-		},
-		"icon": {
-			"one": "Instagram",
-			"oneLink": "https://instagram.com",
-			"onePath": "/icons/instagram.svg",
-			"two": "Whatsapp",
-			"twoLink": "https://whatsapp.com",
-			"twoPath": "/icons/whatsapp.svg",
-			"four": "Twitter",
-			"fourLink": "https://twitter.com",
-			"fourPath": "/icons/twitter.svg"
-		}
-	},
-	"Nav": {
-		"items": [
-			{
-				"title": "الرئيسية",
-				"href": "/"
-			},
-			{
-				"title": "المتجر",
-				"href": "/products",
-				"sections": [
-					{
-						"title": "الفئات",
-						"links": [
-							{ "title": "تيشيرت", "href": "/t-shirt" },
-							{ "title": "بناطيل", "href": "/trousers" },
-							{ "title": "أحذية", "href": "/shoe" }
-						]
-					},
-					{
-						"title": "تشكيلات",
-						"links": [
-							{ "title": "الموسم الجديد", "href": "/new" },
-							{ "title": "تخفيضات", "href": "/discount" }
-						]
-					}
-				]
-			},
-			{
-				"title": "اتصل بنا",
-				"href": "/contact"
-			},
-			{
-				"title": "معطف",
-				"href": "/coat"
-			},
-			{
-				"title": "سويت شيرت",
-				"href": "/sweat"
-			},
-			{
-				"title": "تخفيضات",
-				"href": "/discount"
-			}
-		]
-	},
-	"Filters": {
-		"categoriesTitle": "الفئات",
-		"category": {
-			"one": "إلكترونيات",
-			"two": "أزياء",
-			"three": "المنزل والحديقة",
-			"four": "رياضة",
-			"five": "الصحة والجمال",
-			"six": "ألعاب",
-			"seven": "سيارات",
-			"eight": "كتب"
-		},
-		"sizeTitle": "المقاسات",
-		"size": {
-			"one": "XS",
-			"two": "S",
-			"three": "M",
-			"four": "L",
-			"five": "XL",
-			"six": "XXL"
-		},
-		"spTitle": "تصفية",
-		"sp": {
-			"one": "وصل حديثاً",
-			"two": "منتجات مخفضة",
-			"three": "شحن مجاني"
-		},
-		"Price": {
-			"title": "نطاق السعر",
-			"currency": "$",
-			"separator": " - "
-		}
-	},
-	"Category": {
-		"CategoryCardTitle": {
-			"1": "مرحباً",
-			"2": "أنا",
-			"3": "اسمي",
-			"4": "هو",
-			"5": "ماجد",
-			"6": "أحدب"
-		},
-		"Discover": "استكشف الكل"
-	},
-	"Contact": {
-		"title": "اتصل بنا",
-		"name": "الاسم",
-		"email": "البريد الإلكتروني",
-		"details": "تفاصيل المشروع",
-		"sending": "جاري الإرسال...",
-		"submit": "إرسال الاقتراح",
-		"success": "تم الإرسال بنجاح!",
-		"error": "فشل الإرسال. يرجى المحاولة مرة أخرى."
-	}
+    "Products": {
+        "ProductPage": {
+            "sizetext": "المقاس",
+            "addtocart": "أضف إلى السلة",
+            "whatsapp": "راسلنا على واتساب",
+            "maniken": "عارضة الأزياء",
+            "height": "الطول",
+            "weight": "الوزن",
+            "mansize": "مقاس العارضة",
+            "colors": "خيارات الألوان",
+            "desc": "وصف المنتج",
+            "linktext": "لدي سؤال حول هذا المنتج "
+        },
+        "productCardTitle": {
+            "1": "مرحباً",
+            "2": "اسمي",
+            "3": "هو",
+            "4": "ماجد",
+            "5": "أهدب",
+            "6": "",
+            "7": ""
+        },
+        "addtocart": "أضف إلى السلة"
+    },
+    "footer": {
+        "first": {
+            "title": "الشركة",
+            "one": "فروعنا",
+            "two": "من نحن",
+            "three": "تواصل معنا"
+        },
+        "second": {
+            "title": "معلومات",
+            "one": "الاشتراك",
+            "two": "حسابي",
+            "three": "طلباتي",
+            "four": "المدونة",
+            "five": "اتصل بنا"
+        },
+        "third": {
+            "title": "الفئات الشائعة",
+            "one": "وصل حديثاً",
+            "two": "ملابس الجزء العلوي",
+            "three": "ملابس الجزء السفلي",
+            "four": "أحذية"
+        },
+        "icon": {
+            "one": "إنستغرام",
+            "oneLink": "https://instagram.com",
+            "onePath": "/icons/instagram.svg",
+            "two": "واتساب",
+            "twoLink": "https://whatsapp.com",
+            "twoPath": "/icons/whatsapp.svg",
+            "four": "تويتر",
+            "fourLink": "https://twitter.com",
+            "fourPath": "/icons/twitter.svg"
+        }
+    },
+    "Nav": {
+        "items": [
+            {
+                "title": "الرئيسية",
+                "href": "/"
+            },
+            {
+                "title": "اتصل بنا",
+                "href": "/contact"
+            },
+            {
+                "title": "المتجر",
+                "href": "/products",
+                "sections": [
+                    {
+                        "title": "الفئات",
+                        "links": [
+                            { "title": "تيشيرت", "href": "/t-shirt" },
+                            { "title": "بنطال", "href": "/trousers" },
+                            { "title": "أحذية", "href": "/shoe" },
+                            { "title": "معطف", "href": "/coat" },
+                            { "title": "سويت", "href": "/sweat" }
+                        ]
+                    },
+                    {
+                        "title": "المجموعات",
+                        "links": [
+                            { "title": "الموسم الجديد", "href": "/new" },
+                            { "title": "تخفيضات", "href": "/discount" }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "searchPlaceholder": "بحث"
+    },
+    "Filters": {
+        "categoriesTitle": "الفئات",
+        "category": {
+            "one": "إلكترونيات",
+            "two": "أزياء",
+            "three": "المنزل والحديقة",
+            "four": "رياضة",
+            "five": "الصحة والجمال",
+            "six": "ألعاب",
+            "seven": "السيارات",
+            "eight": "كتب"
+        },
+        "sizeTitle": "المقاسات",
+        "size": {
+            "one": "XS",
+            "two": "S",
+            "three": "M",
+            "four": "L",
+            "five": "XL",
+            "six": "XXL"
+        },
+        "spTitle": "الفلاتر",
+        "sp": {
+            "one": "وصل حديثاً",
+            "two": "منتجات مخفضة",
+            "three": "شحن مجاني"
+        },
+        "Price": {
+            "title": "نطاق السعر",
+            "currency": "₺",
+            "separator": " - "
+        },
+        "show": "إظهار الفلاتر",
+        "hide": "إخفاء الفلاتر",
+        "sort": "ترتيب"
+    },
+    "Category": {
+        "CategoryCardTitle": {
+            "1": "مرحباً",
+            "2": "اسمي",
+            "3": "هو",
+            "4": "ماجد",
+            "5": "أهدب",
+            "6": ""
+        },
+        "Discover": "اكتشف الكل"
+    },
+    "Contact": {
+        "title": "تواصل معنا",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "details": "الرسالة",
+        "sending": "جارٍ الإرسال...",
+        "submit": "إرسال الرسالة",
+        "success": "تم إرسال الرسالة بنجاح!",
+        "error": "فشل إرسال الرسالة. يرجى المحاولة مرة أخرى."
+    },
+    "Carousel": {
+        "Title": "المنتجات المميزة"
+    },
+    "User": {
+        "userpage": {
+            "welcome": "مرحباً",
+            "liked": "اذهب إلى المنتجات المفضلة ",
+            "cart": "اذهب إلى السلة",
+            "user": {
+                "show": "إظهار معلومات المستخدم",
+                "hide": "إخفاء معلومات المستخدم"
+            },
+            "name": "الاسم",
+            "last": "اسم العائلة",
+            "email": "البريد الإلكتروني"
+        },
+        "user": {
+            "name": "ماجد",
+            "last": "أهدب",
+            "email": "majed.ahdab@example.com"
+        }
+    },
+    "CartTO": {
+        "summary": "ملخص السلة",
+        "total": "الإجمالي: ",
+        "wabutton": "إتمام الطلب عبر واتساب",
+        "buttonlink": "أرغب في طلب المنتجات التالية "
+    },
+    "signin": {
+        "title": "تسجيل الدخول",
+        "desc": "مرحباً بعودتك",
+        "emailTitle": "البريد الإلكتروني",
+        "emailPlaceholder": "أدخل بريدك الإلكتروني",
+        "passwordTitle": "كلمة المرور",
+        "passwordPlaceholder": "أدخل كلمة المرور",
+        "signin": "تسجيل الدخول",
+        "link": "ليس لديك حساب؟ أنشئ حساباً",
+        "redirecting": "جارٍ إعادة التوجيه..."
+    },
+    "signup": {
+        "title": "إنشاء حساب",
+        "desc": "مرحباً",
+        "nameTitle": "اسم المستخدم",
+        "namePlaceholder": "أدخل اسم المستخدم",
+        "emailTitle": "البريد الإلكتروني",
+        "emailPlaceholder": "أدخل بريدك الإلكتروني",
+        "passwordTitle": "كلمة المرور",
+        "passwordPlaceholder": "أدخل كلمة المرور",
+        "signup": "إنشاء حساب",
+        "link": "لديك حساب بالفعل؟ سجّل الدخول",
+        "redirecting": "جارٍ إعادة التوجيه..."
+    },
+    "contactCard": {
+        "call": {
+            "title": "اتصل بنا",
+            "button": "اتصل"
+        },
+        "chat": {
+            "title": "راسلنا",
+            "desc": "أرسل رسالة عبر واتساب",
+            "button": "أرسل رسالة"
+        },
+        "question": {
+            "title": "اطرح سؤالاً",
+            "desc": "املأ النموذج وسنعود إليك",
+            "button": "املأ النموذج"
+        }
+    }
 }

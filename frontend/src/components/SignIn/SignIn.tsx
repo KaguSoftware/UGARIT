@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState, type ChangeEvent } from "react";
 import { SIGNIN } from "./constants";
 import type { SigninFormData } from "./types";
 import { Link, useRouter } from "@/src/i18n/routing";
+import { useTranslations } from "next-intl";
 import { LoginUserAction } from "@/src/app/actions";
 
 export default function SignIn() {
@@ -17,6 +18,7 @@ export default function SignIn() {
     };
 
     const router = useRouter();
+    const t = useTranslations();
 
     const [form, setForm] = useState<SigninFormData>({
         email: "",
@@ -58,12 +60,13 @@ export default function SignIn() {
             >
                 <div className="bg-white shadow-xl justify-between rounded-2xl border-2 flex flex-col gap-5 p-5 py-12 md:p-10">
                     <h1 className="text-center justify-end text-6xl flex flex-col gap-4 ">
-                        {SIGNIN.title} <p className="text-xl">{SIGNIN.desc}</p>
+                        {t(SIGNIN.title)}{" "}
+                        <p className="text-xl">{t(SIGNIN.desc)}</p>
                     </h1>
 
                     {formState?.successMessage && (
                         <div className="w-full rounded-xl border border-green-300 bg-green-100 p-3 text-center text-green-800">
-                            {formState.successMessage} Redirecting...
+                            {formState.successMessage} {t("signin.redirecting")}
                         </div>
                     )}
 
@@ -74,13 +77,13 @@ export default function SignIn() {
                     )}
 
                     <label htmlFor="email" className="">
-                        {SIGNIN.emailTitle}
+                        {t(SIGNIN.emailTitle)}
                     </label>
                     <input
                         id="email"
                         name="email"
                         type="email"
-                        placeholder={SIGNIN.emailPlaceholder}
+                        placeholder={t(SIGNIN.emailPlaceholder)}
                         value={form.email}
                         onChange={handleChange}
                         className="md:w-100 w-80 border p-2 border-gray-200"
@@ -88,12 +91,12 @@ export default function SignIn() {
                     {emailErrors && (
                         <p className="text-sm text-red-600">{emailErrors[0]}</p>
                     )}
-                    <label htmlFor="password">{SIGNIN.passwordTitle}</label>
+                    <label htmlFor="password">{t(SIGNIN.passwordTitle)}</label>
                     <input
                         id="password"
                         name="password"
                         type="password"
-                        placeholder={SIGNIN.passwordPlaceholder}
+                        placeholder={t(SIGNIN.passwordPlaceholder)}
                         value={form.password}
                         onChange={handleChange}
                         className="md:w-100 w-80 border p-2 border-gray-200"
@@ -102,13 +105,13 @@ export default function SignIn() {
                         <p className="text-sm text-red-600">{passErrors[0]}</p>
                     )}
                     <button className="w-full text-white rounded-2xl p-2 bg-gray-700">
-                        {SIGNIN.signin}
+                        {t(SIGNIN.signin)}
                     </button>
                     <Link
                         href={"/signup"}
                         className="w-full text-gray-500 mt-3 hover:text-gray-800 rounded-2xl text-center"
                     >
-                        {SIGNIN.link}
+                        {t(SIGNIN.link)}
                     </Link>
                 </div>
             </form>

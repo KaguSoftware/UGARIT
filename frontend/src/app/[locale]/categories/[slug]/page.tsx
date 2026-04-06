@@ -1,7 +1,5 @@
 import { cookies } from "next/headers";
-import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductGrid from "@/src/components/productsGrid/products";
-import ProductFiltersForm from "@/src/components/ui/filters/ProductFiltersForm";
 import { notFound } from "next/navigation";
 import { Filters } from "@/src/components/ui/filters/filters";
 
@@ -61,9 +59,9 @@ function buildProductsQuery({
     searchParams: {
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
     };
 }) {
     const params = new URLSearchParams();
@@ -95,9 +93,63 @@ function buildProductsQuery({
         XXL: "sizeXXL",
     };
 
-    if (searchParams.size && sizeMap[searchParams.size]) {
-        params.set(`filters[${sizeMap[searchParams.size]}][$eq]`, "true");
-    }
+    const legacySizeKeyMap: Record<string, string> = {
+        one: "XS",
+        two: "S",
+        three: "M",
+        four: "L",
+        five: "XL",
+        six: "XXL",
+    };
+
+    const rawSelectedSizes = Array.isArray(searchParams.size)
+        ? searchParams.size
+        : searchParams.size
+        ? [searchParams.size]
+        : [];
+
+    const normalizedSelectedSizes = rawSelectedSizes
+        .flatMap((size) => String(size).split(","))
+        .map((size) => String(size).trim())
+        .filter(Boolean)
+        .map((size) => legacySizeKeyMap[size] || size.toUpperCase());
+
+    const validSizeFields = [...new Set(normalizedSelectedSizes)]
+        .map((size) => sizeMap[size])
+        .filter(Boolean);
+
+    validSizeFields.forEach((field, index) => {
+        params.set(`filters[$or][${index}][${field}][$eq]`, "true");
+    });
+
+    const featuredMap: Record<string, string> = {
+        "sp.one": "spOne",
+        "sp.two": "spTwo",
+        "sp.three": "spThree",
+    };
+
+    const rawFeaturedOptions = Array.isArray(searchParams.featured)
+        ? searchParams.featured
+        : searchParams.featured
+        ? [searchParams.featured]
+        : [];
+
+    const normalizedFeaturedOptions = rawFeaturedOptions
+        .flatMap((option) => String(option).split(","))
+        .map((option) => String(option).trim())
+        .filter(Boolean);
+
+    const validFeaturedFields = [...new Set(normalizedFeaturedOptions)]
+        .map((option) => featuredMap[option])
+        .filter(Boolean);
+
+    const featuredBaseIndex = validSizeFields.length;
+    validFeaturedFields.forEach((field, index) => {
+        params.set(
+            `filters[$or][${featuredBaseIndex + index}][${field}][$eq]`,
+            "true"
+        );
+    });
 
     switch (searchParams.sort) {
         case "price-asc":
@@ -134,9 +186,9 @@ async function getProducts(
     searchParams: {
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
     }
 ) {
     const query = buildProductsQuery({
@@ -151,6 +203,23 @@ async function getProducts(
 
     if (!res.ok) return { data: [] };
     return res.json();
+}
+
+function getAvailableSizes(products: any[] = []) {
+    const sizeMap = [
+        { key: "sizeXS", label: "XS" },
+        { key: "sizeS", label: "S" },
+        { key: "sizeM", label: "M" },
+        { key: "sizeL", label: "L" },
+        { key: "sizeXL", label: "XL" },
+        { key: "sizeXXL", label: "XXL" },
+    ] as const;
+
+    return sizeMap
+        .filter(({ key }) =>
+            products.some((product: any) => product?.[key] === true)
+        )
+        .map(({ label }) => label);
 }
 
 async function getJwtFromCookie() {
@@ -214,9 +283,9 @@ export default async function CategoryPage({
     searchParams: Promise<{
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
     }>;
 }) {
     const { locale, slug } = await params;
@@ -226,6 +295,11 @@ export default async function CategoryPage({
     if (!category) notFound();
 
     const productsResponse = await getProducts(locale, slug, filters);
+    const sizeOptionsResponse = await getProducts(locale, slug, {
+        ...filters,
+        size: undefined,
+    });
+    const availableSizes = getAvailableSizes(sizeOptionsResponse.data);
     const jwt = await getJwtFromCookie();
     const likedProductIds = jwt ? await getLikedProductIds(jwt) : [];
 
@@ -245,7 +319,16 @@ export default async function CategoryPage({
 
                 <div className="grid lg:grid-cols-[280px_1fr] gap-8">
                     <div>
-                        <Filters />
+                        <Filters
+                            initialValues={{
+                                min: filters.min,
+                                max: filters.max,
+                                size: filters.size,
+                                sort: filters.sort,
+                                featured: filters.featured,
+                            }}
+                            availableSizes={availableSizes}
+                        />
                     </div>
 
                     <div>

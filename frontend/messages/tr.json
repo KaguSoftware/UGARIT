@@ -2,33 +2,33 @@
     "Products": {
         "ProductPage": {
             "sizetext": "Beden",
-            "addtocart": "Sepete Ekle",
-            "whatsapp": "Bize WhatsApp'tan mesaj gönderin",
+            "addtocart": "Sepete ekle",
+            "whatsapp": "WhatsApp'tan bize yazın",
             "maniken": "Manken",
             "height": "Boy",
             "weight": "Kilo",
             "mansize": "Manken bedeni",
             "colors": "Renk seçenekleri",
-            "desc": "Ürün Açıklaması",
+            "desc": "Ürün açıklaması",
             "linktext": "Bu ürün hakkında bir sorum var "
         },
         "productCardTitle": {
-            "1": "merhaba",
+            "1": "Merhaba",
             "2": "benim",
             "3": "adım",
-            "4": "",
-            "5": "",
+            "4": "Majed",
+            "5": "Ahdab",
             "6": "",
             "7": ""
         },
-        "addtocart": "Sepete Ekle"
+        "addtocart": "Sepete ekle"
     },
     "footer": {
         "first": {
             "title": "Şirket",
-            "one": "Şubelerimiz",
+            "one": "Mağazalarımız",
             "two": "Hakkımızda",
-            "three": "Bize Ulaşın"
+            "three": "Bize ulaşın"
         },
         "second": {
             "title": "Bilgi",
@@ -39,17 +39,17 @@
             "five": "İletişim"
         },
         "third": {
-            "title": "Popüler Kategoriler",
-            "one": "Yeni Gelenler",
-            "two": "Üst Giyim",
-            "three": "Alt Giyim",
-            "four": "Ayakkabılar"
+            "title": "Popüler kategoriler",
+            "one": "Yeni gelenler",
+            "two": "Üst giyim",
+            "three": "Alt giyim",
+            "four": "Ayakkabı"
         },
         "icon": {
             "one": "Instagram",
             "oneLink": "https://instagram.com",
             "onePath": "/icons/instagram.svg",
-            "two": "Whatsapp",
+            "two": "WhatsApp",
             "twoLink": "https://whatsapp.com",
             "twoPath": "/icons/whatsapp.svg",
             "four": "Twitter",
@@ -60,11 +60,11 @@
     "Nav": {
         "items": [
             {
-                "title": "Ana Sayfa",
+                "title": "Ana sayfa",
                 "href": "/"
             },
             {
-                "title": "İletişim",
+                "title": "Bize ulaşın",
                 "href": "/contact"
             },
             {
@@ -84,22 +84,23 @@
                     {
                         "title": "Koleksiyonlar",
                         "links": [
-                            { "title": "Yeni Sezon", "href": "/new" },
+                            { "title": "Yeni sezon", "href": "/new" },
                             { "title": "İndirim", "href": "/discount" }
                         ]
                     }
                 ]
             }
-        ]
+        ],
+        "searchPlaceholder": "Ara"
     },
     "Filters": {
         "categoriesTitle": "Kategoriler",
         "category": {
             "one": "Elektronik",
             "two": "Moda",
-            "three": "Ev & Bahçe",
+            "three": "Ev ve bahçe",
             "four": "Spor",
-            "five": "Sağlık & Güzellik",
+            "five": "Sağlık ve güzellik",
             "six": "Oyuncaklar",
             "seven": "Otomotiv",
             "eight": "Kitaplar"
@@ -115,34 +116,37 @@
         },
         "spTitle": "Filtreler",
         "sp": {
-            "one": "Yeni Gelenler",
-            "two": "İndirimli Ürünler",
-            "three": "Ücretsiz Kargo"
+            "one": "Yeni gelenler",
+            "two": "İndirimli ürünler",
+            "three": "Ücretsiz kargo"
         },
         "Price": {
-            "title": "Fiyat Aralığı",
-            "currency": "$",
+            "title": "Fiyat aralığı",
+            "currency": "₺",
             "separator": " - "
-        }
+        },
+        "show": "Filtreler",
+        "hide": "Filtreleri Gizle",
+        "sort": "sırala"
     },
     "Category": {
         "CategoryCardTitle": {
-            "1": "merhaba",
+            "1": "Merhaba",
             "2": "benim",
             "3": "adım",
-            "4": "",
-            "5": "",
+            "4": "Majed",
+            "5": "Ahdab",
             "6": ""
         },
-        "Discover": "Hepsini Keşfet"
+        "Discover": "Hepsini keşfet"
     },
     "Contact": {
         "title": "Bize ulaşın",
-        "name": "Ad",
+        "name": "İsim",
         "email": "E-posta",
         "details": "Mesaj",
         "sending": "Gönderiliyor...",
-        "submit": "Mesaj Gönder",
+        "submit": "Mesaj gönder",
         "success": "Mesaj başarıyla gönderildi!",
         "error": "Mesaj gönderilemedi. Lütfen tekrar deneyin."
     },
@@ -152,20 +156,66 @@
     "User": {
         "userpage": {
             "welcome": "Hoş geldiniz",
-            "liked": "Beğenilen ürünlere git",
+            "liked": "Beğenilen ürünlere git ",
             "cart": "Sepete git",
             "user": {
                 "show": "Kullanıcı bilgilerini göster",
                 "hide": "Kullanıcı bilgilerini gizle"
             },
-            "name": "Ad",
-            "last": "Soyad",
+            "name": "İsim",
+            "last": "Soyisim",
             "email": "E-posta"
         },
         "user": {
             "name": "Majed",
             "last": "Ahdab",
             "email": "majed.ahdab@example.com"
+        }
+    },
+    "CartTO": {
+        "summary": "Sepet özeti",
+        "total": "Toplam: ",
+        "wabutton": "Siparişi WhatsApp ile tamamla",
+        "buttonlink": "Aşağıdaki ürünleri sipariş etmek istiyorum "
+    },
+    "signin": {
+        "title": "Giriş Yap",
+        "desc": "Tekrar hoş geldiniz",
+        "emailTitle": "E-posta",
+        "emailPlaceholder": "E-posta adresinizi girin",
+        "passwordTitle": "Şifre",
+        "passwordPlaceholder": "Şifrenizi girin",
+        "signin": "Giriş Yap",
+        "link": "Hesabınız yok mu? Kayıt olun",
+        "redirecting": "Yönlendiriliyor..."
+    },
+    "signup": {
+        "title": "Kayıt Ol",
+        "desc": "Hoş geldiniz",
+        "nameTitle": "Kullanıcı adı",
+        "namePlaceholder": "Kullanıcı adınızı girin",
+        "emailTitle": "E-posta",
+        "emailPlaceholder": "E-posta adresinizi girin",
+        "passwordTitle": "Şifre",
+        "passwordPlaceholder": "Şifrenizi girin",
+        "signup": "Kayıt Ol",
+        "link": "Zaten hesabınız var mı? Giriş yapın",
+        "redirecting": "Yönlendiriliyor..."
+    },
+    "contactCard": {
+        "call": {
+            "title": "Bizi Arayın",
+            "button": "Ara"
+        },
+        "chat": {
+            "title": "Bizimle Yazışın",
+            "desc": "WhatsApp üzerinden mesaj gönderin",
+            "button": "Mesaj gönder"
+        },
+        "question": {
+            "title": "Soru Sorun",
+            "desc": "Formu doldurun, size geri dönüş yapalım",
+            "button": "Formu doldurun"
         }
     }
 }

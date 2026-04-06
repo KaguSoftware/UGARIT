@@ -9,6 +9,7 @@ export interface Signup {
     passwordPlaceholder: string;
     signup: string;
     link: string;
+    redirecting: string;
 }
 
 export interface SignupFormData {

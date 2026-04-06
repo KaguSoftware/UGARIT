@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
 import ProductGrid from "@/src/components/productsGrid/products";
-import ProductFiltersForm from "@/src/components/ui/filters/ProductFiltersForm";
 
 export const dynamic = "force-dynamic";
 
@@ -213,19 +212,10 @@ export default async function ProductList({
                 <h1 className="text-3xl font-bold mb-6">All Products</h1>
 
                 <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-                    <div>
-                        <ProductFiltersForm
-                            clearHref="/products"
-                            filters={filters}
-                        />
-                    </div>
-
-                    <div>
-                        <ProductGrid
-                            products={formattedProducts}
-                            likedProductIds={likedProductIds}
-                        />
-                    </div>
+                    <ProductGrid
+                        products={formattedProducts}
+                        likedProductIds={likedProductIds}
+                    />
                 </div>
             </div>
         </main>

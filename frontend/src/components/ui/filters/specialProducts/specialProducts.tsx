@@ -1,27 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SP_DATA } from "./constants";
 
-export const Sp = () => {
+type SpProps = {
+    initialValue?: string | string[];
+};
+
+const normalizeFeaturedValues = (value?: string | string[]) => {
+    const values = Array.isArray(value) ? value : value ? [value] : [];
+
+    return [
+        ...new Set(
+            values
+                .flatMap((item) => String(item).split(","))
+                .map((item) => item.trim())
+                .filter(Boolean)
+        ),
+    ];
+};
+
+export const Sp = ({ initialValue }: SpProps) => {
     const t = useTranslations("Filters");
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const spList = SP_DATA[0].ids;
 
-    const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<string[]>(
+        normalizeFeaturedValues(initialValue)
+    );
 
-    const toggleSize = (id: string) => {
-        setSelectedSizes((prev) =>
-            prev.includes(id)
-                ? prev.filter((item) => item !== id)
-                : [...prev, id]
-        );
+    useEffect(() => {
+        setSelectedOptions(normalizeFeaturedValues(initialValue));
+    }, [initialValue]);
+
+    const toggleOption = (id: string) => {
+        const currentOptions = normalizeFeaturedValues(selectedOptions);
+        const nextOptions = currentOptions.includes(id)
+            ? currentOptions.filter((item) => item !== id)
+            : [...currentOptions, id];
+
+        setSelectedOptions(nextOptions);
+
+        const params = new URLSearchParams(searchParams.toString());
+        params.delete("featured");
+        nextOptions.forEach((option) => params.append("featured", option));
+
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+        router.refresh();
     };
 
     return (
         <div className="p-6 pt-4 w-full bg-white rounded-xl border border-slate-200 text-slate-900 shadow-lg max-w-64 max-h-60 flex flex-col">
             <div className="mb-6">
-                <h3 className="font-bold text-lg">{t("sizeTitle")}</h3>
+                <h3 className="font-bold text-lg">{t("spTitle")}</h3>
             </div>
 
             <div className="flex flex-col gap-4 overflow-y-auto pr-2 custom-scrollbar">
@@ -33,8 +68,8 @@ export const Sp = () => {
                         <input
                             type="checkbox"
                             className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                            checked={selectedSizes.includes(item.id)}
-                            onChange={() => toggleSize(item.id)}
+                            checked={selectedOptions.includes(item.id)}
+                            onChange={() => toggleOption(item.id)}
                         />
                         <span className="text-slate-700 group-hover:text-blue-600 font-medium transition-colors">
                             {t(item.id)}
