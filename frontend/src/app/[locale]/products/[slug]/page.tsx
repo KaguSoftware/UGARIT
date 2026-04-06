@@ -96,9 +96,20 @@ async function findProductAcrossLocales(slug: string) {
                 query: {
                     locale: "all",
                     filters: {
-                        slug: {
-                            $eq: slug,
-                        },
+                        $or: [
+                            {
+                                slug: {
+                                    $eq: slug,
+                                },
+                            },
+                            {
+                                localizations: {
+                                    slug: {
+                                        $eq: slug,
+                                    },
+                                },
+                            },
+                        ],
                     },
                     fields: [
                         "documentId",
@@ -186,17 +197,21 @@ export default async function ProductDetail({
             normalizeProduct(productFromAnyLocale);
 
         if (productFromAnyLocale) {
-            const localizedSlug = getLocalizedSlug(
-                productFromAnyLocale,
-                locale
-            );
-
-            if (localizedSlug && localizedSlug !== slug) {
-                redirect(`/${locale}/products/${localizedSlug}`);
-            }
-
             if (normalizedAnyLocaleProduct?.locale === locale) {
                 strapiProduct = normalizedAnyLocaleProduct;
+            } else {
+                const localizedSlug = getLocalizedSlug(
+                    productFromAnyLocale,
+                    locale
+                );
+
+                if (localizedSlug) {
+                    if (localizedSlug !== slug) {
+                        redirect(`/${locale}/products/${localizedSlug}`);
+                    }
+
+                    strapiProduct = await getProduct(localizedSlug, locale);
+                }
             }
         }
     }
