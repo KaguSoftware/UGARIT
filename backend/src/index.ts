@@ -4,6 +4,11 @@ import type { Core } from "@strapi/strapi";
 
 const SOURCE_LOCALE = "tr";
 const TARGET_LOCALES = ["en", "ar"];
+const PUBLISH_RETRY_DELAY_MS = 300;
+
+function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 // ─── Product sync ────────────────────────────────────────────────────────────
 
@@ -56,6 +61,7 @@ async function syncProductLocales(
         return;
     }
 
+    // Step 1: Write all drafts first
     for (const locale of TARGET_LOCALES) {
         const data = buildProductData(source, locale);
         try {
@@ -65,15 +71,7 @@ async function syncProductLocales(
                 data: data as any,
                 status: "draft",
             });
-
-            if (shouldPublish) {
-                await strapi.documents(PRODUCT_UID as any).publish({
-                    documentId,
-                    locale,
-                });
-            }
-
-            console.log(`[Ugarit] ✅ Product locale '${locale}' synced`);
+            console.log(`[Ugarit] ✅ Product draft written for '${locale}'`);
         } catch (err: any) {
             console.warn(
                 `[Ugarit] update() failed for product '${locale}', trying direct insert: ${err.message}`
@@ -84,7 +82,7 @@ async function syncProductLocales(
                         ...data,
                         locale,
                         document_id: documentId,
-                        published_at: shouldPublish ? new Date() : null,
+                        published_at: null,
                     },
                 });
                 console.log(
@@ -95,6 +93,24 @@ async function syncProductLocales(
                     `[Ugarit] ❌ Product locale '${locale}' failed: ${dbErr.message}`
                 );
             }
+        }
+    }
+
+    // Step 2: Publish all locales in one call using wildcard — avoids race conditions
+    if (shouldPublish) {
+        await wait(PUBLISH_RETRY_DELAY_MS);
+        try {
+            await strapi.documents(PRODUCT_UID as any).publish({
+                documentId,
+                locale: "*",
+            });
+            console.log(
+                `[Ugarit] ✅ Product all locales published for ${documentId}`
+            );
+        } catch (err: any) {
+            console.error(
+                `[Ugarit] ❌ Product publish all failed: ${err.message}`
+            );
         }
     }
 }
@@ -135,6 +151,7 @@ async function syncCategoryLocales(
         return;
     }
 
+    // Step 1: Write all drafts first
     for (const locale of TARGET_LOCALES) {
         const data = buildCategoryData(source);
         try {
@@ -144,15 +161,7 @@ async function syncCategoryLocales(
                 data: data as any,
                 status: "draft",
             });
-
-            if (shouldPublish) {
-                await strapi.documents(CATEGORY_UID as any).publish({
-                    documentId,
-                    locale,
-                });
-            }
-
-            console.log(`[Ugarit] ✅ Category locale '${locale}' synced`);
+            console.log(`[Ugarit] ✅ Category draft written for '${locale}'`);
         } catch (err: any) {
             console.warn(
                 `[Ugarit] update() failed for category '${locale}', trying direct insert: ${err.message}`
@@ -163,7 +172,7 @@ async function syncCategoryLocales(
                         ...data,
                         locale,
                         document_id: documentId,
-                        published_at: shouldPublish ? new Date() : null,
+                        published_at: null,
                     },
                 });
                 console.log(
@@ -174,6 +183,24 @@ async function syncCategoryLocales(
                     `[Ugarit] ❌ Category locale '${locale}' failed: ${dbErr.message}`
                 );
             }
+        }
+    }
+
+    // Step 2: Publish all locales in one call using wildcard — avoids race conditions
+    if (shouldPublish) {
+        await wait(PUBLISH_RETRY_DELAY_MS);
+        try {
+            await strapi.documents(CATEGORY_UID as any).publish({
+                documentId,
+                locale: "*",
+            });
+            console.log(
+                `[Ugarit] ✅ Category all locales published for ${documentId}`
+            );
+        } catch (err: any) {
+            console.error(
+                `[Ugarit] ❌ Category publish all failed: ${err.message}`
+            );
         }
     }
 }
@@ -190,15 +217,11 @@ export default {
 
             if (!documentId) return result;
 
-            // We care about 3 actions:
-            // - "create" / "update" from the tr locale → sync drafts
-            // - "publish" from the tr locale → sync and publish
             const locale = params?.locale;
             const isSourceLocale = locale === SOURCE_LOCALE;
 
             const isSaveAction =
                 (action === "create" || action === "update") && isSourceLocale;
-            // publish action doesn't always carry locale, so we check the source
             const isPublishAction = action === "publish" && isSourceLocale;
 
             if (!isSaveAction && !isPublishAction) return result;
