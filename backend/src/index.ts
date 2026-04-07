@@ -9,6 +9,56 @@ function wait(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+async function publishWithRetry(
+    strapi: Core.Strapi,
+    uid: string,
+    documentId: string,
+    locale: string,
+    retries = 3,
+    delayMs = 1000
+) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            // Confirm the draft exists before attempting to publish
+            const draft = await strapi.documents(uid as any).findOne({
+                documentId,
+                locale,
+                status: "draft",
+            });
+            console.log(
+                `[Ugarit] Draft check for '${locale}' (attempt ${attempt}):`,
+                draft ? `found (id: ${draft.id})` : "NOT FOUND"
+            );
+
+            if (!draft) {
+                await wait(delayMs);
+                continue;
+            }
+
+            const publishResult = await strapi.documents(uid as any).publish({
+                documentId,
+                locale,
+            });
+            console.log(
+                `[Ugarit] ✅ Published '${locale}':`,
+                JSON.stringify(
+                    publishResult?.entries?.map((entry: any) => ({
+                        locale: entry.locale,
+                        publishedAt: entry.publishedAt,
+                    })) ?? []
+                )
+            );
+            return;
+        } catch (err: any) {
+            console.error(
+                `[Ugarit] ❌ Publish attempt ${attempt} for '${locale}' failed: ${err.message}`
+            );
+            if (attempt < retries) await wait(delayMs * attempt);
+        }
+    }
+    console.error(`[Ugarit] ❌ All publish attempts exhausted for '${locale}'`);
+}
+
 // ─── Product sync ────────────────────────────────────────────────────────────
 
 const PRODUCT_UID = "api::product.product";
@@ -45,7 +95,7 @@ async function syncProductLocales(
     shouldPublish: boolean
 ) {
     console.log(
-        `[Ugarit] Syncing product ${documentId} (publish: ${shouldPublish})`
+        `[Ugarit] ── Product sync start: ${documentId} (publish: ${shouldPublish})`
     );
 
     const source = await strapi.documents(PRODUCT_UID as any).findOne({
@@ -60,20 +110,21 @@ async function syncProductLocales(
         return;
     }
 
-    // Step 1: write all drafts sequentially
     for (const locale of TARGET_LOCALES) {
         const data = buildProductData(source, locale);
         try {
-            await strapi.documents(PRODUCT_UID as any).update({
+            const updated = await strapi.documents(PRODUCT_UID as any).update({
                 documentId,
                 locale,
                 data: data as any,
                 status: "draft",
             });
-            console.log(`[Ugarit] ✅ Product draft written for '${locale}'`);
+            console.log(
+                `[Ugarit] ✅ Product draft written for '${locale}' (id: ${updated?.id})`
+            );
         } catch (err: any) {
             console.warn(
-                `[Ugarit] update() failed for product '${locale}', trying direct insert: ${err.message}`
+                `[Ugarit] update() failed for product '${locale}': ${err.message}`
             );
             try {
                 await strapi.db.query(PRODUCT_UID as any).create({
@@ -84,35 +135,25 @@ async function syncProductLocales(
                         published_at: null,
                     },
                 });
-                console.log(
-                    `[Ugarit] ✅ Product locale '${locale}' direct-inserted`
-                );
+                console.log(`[Ugarit] ✅ Product '${locale}' direct-inserted`);
             } catch (dbErr: any) {
                 console.error(
-                    `[Ugarit] ❌ Product locale '${locale}' failed: ${dbErr.message}`
+                    `[Ugarit] ❌ Product '${locale}' insert failed: ${dbErr.message}`
                 );
             }
         }
     }
 
-    // Step 2: publish each locale explicitly — do NOT use wildcard,
-    // as it may miss freshly created locale rows
     if (shouldPublish) {
-        await wait(500);
+        console.log(
+            `[Ugarit] Starting publish phase for product ${documentId}`
+        );
         for (const locale of TARGET_LOCALES) {
-            try {
-                await strapi.documents(PRODUCT_UID as any).publish({
-                    documentId,
-                    locale,
-                });
-                console.log(`[Ugarit] ✅ Product locale '${locale}' published`);
-            } catch (err: any) {
-                console.error(
-                    `[Ugarit] ❌ Product publish '${locale}' failed: ${err.message}`
-                );
-            }
+            await publishWithRetry(strapi, PRODUCT_UID, documentId, locale);
         }
     }
+
+    console.log(`[Ugarit] ── Product sync end: ${documentId}`);
 }
 
 // ─── Category sync ───────────────────────────────────────────────────────────
@@ -136,7 +177,7 @@ async function syncCategoryLocales(
     shouldPublish: boolean
 ) {
     console.log(
-        `[Ugarit] Syncing category ${documentId} (publish: ${shouldPublish})`
+        `[Ugarit] ── Category sync start: ${documentId} (publish: ${shouldPublish})`
     );
 
     const source = await strapi.documents(CATEGORY_UID as any).findOne({
@@ -151,20 +192,21 @@ async function syncCategoryLocales(
         return;
     }
 
-    // Step 1: write all drafts sequentially
     for (const locale of TARGET_LOCALES) {
         const data = buildCategoryData(source);
         try {
-            await strapi.documents(CATEGORY_UID as any).update({
+            const updated = await strapi.documents(CATEGORY_UID as any).update({
                 documentId,
                 locale,
                 data: data as any,
                 status: "draft",
             });
-            console.log(`[Ugarit] ✅ Category draft written for '${locale}'`);
+            console.log(
+                `[Ugarit] ✅ Category draft written for '${locale}' (id: ${updated?.id})`
+            );
         } catch (err: any) {
             console.warn(
-                `[Ugarit] update() failed for category '${locale}', trying direct insert: ${err.message}`
+                `[Ugarit] update() failed for category '${locale}': ${err.message}`
             );
             try {
                 await strapi.db.query(CATEGORY_UID as any).create({
@@ -175,36 +217,25 @@ async function syncCategoryLocales(
                         published_at: null,
                     },
                 });
-                console.log(
-                    `[Ugarit] ✅ Category locale '${locale}' direct-inserted`
-                );
+                console.log(`[Ugarit] ✅ Category '${locale}' direct-inserted`);
             } catch (dbErr: any) {
                 console.error(
-                    `[Ugarit] ❌ Category locale '${locale}' failed: ${dbErr.message}`
+                    `[Ugarit] ❌ Category '${locale}' insert failed: ${dbErr.message}`
                 );
             }
         }
     }
 
-    // Step 2: publish each locale explicitly
     if (shouldPublish) {
-        await wait(500);
+        console.log(
+            `[Ugarit] Starting publish phase for category ${documentId}`
+        );
         for (const locale of TARGET_LOCALES) {
-            try {
-                await strapi.documents(CATEGORY_UID as any).publish({
-                    documentId,
-                    locale,
-                });
-                console.log(
-                    `[Ugarit] ✅ Category locale '${locale}' published`
-                );
-            } catch (err: any) {
-                console.error(
-                    `[Ugarit] ❌ Category publish '${locale}' failed: ${err.message}`
-                );
-            }
+            await publishWithRetry(strapi, CATEGORY_UID, documentId, locale);
         }
     }
+
+    console.log(`[Ugarit] ── Category sync end: ${documentId}`);
 }
 
 // ─── Registration ────────────────────────────────────────────────────────────
@@ -220,13 +251,10 @@ export default {
 
             const locale = params?.locale;
 
-            // "create" and "update" always carry locale in params
             const isSaveFromSource =
                 (action === "create" || action === "update") &&
                 locale === SOURCE_LOCALE;
 
-            // "publish" from the admin panel may NOT carry locale at all,
-            // or may carry it. Accept both cases.
             const isPublishFromSource =
                 action === "publish" &&
                 (locale === SOURCE_LOCALE ||
@@ -235,16 +263,18 @@ export default {
 
             if (!isSaveFromSource && !isPublishFromSource) return result;
 
-            // For publish with no locale, verify the source locale is actually
-            // the one being published by checking the result
             if (isPublishFromSource && locale !== SOURCE_LOCALE) {
-                // Check if the published version is the tr locale
                 const publishedLocale =
-                    result?.locale ?? result?.versions?.[0]?.locale;
+                    result?.locale ?? result?.entries?.[0]?.locale;
                 if (publishedLocale && publishedLocale !== SOURCE_LOCALE) {
                     return result;
                 }
             }
+
+            // Log full context so we can debug what Strapi passes
+            console.log(
+                `[Ugarit] Middleware hit — action: ${action}, uid: ${uid}, locale: ${locale}, documentId: ${documentId}`
+            );
 
             const shouldPublish = isPublishFromSource;
 
