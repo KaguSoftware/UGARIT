@@ -1,4 +1,7 @@
-import type { Core } from "@strapi/strapi";
+// Locale sync logic has been moved to src/index.ts — see that file.
+// import type { Core } from "@strapi/strapi";
+
+import { Core } from "@strapi/strapi";
 
 console.log("--------------------------------------------------");
 console.log("🚀 UGARIT: Product Lifecycle Module Loaded!");
@@ -8,9 +11,14 @@ const UID = "api::product.product";
 const SOURCE_LOCALE = "tr";
 const TARGET_LOCALES = ["en", "ar"];
 const SYNC_DELAY_MS = 2000;
+const MAX_RETRIES = 3;
 
 // Simple lock to prevent infinite loops during updates
 let isSyncing = false;
+
+function wait(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function buildLocalizedData(source: any, locale: string) {
     return {
@@ -38,6 +46,67 @@ function buildLocalizedData(source: any, locale: string) {
     };
 }
 
+async function upsertLocale(
+    strapi: Core.Strapi,
+    documentId: string,
+    locale: string,
+    data: any,
+    status: "published" | "draft"
+) {
+    let lastError: unknown = null;
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            // Try update first (locale already exists)
+            await strapi.documents(UID as any).update({
+                documentId,
+                locale,
+                data,
+                status,
+            });
+            return; // success
+        } catch (updateErr: any) {
+            // If the locale doesn't exist yet, Strapi throws a "document not found" error.
+            // In that case, create the locale version instead.
+            const msg: string = updateErr?.message ?? "";
+            const isNotFound =
+                msg.includes("not found") ||
+                msg.includes("does not exist") ||
+                updateErr?.details?.code === "DOCUMENT_NOT_FOUND";
+
+            if (isNotFound) {
+                try {
+                    await strapi.documents(UID as any).create({
+                        data: { ...data, locale },
+                        status,
+                    });
+                    // After creating with a new documentId we need to re-link —
+                    // Strapi i18n requires using the `locale` param on the same
+                    // documentId. Use the internal entity service as a fallback.
+                    await strapi
+                        .plugin("i18n")
+                        .service("localizations")
+                        .createLocalization(
+                            { documentId, locale: SOURCE_LOCALE },
+                            { data: { ...data, locale }, populate: [] }
+                        );
+                    return; // success via i18n service
+                } catch (i18nErr: any) {
+                    lastError = i18nErr;
+                }
+            } else {
+                lastError = updateErr;
+            }
+        }
+
+        if (attempt < MAX_RETRIES) {
+            await wait(500 * attempt);
+        }
+    }
+
+    throw lastError;
+}
+
 async function syncProductLocalesFromSource(
     strapi: Core.Strapi,
     documentId: string
@@ -61,24 +130,21 @@ async function syncProductLocalesFromSource(
             return;
         }
 
+        const status = sourceData.publishedAt ? "published" : "draft";
+
         for (const locale of TARGET_LOCALES) {
             const data = buildLocalizedData(sourceData, locale);
             try {
-                await strapi.documents(UID as any).update({
-                    documentId,
-                    locale,
-                    data: data as any,
-                    status: sourceData.publishedAt ? "published" : "draft",
-                });
+                await upsertLocale(strapi, documentId, locale, data, status);
                 console.log(`[Ugarit] ✅ Synced locale: ${locale}`);
-            } catch (err) {
+            } catch (err: any) {
                 console.error(
                     `[Ugarit] ❌ Error syncing ${locale}:`,
                     err.message
                 );
             }
         }
-    } catch (err) {
+    } catch (err: any) {
         console.error(`[Ugarit] 💥 Sync failed:`, err.message);
     } finally {
         isSyncing = false;
