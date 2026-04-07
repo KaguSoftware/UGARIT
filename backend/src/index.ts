@@ -127,18 +127,17 @@ async function syncProductLocales(
                 `[Ugarit] update() failed for product '${locale}': ${err.message}`
             );
             try {
-                await strapi.db.query(PRODUCT_UID as any).create({
-                    data: {
-                        ...data,
-                        locale,
-                        document_id: documentId,
-                        published_at: null,
-                    },
-                });
-                console.log(`[Ugarit] ✅ Product '${locale}' direct-inserted`);
-            } catch (dbErr: any) {
+                await strapi
+                    .plugin("i18n")
+                    .service("localizations")
+                    .createLocalization(
+                        { documentId, locale: SOURCE_LOCALE },
+                        { data: { ...data, locale }, populate: [] }
+                    );
+                console.log(`[Ugarit] ✅ Product '${locale}' locale created via i18n service`);
+            } catch (i18nErr: any) {
                 console.error(
-                    `[Ugarit] ❌ Product '${locale}' insert failed: ${dbErr.message}`
+                    `[Ugarit] ❌ Product '${locale}' locale creation failed: ${i18nErr.message}`
                 );
             }
         }
@@ -209,18 +208,17 @@ async function syncCategoryLocales(
                 `[Ugarit] update() failed for category '${locale}': ${err.message}`
             );
             try {
-                await strapi.db.query(CATEGORY_UID as any).create({
-                    data: {
-                        ...data,
-                        locale,
-                        document_id: documentId,
-                        published_at: null,
-                    },
-                });
-                console.log(`[Ugarit] ✅ Category '${locale}' direct-inserted`);
-            } catch (dbErr: any) {
+                await strapi
+                    .plugin("i18n")
+                    .service("localizations")
+                    .createLocalization(
+                        { documentId, locale: SOURCE_LOCALE },
+                        { data: { ...data, locale }, populate: [] }
+                    );
+                console.log(`[Ugarit] ✅ Category '${locale}' locale created via i18n service`);
+            } catch (i18nErr: any) {
                 console.error(
-                    `[Ugarit] ❌ Category '${locale}' insert failed: ${dbErr.message}`
+                    `[Ugarit] ❌ Category '${locale}' locale creation failed: ${i18nErr.message}`
                 );
             }
         }
