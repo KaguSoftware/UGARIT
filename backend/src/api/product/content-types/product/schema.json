@@ -113,6 +113,11 @@
             "multiple": true,
             "allowedTypes": ["images", "files", "videos", "audios"]
         },
+        "colorVariants": {
+            "type": "component",
+            "repeatable": true,
+            "component": "product.color-variant"
+        },
         "category": {
             "type": "relation",
             "relation": "manyToOne",

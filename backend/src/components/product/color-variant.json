@@ -1,0 +1,22 @@
+{
+    "collectionName": "components_product_color_variants",
+    "info": {
+        "displayName": "Color Variant",
+        "icon": "paint-brush",
+        "description": "Links a specific image to a color"
+    },
+    "options": {},
+    "attributes": {
+        "color": {
+            "type": "relation",
+            "relation": "oneToOne",
+            "target": "api::color.color"
+        },
+        "image": {
+            "type": "media",
+            "multiple": false,
+            "required": true,
+            "allowedTypes": ["images"]
+        }
+    }
+}

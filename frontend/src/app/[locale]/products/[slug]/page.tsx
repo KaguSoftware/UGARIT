@@ -6,6 +6,7 @@ import { PRODUCTPAGE } from "./constants";
 import { getTranslations } from "next-intl/server";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import AddToCartSection from "./AddToCartSection";
+import ProductGallery from "./ProductGallery";
 import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
 
 function extractImageUrl(image: any) {
@@ -42,6 +43,12 @@ function buildProductPopulate() {
     return {
         image: { fields: ["url"] },
         localizations: { fields: ["slug", "locale"] },
+        colorVariants: {
+            populate: {
+                color: true,
+                image: { fields: ["url"] },
+            },
+        },
     };
 }
 
@@ -229,6 +236,17 @@ export default async function ProductDetail({
         ? [strapiProduct.image]
         : [];
 
+    const fallbackImages = allImages.map((img: any) => extractImageUrl(img));
+
+    // Map through the color variants and normalize the data
+    const formattedColorVariants = (strapiProduct.colorVariants || [])
+        .map((cv: any) => ({
+            id: cv.id,
+            color: cv.color?.attributes || cv.color, // handle both data wrapper structures
+            imageUrl: extractImageUrl(cv.image),
+        }))
+        .filter((cv: any) => cv.color); // ensure the relation exists
+
     const sizeOptions = [
         { label: "XS", isAvailable: strapiProduct.sizeXS },
         { label: "S", isAvailable: strapiProduct.sizeS },
@@ -242,34 +260,14 @@ export default async function ProductDetail({
         <MaxWidthWrapper>
             <main className="py-10 px-6">
                 <div className="md:grid md:grid-cols-2 grid-cols-1">
-                    <div className="justify-items-center">
-                        <Image
-                            className="object-cover w-auto md:h-screen rounded-2xl"
-                            alt={strapiProduct.title || "Product Image"}
-                            src={mainImageUrl}
-                            width={1000}
-                            height={750}
-                            unoptimized
-                        />
-                        <div className="justify-items-center">
-                            <p className="font-bold text-sm mt-6">
-                                {t(PRODUCTPAGE.colors)}
-                            </p>
-                            <div className="flex mt-2 gap-4 flex-wrap justify-center">
-                                {allImages.map((img: any, index: number) => (
-                                    <Image
-                                        key={index}
-                                        alt="gallery thumbnail"
-                                        src={extractImageUrl(img)}
-                                        width={75}
-                                        height={75}
-                                        unoptimized
-                                        className="object-cover rounded-xl w-75px h-75px"
-                                    />
-                                ))}
-                            </div>
-                        </div>
-                    </div>
+                    {/* Replaced static image column with interactive ProductGallery component */}
+                    <ProductGallery
+                        initialImage={mainImageUrl}
+                        colorVariants={formattedColorVariants}
+                        colorsTitle={t(PRODUCTPAGE.colors)}
+                        fallbackImages={fallbackImages}
+                    />
+
                     <div className="px-6">
                         <h1 className="text-3xl tracking-tighter font-bold md:mt-0 mt-4 max-w-200">
                             {strapiProduct.title}
@@ -284,7 +282,7 @@ export default async function ProductDetail({
                                 <h2 className="font-semibold text-xl mt-4">
                                     {t(PRODUCTPAGE.desc)}
                                 </h2>
-                                <p className="text-gray-500 tracking-tight text-xl mt-2 max-w-200">
+                                <p className="text-gray-500 tracking-tight text-xl mt-2 max-w-200 whitespace-pre-wrap">
                                     {strapiProduct.description}
                                 </p>
                             </>

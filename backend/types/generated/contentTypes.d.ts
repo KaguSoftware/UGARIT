@@ -611,6 +611,45 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiColorColor extends Struct.CollectionTypeSchema {
+  collectionName: 'colors';
+  info: {
+    description: 'Available product colors';
+    displayName: 'Color';
+    pluralName: 'colors';
+    singularName: 'color';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  pluginOptions: {
+    i18n: {
+      localized: true;
+    };
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    hexCode: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.DefaultTo<'#000000'>;
+    locale: Schema.Attribute.String;
+    localizations: Schema.Attribute.Relation<'oneToMany', 'api::color.color'>;
+    name: Schema.Attribute.String &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetPluginOptions<{
+        i18n: {
+          localized: true;
+        };
+      }>;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiProductProduct extends Struct.CollectionTypeSchema {
   collectionName: 'products';
   info: {
@@ -632,6 +671,7 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
       'api::cart-item.cart-item'
     >;
     category: Schema.Attribute.Relation<'manyToOne', 'api::category.category'>;
+    colorVariants: Schema.Attribute.Component<'product.color-variant', true>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
@@ -1315,6 +1355,7 @@ declare module '@strapi/strapi' {
       'api::cart-item.cart-item': ApiCartItemCartItem;
       'api::cart.cart': ApiCartCart;
       'api::category.category': ApiCategoryCategory;
+      'api::color.color': ApiColorColor;
       'api::product.product': ApiProductProduct;
       'api::userdb.userdb': ApiUserdbUserdb;
       'plugin::content-releases.release': PluginContentReleasesRelease;
