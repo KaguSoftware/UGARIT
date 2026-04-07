@@ -29,7 +29,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
         process.env.NODE_ENV === "production"
     ) {
         console.warn(
-            "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost, which will fail on the deployed site."
+            "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost."
         );
     }
 
@@ -45,48 +45,69 @@ export default function CartProductCard({ product }: cartProductCardProps) {
             setIsDeleting(false);
         }
     };
+
     return (
         <MaxWidthWrapper>
             <div
-                className={`flex max-h-fit h-full w-auto bg-black/2 rounded-2xl transition-opacity ${
-                    isDeleting ? "opacity-50" : "opacity-100"
+                className={`flex items-stretch bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden transition-all hover:shadow-sm h-32 md:h-36 ${
+                    isDeleting
+                        ? "opacity-50 pointer-events-none"
+                        : "opacity-100"
                 }`}
             >
-                <div className="size-42 md:w-[20%] min-w-18 w-24 h-fit">
-                    <Link
-                        className="rounded-2xl object-cover"
-                        href={`/products/${product.slug}`}
-                    >
-                        <Image
-                            src={imageUrl}
-                            alt={product.title}
-                            width={300}
-                            height={400}
-                            className="rounded-2xl"
-                            unoptimized
-                        />
-                    </Link>
-                </div>
-                <div className=" flex p-2 justify-center w-full h-full">
-                    <div className="flex md:flex-col justify-between w-full">
-                        <h3 className="text-xl font-bold text-black line-clamp-2">
-                            {product.title}
-                        </h3>
-                        <p className=" self-center md:mr-auto text-gray-700 font-bold bg-gray-50 w-fit h-fit md:px-6 px-2 rounded-full">
-                            {product.size}
-                        </p>
-                    </div>
-                    <div className="flex gap-1">
-                        <h2 className="text-black self-center font-bold">
-                            ₺{product.unitPrice}
-                        </h2>
+                {/* Image Section */}
+                <Link
+                    href={`/products/${product.slug}`}
+                    className="w-28 md:w-36 shrink-0 relative block bg-gray-200"
+                >
+                    <Image
+                        src={imageUrl}
+                        alt={product.title}
+                        fill
+                        className="object-cover"
+                        unoptimized
+                    />
+                </Link>
+
+                {/* Details Section */}
+                <div className="flex flex-col justify-between flex-1 p-4 w-full min-w-0">
+                    {/* Top Row: Title & Trash */}
+                    <div className="flex justify-between items-start gap-3">
+                        {/* Title & Attributes - min-w-0 is absolutely required here for truncate to work */}
+                        <div className="flex-1 min-w-0">
+                            <h3
+                                className="text-lg font-bold text-gray-900 truncate"
+                                title={product.title}
+                            >
+                                {product.title}
+                            </h3>
+                            <p className="text-sm font-medium text-gray-500 mt-1 truncate">
+                                {product.size}{" "}
+                                {product.color &&
+                                    product.color !== "Default" &&
+                                    `• ${product.color}`}
+                            </p>
+                        </div>
+
+                        {/* Delete Button */}
                         <button
                             onClick={handleDelete}
                             disabled={isDeleting}
-                            className="disabled:opacity-50 transition-opacity"
+                            aria-label="Remove item"
+                            className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors shrink-0 -mt-2 -mr-2"
                         >
-                            <Trash className="text-red-400 md:size-6 size-7 hover:text-red-600 transition-colors" />
+                            <Trash size={20} />
                         </button>
+                    </div>
+
+                    {/* Bottom Row: Quantity & Price */}
+                    <div className="flex items-center justify-between mt-auto">
+                        <span className="text-gray-500 text-sm font-medium">
+                            Qty: {product.quantity}
+                        </span>
+                        <span className="text-xl font-bold text-black">
+                            ₺{product.unitPrice}
+                        </span>
                     </div>
                 </div>
             </div>

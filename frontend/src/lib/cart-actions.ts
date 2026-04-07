@@ -22,6 +22,7 @@ type StrapiSingleResponse<T> = {
 type CartItemSnapshot = {
     quantity?: number;
     size?: string;
+    color?: string;
     unitPrice?: number;
     titleSnapshot?: string;
     slugSnapshot?: string;
@@ -60,11 +61,7 @@ async function getEntityIdByDocumentId(
         >(`/api/${collection}`, {
             query: {
                 locale,
-                filters: {
-                    documentId: {
-                        $eq: documentId,
-                    },
-                },
+                filters: { documentId: { $eq: documentId } },
                 fields: ["id"],
                 pagination: { pageSize: 1 },
             },
@@ -90,7 +87,6 @@ export async function ensureCartSessionId() {
 
     if (!cartSessionId) {
         cartSessionId = randomUUID();
-
         cookieStore.set("cartSessionId", cartSessionId, {
             httpOnly: true,
             sameSite: "lax",
@@ -106,26 +102,21 @@ export async function ensureCartSessionId() {
 export async function getOrCreateCart(cartSessionId?: string) {
     const resolvedCartSessionId = cartSessionId ?? (await getCartSessionId());
 
-    if (!resolvedCartSessionId) {
-        return null;
-    }
+    if (!resolvedCartSessionId) return null;
 
     try {
         const searchData = await strapiPrivateFetch<
             StrapiCollectionResponse<CartEntity>
         >("/api/carts", {
             query: {
-                filters: {
-                    sessionId: {
-                        $eq: resolvedCartSessionId,
-                    },
-                },
+                filters: { sessionId: { $eq: resolvedCartSessionId } },
                 fields: ["sessionId", "cartStatus", "documentId"],
                 populate: {
                     cart_items: {
                         fields: [
                             "quantity",
                             "size",
+                            "color",
                             "unitPrice",
                             "titleSnapshot",
                             "slugSnapshot",
@@ -171,6 +162,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
 export async function addToCart(
     productDocumentId: string,
     size: string,
+    color: string,
     quantity: number,
     unitPrice: number,
     title: string,
@@ -178,14 +170,10 @@ export async function addToCart(
     imageUrl: string,
     currentLocale: string
 ) {
-    // make sure the cookie exists before creating or fetching a cart
     const cartSessionId = await ensureCartSessionId();
     const cart = await getOrCreateCart(cartSessionId);
 
-    if (!cart) {
-        console.error("No cart found or created for session:", cartSessionId);
-        return { success: false, error: "Could not get cart session" };
-    }
+    if (!cart) return { success: false, error: "Could not get cart session" };
 
     const cartId =
         typeof cart?.id === "number"
@@ -202,12 +190,6 @@ export async function addToCart(
     );
 
     if (!cartId || !productRelationValue) {
-        console.error("Could not resolve relation ids for cart item", {
-            cartId,
-            cartDocumentId: cart?.documentId,
-            productDocumentId,
-            productId: productRelationValue,
-        });
         return { success: false, error: "Failed to save item." };
     }
 
@@ -221,6 +203,7 @@ export async function addToCart(
                     data: {
                         quantity,
                         size,
+                        color,
                         unitPrice,
                         titleSnapshot: title,
                         slugSnapshot: slug,
@@ -250,13 +233,10 @@ export async function removeFromCart(documentId: string) {
             method: "DELETE",
             headers: await getStrapiHeaders(),
         });
-
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
-
         return { success: true };
     } catch (error) {
-        console.error("Network error deleting item:", error);
         return { success: false, error: "Could not connect to database" };
     }
 }

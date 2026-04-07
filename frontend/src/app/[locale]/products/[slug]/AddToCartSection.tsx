@@ -18,6 +18,7 @@ interface Props {
     title: string;
     slug: string;
     imageUrl: string;
+    color?: string; // <-- 1. Added color to your props here!
     sizeOptions: SizeOption[];
     translations: {
         sizetext: string;
@@ -33,6 +34,7 @@ export default function AddToCartSection({
     title,
     slug,
     imageUrl,
+    color = "Default", // <-- 2. Default fallback if no color is passed
     sizeOptions,
     translations,
 }: Props) {
@@ -49,16 +51,18 @@ export default function AddToCartSection({
         }
 
         setIsAdding(true);
-        // Using Number() just to be safe with the Strapi data type
+
+        // 3. Fixed the argument order to perfectly match cart-actions.ts
         const result = await addToCartAction(
-            documentId,
-            selectedSize,
-            1,
-            Number(price),
-            title,
-            slug,
-            imageUrl,
-            currentLocale
+            documentId, // 1. productDocumentId
+            selectedSize, // 2. size
+            color, // 3. color (moved this here!)
+            1, // 4. quantity
+            Number(price), // 5. unitPrice
+            title, // 6. title
+            slug, // 7. slug
+            imageUrl, // 8. imageUrl
+            currentLocale // 9. currentLocale
         );
 
         if (result.success) {

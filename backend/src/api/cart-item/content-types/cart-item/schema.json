@@ -1,93 +1,94 @@
 {
-  "kind": "collectionType",
-  "collectionName": "cart_items",
-  "info": {
-    "singularName": "cart-item",
-    "pluralName": "cart-items",
-    "displayName": "cart-item"
-  },
-  "options": {
-    "draftAndPublish": true
-  },
-  "pluginOptions": {
-    "i18n": {
-      "localized": true
+    "kind": "collectionType",
+    "collectionName": "cart_items",
+    "info": {
+        "singularName": "cart-item",
+        "pluralName": "cart-items",
+        "displayName": "cart-item"
+    },
+    "options": {
+        "draftAndPublish": true
+    },
+    "pluginOptions": {
+        "i18n": {
+            "localized": true
+        }
+    },
+    "attributes": {
+        "quantity": {
+            "type": "integer",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            },
+            "required": true,
+            "default": 1,
+            "min": 1
+        },
+        "size": {
+            "type": "enumeration",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            },
+            "enum": ["XS", "S", "M", "L", "XL", "XXL"]
+        },
+        "color": {
+            "type": "string",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "unitPrice": {
+            "type": "decimal",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            },
+            "required": true
+        },
+        "titleSnapshot": {
+            "type": "string",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            },
+            "required": true
+        },
+        "slugSnapshot": {
+            "type": "string",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            },
+            "required": true
+        },
+        "imageSnapshot": {
+            "type": "string",
+            "pluginOptions": {
+                "i18n": {
+                    "localized": true
+                }
+            }
+        },
+        "cart_item": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::cart.cart",
+            "inversedBy": "cart_items"
+        },
+        "product": {
+            "type": "relation",
+            "relation": "manyToOne",
+            "target": "api::product.product",
+            "inversedBy": "cart_items"
+        }
     }
-  },
-  "attributes": {
-    "quantity": {
-      "type": "integer",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true,
-      "default": 1,
-      "min": 1
-    },
-    "size": {
-      "type": "enumeration",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "enum": [
-        "XS",
-        "S",
-        "M",
-        "L",
-        "XL",
-        "XXL"
-      ]
-    },
-    "unitPrice": {
-      "type": "decimal",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
-    "titleSnapshot": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
-    "slugSnapshot": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      },
-      "required": true
-    },
-    "imageSnapshot": {
-      "type": "string",
-      "pluginOptions": {
-        "i18n": {
-          "localized": true
-        }
-      }
-    },
-    "cart_item": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::cart.cart",
-      "inversedBy": "cart_items"
-    },
-    "product": {
-      "type": "relation",
-      "relation": "manyToOne",
-      "target": "api::product.product",
-      "inversedBy": "cart_items"
-    }
-  }
 }

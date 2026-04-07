@@ -1,37 +1,17 @@
-import Image from "next/image";
-import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
-import { PRODUCTPAGE } from "./constants";
 import { getTranslations } from "next-intl/server";
+import { PRODUCTPAGE } from "./constants";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
-import AddToCartSection from "./AddToCartSection";
-import ProductGallery from "./ProductGallery";
+import ProductInteractive from "./ProductInteractive";
 import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
 
 function extractImageUrl(image: any) {
     if (!image) return "/mock-images/mockshirt.png";
-
-    if (Array.isArray(image)) {
-        return extractImageUrl(image[0]);
-    }
-
-    if (typeof image === "string") {
-        return getStrapiMedia(image);
-    }
-
-    if (image.url) {
-        return getStrapiMedia(image.url);
-    }
-
-    if (image.data) {
-        return extractImageUrl(image.data);
-    }
-
-    if (image.attributes?.url) {
-        return getStrapiMedia(image.attributes.url);
-    }
-
+    if (Array.isArray(image)) return extractImageUrl(image[0]);
+    if (typeof image === "string") return getStrapiMedia(image);
+    if (image.url) return getStrapiMedia(image.url);
+    if (image.data) return extractImageUrl(image.data);
+    if (image.attributes?.url) return getStrapiMedia(image.attributes.url);
     return "/mock-images/mockshirt.png";
 }
 
@@ -44,10 +24,7 @@ function buildProductPopulate() {
         image: { fields: ["url"] },
         localizations: { fields: ["slug", "locale"] },
         colorVariants: {
-            populate: {
-                color: true,
-                image: { fields: ["url"] },
-            },
+            populate: { color: true, image: { fields: ["url"] } },
         },
     };
 }
@@ -59,11 +36,7 @@ async function getProduct(slug: string, locale: string) {
             {
                 query: {
                     locale,
-                    filters: {
-                        slug: {
-                            $eq: slug,
-                        },
-                    },
+                    filters: { slug: { $eq: slug } },
                     fields: [
                         "documentId",
                         "title",
@@ -87,105 +60,10 @@ async function getProduct(slug: string, locale: string) {
                 tags: [`product:${locale}:${slug}`],
             }
         );
-
         return json.data?.[0] || null;
     } catch (error) {
-        console.error("getProduct failed:", error);
         return null;
     }
-}
-
-async function findProductAcrossLocales(slug: string) {
-    try {
-        const json = await strapiPublicFetch<{ data?: any[] }>(
-            "/api/products",
-            {
-                query: {
-                    locale: "all",
-                    filters: {
-                        $or: [
-                            {
-                                slug: {
-                                    $eq: slug,
-                                },
-                            },
-                            {
-                                localizations: {
-                                    slug: {
-                                        $eq: slug,
-                                    },
-                                },
-                            },
-                        ],
-                    },
-                    fields: [
-                        "documentId",
-                        "title",
-                        "slug",
-                        "price",
-                        "description",
-                        "sizeXS",
-                        "sizeS",
-                        "sizeM",
-                        "sizeL",
-                        "sizeXL",
-                        "sizeXXL",
-                        "modelHeight",
-                        "modelWeight",
-                        "modelSize",
-                        "locale",
-                    ],
-                    populate: buildProductPopulate(),
-                },
-                revalidate: 300,
-                tags: [`product:any-locale:${slug}`],
-            }
-        );
-
-        return json.data?.[0] || null;
-    } catch (error) {
-        console.error("findProductAcrossLocales failed:", error);
-        return null;
-    }
-}
-
-function getLocalizedSlug(
-    productFromAnyLocale: any,
-    targetLocale: string
-): string | null {
-    const directLocalizations = productFromAnyLocale?.localizations;
-
-    if (Array.isArray(directLocalizations)) {
-        const match = directLocalizations.find(
-            (entry: any) => entry?.locale === targetLocale
-        );
-        if (match?.slug) return match.slug;
-    }
-
-    if (Array.isArray(directLocalizations?.data)) {
-        const match = directLocalizations.data.find(
-            (entry: any) => entry?.attributes?.locale === targetLocale
-        );
-        if (match?.attributes?.slug) return match.attributes.slug;
-    }
-
-    const nestedLocalizations = productFromAnyLocale?.attributes?.localizations;
-
-    if (Array.isArray(nestedLocalizations)) {
-        const match = nestedLocalizations.find(
-            (entry: any) => entry?.locale === targetLocale
-        );
-        if (match?.slug) return match.slug;
-    }
-
-    if (Array.isArray(nestedLocalizations?.data)) {
-        const match = nestedLocalizations.data.find(
-            (entry: any) => entry?.attributes?.locale === targetLocale
-        );
-        if (match?.attributes?.slug) return match.attributes.slug;
-    }
-
-    return null;
 }
 
 export default async function ProductDetail({
@@ -197,55 +75,25 @@ export default async function ProductDetail({
     const t = await getTranslations();
 
     let strapiProduct = await getProduct(slug, locale);
+    if (!strapiProduct) notFound();
 
-    if (!strapiProduct) {
-        const productFromAnyLocale = await findProductAcrossLocales(slug);
-        const normalizedAnyLocaleProduct =
-            normalizeProduct(productFromAnyLocale);
-
-        if (productFromAnyLocale) {
-            if (normalizedAnyLocaleProduct?.locale === locale) {
-                strapiProduct = normalizedAnyLocaleProduct;
-            } else {
-                const localizedSlug = getLocalizedSlug(
-                    productFromAnyLocale,
-                    locale
-                );
-
-                if (localizedSlug) {
-                    if (localizedSlug !== slug) {
-                        redirect(`/${locale}/products/${localizedSlug}`);
-                    }
-
-                    strapiProduct = await getProduct(localizedSlug, locale);
-                }
-            }
-        }
-    }
-
-    if (!strapiProduct) {
-        notFound();
-    }
     strapiProduct = normalizeProduct(strapiProduct);
 
     const mainImageUrl = extractImageUrl(strapiProduct.image);
-
     const allImages = Array.isArray(strapiProduct.image)
         ? strapiProduct.image
         : strapiProduct.image
         ? [strapiProduct.image]
         : [];
-
     const fallbackImages = allImages.map((img: any) => extractImageUrl(img));
 
-    // Map through the color variants and normalize the data
     const formattedColorVariants = (strapiProduct.colorVariants || [])
         .map((cv: any) => ({
             id: cv.id,
-            color: cv.color?.attributes || cv.color, // handle both data wrapper structures
+            color: cv.color?.attributes || cv.color,
             imageUrl: extractImageUrl(cv.image),
         }))
-        .filter((cv: any) => cv.color); // ensure the relation exists
+        .filter((cv: any) => cv.color);
 
     const sizeOptions = [
         { label: "XS", isAvailable: strapiProduct.sizeXS },
@@ -259,80 +107,34 @@ export default async function ProductDetail({
     return (
         <MaxWidthWrapper>
             <main className="py-10 px-6">
-                <div className="md:grid md:grid-cols-2 grid-cols-1">
-                    {/* Replaced static image column with interactive ProductGallery component */}
-                    <ProductGallery
-                        initialImage={mainImageUrl}
-                        colorVariants={formattedColorVariants}
-                        colorsTitle={t(PRODUCTPAGE.colors)}
-                        fallbackImages={fallbackImages}
-                    />
-
-                    <div className="px-6">
-                        <h1 className="text-3xl tracking-tighter font-bold md:mt-0 mt-4 max-w-200">
-                            {strapiProduct.title}
-                        </h1>
-                        <div className="flex items-center font-bold mt-2 gap-4">
-                            <p className="text-black text-4xl">
-                                ₺{strapiProduct.price}
-                            </p>
-                        </div>
-                        {strapiProduct.description && (
-                            <>
-                                <h2 className="font-semibold text-xl mt-4">
-                                    {t(PRODUCTPAGE.desc)}
-                                </h2>
-                                <p className="text-gray-500 tracking-tight text-xl mt-2 max-w-200 whitespace-pre-wrap">
-                                    {strapiProduct.description}
-                                </p>
-                            </>
-                        )}
-                        <AddToCartSection
-                            documentId={strapiProduct.documentId}
-                            price={strapiProduct.price}
-                            title={strapiProduct.title}
-                            slug={strapiProduct.slug}
-                            imageUrl={mainImageUrl}
-                            sizeOptions={sizeOptions}
-                            translations={{
-                                sizetext: t(PRODUCTPAGE.sizetext),
-                                addtocart: t(PRODUCTPAGE.addtocart),
-                                linktext: t(PRODUCTPAGE.linktext),
-                                whatsapp: t(PRODUCTPAGE.whatsapp),
-                            }}
-                        />
-                        {(strapiProduct.modelHeight ||
-                            strapiProduct.modelWeight ||
-                            strapiProduct.modelSize) && (
-                            <div className="text-lg text-center md:text-left mt-4">
-                                <h4 className="font-bold">
-                                    {t(PRODUCTPAGE.maniken)}:
-                                </h4>
-                                {strapiProduct.modelHeight && (
-                                    <p className="flex gap-2">
-                                        <Ruler className="hover:fill-gray-400" />
-                                        {t(PRODUCTPAGE.height)}:
-                                        {strapiProduct.modelHeight}
-                                    </p>
-                                )}
-                                {strapiProduct.modelWeight && (
-                                    <p className="flex gap-2">
-                                        <Weight className="hover:fill-gray-400" />
-                                        {t(PRODUCTPAGE.weight)}:
-                                        {strapiProduct.modelWeight}
-                                    </p>
-                                )}
-                                {strapiProduct.modelSize && (
-                                    <p className="flex gap-2">
-                                        <Shirt className="hover:fill-gray-400" />
-                                        {t(PRODUCTPAGE.mansize)}:
-                                        {strapiProduct.modelSize}
-                                    </p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <ProductInteractive
+                    documentId={strapiProduct.documentId}
+                    price={strapiProduct.price}
+                    title={strapiProduct.title}
+                    slug={strapiProduct.slug}
+                    description={strapiProduct.description}
+                    initialImage={mainImageUrl}
+                    fallbackImages={fallbackImages}
+                    colorVariants={formattedColorVariants}
+                    sizeOptions={sizeOptions}
+                    modelInfo={{
+                        modelHeight: strapiProduct.modelHeight,
+                        modelWeight: strapiProduct.modelWeight,
+                        modelSize: strapiProduct.modelSize,
+                    }}
+                    translations={{
+                        colors: t(PRODUCTPAGE.colors),
+                        desc: t(PRODUCTPAGE.desc),
+                        sizetext: t(PRODUCTPAGE.sizetext),
+                        addtocart: t(PRODUCTPAGE.addtocart),
+                        linktext: t(PRODUCTPAGE.linktext),
+                        whatsapp: t(PRODUCTPAGE.whatsapp),
+                        maniken: t(PRODUCTPAGE.maniken),
+                        height: t(PRODUCTPAGE.height),
+                        weight: t(PRODUCTPAGE.weight),
+                        mansize: t(PRODUCTPAGE.mansize),
+                    }}
+                />
             </main>
         </MaxWidthWrapper>
     );

@@ -23,6 +23,7 @@ export default async function CartPage() {
         slug: item.slugSnapshot,
         imageUrl: item.imageSnapshot || "",
         size: item.size,
+        color: item.color, // <-- Added this line!
         quantity: item.quantity,
         unitPrice: item.unitPrice,
     }));
