@@ -4,7 +4,6 @@ import type { Core } from "@strapi/strapi";
 
 const SOURCE_LOCALE = "tr";
 const TARGET_LOCALES = ["en", "ar"];
-const PUBLISH_RETRY_DELAY_MS = 300;
 
 function wait(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -61,7 +60,7 @@ async function syncProductLocales(
         return;
     }
 
-    // Step 1: Write all drafts first
+    // Step 1: write all drafts sequentially
     for (const locale of TARGET_LOCALES) {
         const data = buildProductData(source, locale);
         try {
@@ -96,21 +95,22 @@ async function syncProductLocales(
         }
     }
 
-    // Step 2: Publish all locales in one call using wildcard — avoids race conditions
+    // Step 2: publish each locale explicitly — do NOT use wildcard,
+    // as it may miss freshly created locale rows
     if (shouldPublish) {
-        await wait(PUBLISH_RETRY_DELAY_MS);
-        try {
-            await strapi.documents(PRODUCT_UID as any).publish({
-                documentId,
-                locale: "*",
-            });
-            console.log(
-                `[Ugarit] ✅ Product all locales published for ${documentId}`
-            );
-        } catch (err: any) {
-            console.error(
-                `[Ugarit] ❌ Product publish all failed: ${err.message}`
-            );
+        await wait(500);
+        for (const locale of TARGET_LOCALES) {
+            try {
+                await strapi.documents(PRODUCT_UID as any).publish({
+                    documentId,
+                    locale,
+                });
+                console.log(`[Ugarit] ✅ Product locale '${locale}' published`);
+            } catch (err: any) {
+                console.error(
+                    `[Ugarit] ❌ Product publish '${locale}' failed: ${err.message}`
+                );
+            }
         }
     }
 }
@@ -151,7 +151,7 @@ async function syncCategoryLocales(
         return;
     }
 
-    // Step 1: Write all drafts first
+    // Step 1: write all drafts sequentially
     for (const locale of TARGET_LOCALES) {
         const data = buildCategoryData(source);
         try {
@@ -186,21 +186,23 @@ async function syncCategoryLocales(
         }
     }
 
-    // Step 2: Publish all locales in one call using wildcard — avoids race conditions
+    // Step 2: publish each locale explicitly
     if (shouldPublish) {
-        await wait(PUBLISH_RETRY_DELAY_MS);
-        try {
-            await strapi.documents(CATEGORY_UID as any).publish({
-                documentId,
-                locale: "*",
-            });
-            console.log(
-                `[Ugarit] ✅ Category all locales published for ${documentId}`
-            );
-        } catch (err: any) {
-            console.error(
-                `[Ugarit] ❌ Category publish all failed: ${err.message}`
-            );
+        await wait(500);
+        for (const locale of TARGET_LOCALES) {
+            try {
+                await strapi.documents(CATEGORY_UID as any).publish({
+                    documentId,
+                    locale,
+                });
+                console.log(
+                    `[Ugarit] ✅ Category locale '${locale}' published`
+                );
+            } catch (err: any) {
+                console.error(
+                    `[Ugarit] ❌ Category publish '${locale}' failed: ${err.message}`
+                );
+            }
         }
     }
 }
@@ -214,19 +216,37 @@ export default {
 
             const { action, uid, params } = context;
             const documentId = result?.documentId ?? params?.documentId;
-
             if (!documentId) return result;
 
             const locale = params?.locale;
-            const isSourceLocale = locale === SOURCE_LOCALE;
 
-            const isSaveAction =
-                (action === "create" || action === "update") && isSourceLocale;
-            const isPublishAction = action === "publish" && isSourceLocale;
+            // "create" and "update" always carry locale in params
+            const isSaveFromSource =
+                (action === "create" || action === "update") &&
+                locale === SOURCE_LOCALE;
 
-            if (!isSaveAction && !isPublishAction) return result;
+            // "publish" from the admin panel may NOT carry locale at all,
+            // or may carry it. Accept both cases.
+            const isPublishFromSource =
+                action === "publish" &&
+                (locale === SOURCE_LOCALE ||
+                    locale === undefined ||
+                    locale === null);
 
-            const shouldPublish = isPublishAction;
+            if (!isSaveFromSource && !isPublishFromSource) return result;
+
+            // For publish with no locale, verify the source locale is actually
+            // the one being published by checking the result
+            if (isPublishFromSource && locale !== SOURCE_LOCALE) {
+                // Check if the published version is the tr locale
+                const publishedLocale =
+                    result?.locale ?? result?.versions?.[0]?.locale;
+                if (publishedLocale && publishedLocale !== SOURCE_LOCALE) {
+                    return result;
+                }
+            }
+
+            const shouldPublish = isPublishFromSource;
 
             if (uid === PRODUCT_UID) {
                 setImmediate(() => {
