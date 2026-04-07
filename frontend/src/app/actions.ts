@@ -61,6 +61,7 @@ type ActionState = {
     successMessage?: string | null;
     jwt?: string | null;
     user?: unknown;
+    redirectTo?: string | null;
 };
 
 async function getJwtFromCookie() {
@@ -81,6 +82,7 @@ function buildActionState(
         successMessage: null,
         jwt: null,
         user: null,
+        redirectTo: null,
         ...overrides,
     };
 }
@@ -139,6 +141,14 @@ async function createAuthRequest(
         },
         body: JSON.stringify(payload),
     });
+}
+
+function isDuplicateCredentialError(error: unknown) {
+    if (!(error instanceof Error)) {
+        return false;
+    }
+
+    return error.message.includes("Email or Username are already taken");
 }
 
 function getLikedProductsFromEntry(
@@ -385,8 +395,66 @@ export async function CreateUserAction(
             errorMessage: postSignupSetupError,
             jwt: data?.jwt ?? null,
             user: data?.user ?? null,
+            redirectTo: "/",
         });
     } catch (error) {
+        if (isDuplicateCredentialError(error)) {
+            try {
+                const loginData = await createAuthRequest("/api/auth/local", {
+                    identifier: result.data.email,
+                    password: result.data.password,
+                });
+
+                let postSignupSetupError: string | null = null;
+
+                if (loginData?.jwt && loginData?.user) {
+                    try {
+                        await setAuthCookies({
+                            jwt: loginData.jwt,
+                            user: loginData.user,
+                        });
+
+                        const existingUserDb = await findUserDbByAuthUser(
+                            loginData.jwt,
+                            loginData.user.id ?? 0,
+                            loginData.user.email ?? undefined,
+                            loginData.user.username ?? undefined
+                        );
+
+                        if (
+                            !existingUserDb &&
+                            loginData.user.id &&
+                            loginData.user.documentId
+                        ) {
+                            await createUserDbEntry(loginData.jwt, {
+                                id: loginData.user.id,
+                                documentId: loginData.user.documentId,
+                                username: loginData.user.username ?? "",
+                                email: loginData.user.email ?? "",
+                            });
+                        }
+                    } catch (postSignupError) {
+                        postSignupSetupError =
+                            postSignupError instanceof Error
+                                ? postSignupError.message
+                                : "Account exists and you were signed in, but profile setup failed.";
+                    }
+
+                    return buildActionState(prevState, {
+                        success: true,
+                        successMessage:
+                            "Your account already existed, so you were signed in instead.",
+                        errorMessage: postSignupSetupError,
+                        jwt: loginData?.jwt ?? null,
+                        user: loginData?.user ?? null,
+                        redirectTo: "/",
+                    });
+                }
+            } catch {
+                // Fall through to the original error response below.
+            }
+        }
+
         const message =
             error instanceof Error
                 ? error.message
@@ -460,6 +528,7 @@ export async function LoginUserAction(
             errorMessage: postLoginSetupError,
             jwt: data?.jwt ?? null,
             user: data?.user ?? null,
+            redirectTo: "/",
         });
     } catch (error) {
         const message =
