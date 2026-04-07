@@ -1,5 +1,10 @@
 import type { Core } from "@strapi/strapi";
 
+// ─── Shared config ───────────────────────────────────────────────────────────
+
+const SOURCE_LOCALE = "tr";
+const TARGET_LOCALES = ["en", "ar"];
+
 // ─── Product sync ────────────────────────────────────────────────────────────
 
 const PRODUCT_UID = "api::product.product";
@@ -30,27 +35,21 @@ function buildProductData(source: any, locale: string) {
     };
 }
 
-async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
-    console.log(`[Ugarit] Syncing locales for product: ${documentId}`);
+async function syncProductLocales(
+    strapi: Core.Strapi,
+    documentId: string,
+    shouldPublish: boolean
+) {
+    console.log(
+        `[Ugarit] Syncing product ${documentId} (publish: ${shouldPublish})`
+    );
 
-    const sourcePublished = await strapi.documents(PRODUCT_UID as any).findOne({
+    const source = await strapi.documents(PRODUCT_UID as any).findOne({
         documentId,
         locale: SOURCE_LOCALE,
-        status: "published",
+        status: shouldPublish ? "published" : "draft",
         populate: ["image", "category"],
     });
-
-    const sourceDraft = !sourcePublished
-        ? await strapi.documents(PRODUCT_UID as any).findOne({
-              documentId,
-              locale: SOURCE_LOCALE,
-              status: "draft",
-              populate: ["image", "category"],
-          })
-        : null;
-
-    const source = sourcePublished ?? sourceDraft;
-    const shouldPublish = !!sourcePublished;
 
     if (!source) {
         console.warn(`[Ugarit] No product source found for ${documentId}`);
@@ -74,9 +73,7 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
                 });
             }
 
-            console.log(
-                `[Ugarit] ✅ Product locale '${locale}' synced (published: ${shouldPublish})`
-            );
+            console.log(`[Ugarit] ✅ Product locale '${locale}' synced`);
         } catch (err: any) {
             console.warn(
                 `[Ugarit] update() failed for product '${locale}', trying direct insert: ${err.message}`
@@ -117,29 +114,21 @@ function buildCategoryData(source: any) {
     };
 }
 
-async function syncCategoryLocales(strapi: Core.Strapi, documentId: string) {
-    console.log(`[Ugarit] Syncing locales for category: ${documentId}`);
+async function syncCategoryLocales(
+    strapi: Core.Strapi,
+    documentId: string,
+    shouldPublish: boolean
+) {
+    console.log(
+        `[Ugarit] Syncing category ${documentId} (publish: ${shouldPublish})`
+    );
 
-    const sourcePublished = await strapi
-        .documents(CATEGORY_UID as any)
-        .findOne({
-            documentId,
-            locale: SOURCE_LOCALE,
-            status: "published",
-            populate: ["image"],
-        });
-
-    const sourceDraft = !sourcePublished
-        ? await strapi.documents(CATEGORY_UID as any).findOne({
-              documentId,
-              locale: SOURCE_LOCALE,
-              status: "draft",
-              populate: ["image"],
-          })
-        : null;
-
-    const source = sourcePublished ?? sourceDraft;
-    const shouldPublish = !!sourcePublished;
+    const source = await strapi.documents(CATEGORY_UID as any).findOne({
+        documentId,
+        locale: SOURCE_LOCALE,
+        status: shouldPublish ? "published" : "draft",
+        populate: ["image"],
+    });
 
     if (!source) {
         console.warn(`[Ugarit] No category source found for ${documentId}`);
@@ -163,9 +152,7 @@ async function syncCategoryLocales(strapi: Core.Strapi, documentId: string) {
                 });
             }
 
-            console.log(
-                `[Ugarit] ✅ Category locale '${locale}' synced (published: ${shouldPublish})`
-            );
+            console.log(`[Ugarit] ✅ Category locale '${locale}' synced`);
         } catch (err: any) {
             console.warn(
                 `[Ugarit] update() failed for category '${locale}', trying direct insert: ${err.message}`
@@ -191,11 +178,6 @@ async function syncCategoryLocales(strapi: Core.Strapi, documentId: string) {
     }
 }
 
-// ─── Shared config ───────────────────────────────────────────────────────────
-
-const SOURCE_LOCALE = "tr";
-const TARGET_LOCALES = ["en", "ar"];
-
 // ─── Registration ────────────────────────────────────────────────────────────
 
 export default {
@@ -203,29 +185,46 @@ export default {
         strapi.documents.use(async (context: any, next: any) => {
             const result = await next();
 
-            const isWriteAction =
-                context.action === "create" || context.action === "update";
-            const isSourceLocale = context.params?.locale === SOURCE_LOCALE;
+            const { action, uid, params } = context;
+            const documentId = result?.documentId ?? params?.documentId;
 
-            if (!isWriteAction || !isSourceLocale) return result;
-
-            const documentId = result?.documentId;
             if (!documentId) return result;
 
-            if (context.uid === PRODUCT_UID) {
+            // We care about 3 actions:
+            // - "create" / "update" from the tr locale → sync drafts
+            // - "publish" from the tr locale → sync and publish
+            const locale = params?.locale;
+            const isSourceLocale = locale === SOURCE_LOCALE;
+
+            const isSaveAction =
+                (action === "create" || action === "update") && isSourceLocale;
+            // publish action doesn't always carry locale, so we check the source
+            const isPublishAction = action === "publish" && isSourceLocale;
+
+            if (!isSaveAction && !isPublishAction) return result;
+
+            const shouldPublish = isPublishAction;
+
+            if (uid === PRODUCT_UID) {
                 setImmediate(() => {
-                    syncProductLocales(strapi, documentId).catch((err) => {
-                        console.error(
-                            "[Ugarit] Product sync error:",
-                            err.message
-                        );
-                    });
+                    syncProductLocales(strapi, documentId, shouldPublish).catch(
+                        (err) => {
+                            console.error(
+                                "[Ugarit] Product sync error:",
+                                err.message
+                            );
+                        }
+                    );
                 });
             }
 
-            if (context.uid === CATEGORY_UID) {
+            if (uid === CATEGORY_UID) {
                 setImmediate(() => {
-                    syncCategoryLocales(strapi, documentId).catch((err) => {
+                    syncCategoryLocales(
+                        strapi,
+                        documentId,
+                        shouldPublish
+                    ).catch((err) => {
                         console.error(
                             "[Ugarit] Category sync error:",
                             err.message
