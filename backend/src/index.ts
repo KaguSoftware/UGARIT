@@ -1,10 +1,10 @@
 import type { Core } from "@strapi/strapi";
 
-const PRODUCT_UID = "api::product.product";
-const SOURCE_LOCALE = "tr";
-const TARGET_LOCALES = ["en", "ar"];
+// ─── Product sync ────────────────────────────────────────────────────────────
 
-function buildLocalizedData(source: any, locale: string) {
+const PRODUCT_UID = "api::product.product";
+
+function buildProductData(source: any, locale: string) {
     return {
         title: source.title ?? "",
         description: source.description ?? "",
@@ -33,7 +33,6 @@ function buildLocalizedData(source: any, locale: string) {
 async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
     console.log(`[Ugarit] Syncing locales for product: ${documentId}`);
 
-    // Try published version first — that's what we want to mirror
     const sourcePublished = await strapi.documents(PRODUCT_UID as any).findOne({
         documentId,
         locale: SOURCE_LOCALE,
@@ -41,7 +40,6 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
         populate: ["image", "category"],
     });
 
-    // Fall back to draft if not published yet
     const sourceDraft = !sourcePublished
         ? await strapi.documents(PRODUCT_UID as any).findOne({
               documentId,
@@ -55,14 +53,13 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
     const shouldPublish = !!sourcePublished;
 
     if (!source) {
-        console.warn(`[Ugarit] No source found for ${documentId}`);
+        console.warn(`[Ugarit] No product source found for ${documentId}`);
         return;
     }
 
     for (const locale of TARGET_LOCALES) {
-        const data = buildLocalizedData(source, locale);
+        const data = buildProductData(source, locale);
         try {
-            // Step 1: Write the draft (creates locale row if it doesn't exist)
             await strapi.documents(PRODUCT_UID as any).update({
                 documentId,
                 locale,
@@ -70,9 +67,6 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
                 status: "draft",
             });
 
-            // Step 2: Explicitly publish if source is published.
-            // In Strapi v5, status:"published" on update() does NOT publish —
-            // .publish() must be called separately.
             if (shouldPublish) {
                 await strapi.documents(PRODUCT_UID as any).publish({
                     documentId,
@@ -81,12 +75,11 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
             }
 
             console.log(
-                `[Ugarit] ✅ Synced locale '${locale}' for ${documentId} (published: ${shouldPublish})`
+                `[Ugarit] ✅ Product locale '${locale}' synced (published: ${shouldPublish})`
             );
         } catch (err: any) {
-            // Fallback: direct DB insert if locale row doesn't exist yet
             console.warn(
-                `[Ugarit] update() failed for '${locale}', trying direct insert: ${err.message}`
+                `[Ugarit] update() failed for product '${locale}', trying direct insert: ${err.message}`
             );
             try {
                 await strapi.db.query(PRODUCT_UID as any).create({
@@ -98,43 +91,147 @@ async function syncProductLocales(strapi: Core.Strapi, documentId: string) {
                     },
                 });
                 console.log(
-                    `[Ugarit] ✅ Direct-inserted locale '${locale}' for ${documentId}`
+                    `[Ugarit] ✅ Product locale '${locale}' direct-inserted`
                 );
             } catch (dbErr: any) {
                 console.error(
-                    `[Ugarit] ❌ Failed to sync locale '${locale}': ${dbErr.message}`
+                    `[Ugarit] ❌ Product locale '${locale}' failed: ${dbErr.message}`
                 );
             }
         }
     }
 }
 
+// ─── Category sync ───────────────────────────────────────────────────────────
+
+const CATEGORY_UID = "api::category.category";
+
+function buildCategoryData(source: any) {
+    return {
+        name: source.name ?? "",
+        slug: source.slug ?? "",
+        image: source.image?.id ? [source.image.id] : [],
+        showInNavbar: source.showInNavbar ?? true,
+        isMegaMenu: source.isMegaMenu ?? false,
+        megaMenuContent: source.megaMenuContent ?? null,
+    };
+}
+
+async function syncCategoryLocales(strapi: Core.Strapi, documentId: string) {
+    console.log(`[Ugarit] Syncing locales for category: ${documentId}`);
+
+    const sourcePublished = await strapi
+        .documents(CATEGORY_UID as any)
+        .findOne({
+            documentId,
+            locale: SOURCE_LOCALE,
+            status: "published",
+            populate: ["image"],
+        });
+
+    const sourceDraft = !sourcePublished
+        ? await strapi.documents(CATEGORY_UID as any).findOne({
+              documentId,
+              locale: SOURCE_LOCALE,
+              status: "draft",
+              populate: ["image"],
+          })
+        : null;
+
+    const source = sourcePublished ?? sourceDraft;
+    const shouldPublish = !!sourcePublished;
+
+    if (!source) {
+        console.warn(`[Ugarit] No category source found for ${documentId}`);
+        return;
+    }
+
+    for (const locale of TARGET_LOCALES) {
+        const data = buildCategoryData(source);
+        try {
+            await strapi.documents(CATEGORY_UID as any).update({
+                documentId,
+                locale,
+                data: data as any,
+                status: "draft",
+            });
+
+            if (shouldPublish) {
+                await strapi.documents(CATEGORY_UID as any).publish({
+                    documentId,
+                    locale,
+                });
+            }
+
+            console.log(
+                `[Ugarit] ✅ Category locale '${locale}' synced (published: ${shouldPublish})`
+            );
+        } catch (err: any) {
+            console.warn(
+                `[Ugarit] update() failed for category '${locale}', trying direct insert: ${err.message}`
+            );
+            try {
+                await strapi.db.query(CATEGORY_UID as any).create({
+                    data: {
+                        ...data,
+                        locale,
+                        document_id: documentId,
+                        published_at: shouldPublish ? new Date() : null,
+                    },
+                });
+                console.log(
+                    `[Ugarit] ✅ Category locale '${locale}' direct-inserted`
+                );
+            } catch (dbErr: any) {
+                console.error(
+                    `[Ugarit] ❌ Category locale '${locale}' failed: ${dbErr.message}`
+                );
+            }
+        }
+    }
+}
+
+// ─── Shared config ───────────────────────────────────────────────────────────
+
+const SOURCE_LOCALE = "tr";
+const TARGET_LOCALES = ["en", "ar"];
+
+// ─── Registration ────────────────────────────────────────────────────────────
+
 export default {
     register({ strapi }: { strapi: Core.Strapi }) {
-        // Document Service Middleware fires exactly once per document action.
-        // Lifecycle hooks are NOT used because in Strapi v5 they fire multiple
-        // times per action (once per DB row: draft + published).
         strapi.documents.use(async (context: any, next: any) => {
             const result = await next();
 
-            const isProduct = context.uid === PRODUCT_UID;
             const isWriteAction =
                 context.action === "create" || context.action === "update";
             const isSourceLocale = context.params?.locale === SOURCE_LOCALE;
 
-            if (isProduct && isWriteAction && isSourceLocale) {
-                const documentId = result?.documentId;
-                if (documentId) {
-                    // Fire async — don't block the save/publish response
-                    setImmediate(() => {
-                        syncProductLocales(strapi, documentId).catch((err) => {
-                            console.error(
-                                "[Ugarit] Locale sync error:",
-                                err.message
-                            );
-                        });
+            if (!isWriteAction || !isSourceLocale) return result;
+
+            const documentId = result?.documentId;
+            if (!documentId) return result;
+
+            if (context.uid === PRODUCT_UID) {
+                setImmediate(() => {
+                    syncProductLocales(strapi, documentId).catch((err) => {
+                        console.error(
+                            "[Ugarit] Product sync error:",
+                            err.message
+                        );
                     });
-                }
+                });
+            }
+
+            if (context.uid === CATEGORY_UID) {
+                setImmediate(() => {
+                    syncCategoryLocales(strapi, documentId).catch((err) => {
+                        console.error(
+                            "[Ugarit] Category sync error:",
+                            err.message
+                        );
+                    });
+                });
             }
 
             return result;
