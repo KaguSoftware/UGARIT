@@ -85,6 +85,12 @@ export function getStrapiMedia(url?: string | null) {
     return `${STRAPI_URL}${url}`;
 }
 
+const RETRY_DELAYS_MS = [1500, 3000, 5000];
+
+async function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function strapiFetch<T = any>(
     path: string,
     options: StrapiFetchOptions = {}
@@ -111,7 +117,7 @@ export async function strapiFetch<T = any>(
         mergedHeaders.set("Authorization", `Bearer ${STRAPI_API_TOKEN}`);
     }
 
-    const res = await fetch(url, {
+    const fetchOptions = {
         method,
         body,
         headers: mergedHeaders,
@@ -120,7 +126,15 @@ export async function strapiFetch<T = any>(
             revalidate: next?.revalidate ?? revalidate,
             tags: next?.tags ?? tags,
         },
-    });
+    };
+
+    let res = await fetch(url, fetchOptions);
+
+    // Retry on 503 (Strapi Cloud cold start) with backoff
+    for (let i = 0; i < RETRY_DELAYS_MS.length && res.status === 503; i++) {
+        await sleep(RETRY_DELAYS_MS[i]);
+        res = await fetch(url, fetchOptions);
+    }
 
     if (!res.ok) {
         const errorText = await res.text().catch(() => "");
