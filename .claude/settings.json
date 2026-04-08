@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -n \"users/me\\\\|getLikedProductIds\\\\|getAuthenticatedUser\\\\|authUser\\\\.\" /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/products/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/categories/[slug]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/likedproducts/page.tsx)"
+      "Bash(grep -n \"users/me\\\\|getLikedProductIds\\\\|getAuthenticatedUser\\\\|authUser\\\\.\" /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/products/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/categories/[slug]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/likedproducts/page.tsx)",
+      "Read(//Users/majedahdab/Desktop/Product0/backend/src/api/product/content-types/product/**)",
+      "Bash(npx tsc:*)",
+      "Bash(node_modules/.bin/tsc --noEmit)",
+      "Bash(node node_modules/.bin/tsc --noEmit)",
+      "Bash(node node_modules/typescript/bin/tsc --noEmit)",
+      "Bash(echo \"EXIT:$?\")"
     ]
   }
 }

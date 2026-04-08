@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useState, useTransition } from "react";
-import { MessageCircle, Ruler, Weight, Shirt, Heart } from "lucide-react";
+import { MessageCircle, Ruler, Weight, Shirt, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
@@ -23,15 +23,25 @@ export default function ProductInteractive({
     translations,
     isLiked: initialIsLiked = false,
 }: any) {
-    const [mainImage, setMainImage] = useState(initialImage);
-    const [activeColorId, setActiveColorId] = useState<string | number | null>(
-        null
-    );
+    // Build the images list: color variant images + fallback product images
+    const allImages: string[] = colorVariants.length > 0
+        ? colorVariants.map((cv: any) => cv.imageUrl).filter(Boolean)
+        : fallbackImages.length > 0
+        ? fallbackImages
+        : [initialImage];
+
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [activeColorId, setActiveColorId] = useState<string | number | null>(null);
     const [selectedColorName, setSelectedColorName] = useState<string>("");
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
     const [isPending, startTransition] = useTransition();
+
+    const mainImage = allImages[currentIndex] ?? initialImage;
+
+    const prev = () => setCurrentIndex((i) => (i - 1 + allImages.length) % allImages.length);
+    const next = () => setCurrentIndex((i) => (i + 1) % allImages.length);
 
     const handleLike = () => {
         if (isPending) return;
@@ -86,10 +96,9 @@ export default function ProductInteractive({
 
     return (
         <div className="md:grid md:grid-cols-2 grid-cols-1">
-            {/* Image Gallery Column */}
+            {/* Image Carousel Column */}
             <div className="justify-items-center">
-                {/* Image has the aspect-[4/3] you requested earlier */}
-                <div className="relative w-full">
+                <div className="relative w-full select-none">
                     <Image
                         className="object-cover w-full aspect-3/4 rounded-2xl transition-opacity duration-300 shadow-sm"
                         alt={title}
@@ -98,6 +107,8 @@ export default function ProductInteractive({
                         height={1000}
                         unoptimized
                     />
+
+                    {/* Like button */}
                     <button
                         type="button"
                         onClick={handleLike}
@@ -113,69 +124,77 @@ export default function ProductInteractive({
                             }`}
                         />
                     </button>
+
+                    {/* Prev / Next arrows — only shown when more than 1 image */}
+                    {allImages.length > 1 && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={prev}
+                                aria-label="Previous image"
+                                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={next}
+                                aria-label="Next image"
+                                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-black/40 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+
+                            {/* Dot indicators */}
+                            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                                {allImages.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setCurrentIndex(i)}
+                                        aria-label={`Go to image ${i + 1}`}
+                                        className={`w-2 h-2 rounded-full transition-all ${
+                                            i === currentIndex
+                                                ? "bg-white scale-125"
+                                                : "bg-white/50 hover:bg-white/80"
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
-                <div className="justify-items-center w-full">
-                    <p className="font-bold text-sm mt-6">
-                        {translations.colors}
-                    </p>
-                    <div className="flex mt-3 gap-4 flex-wrap justify-center">
-                        {colorVariants.length > 0
-                            ? colorVariants.map(
-                                  (variant: any, index: number) => {
-                                      const isActive =
-                                          activeColorId === variant.id ||
-                                          (mainImage === variant.imageUrl &&
-                                              activeColorId === null);
-                                      return (
-                                          <button
-                                              key={variant.id || index}
-                                              onClick={() => {
-                                                  setMainImage(
-                                                      variant.imageUrl
-                                                  );
-                                                  setActiveColorId(variant.id);
-                                                  setSelectedColorName(
-                                                      variant.color?.name
-                                                  );
-                                              }}
-                                              className={`w-9 h-9 rounded-full border-2 transition-all ${
-                                                  isActive
-                                                      ? "border-gray-800 scale-110 shadow-md"
-                                                      : "border-gray-300 hover:scale-105"
-                                              }`}
-                                              style={{
-                                                  backgroundColor:
-                                                      variant.color?.hexCode ||
-                                                      "#ccc",
-                                              }}
-                                              title={variant.color?.name}
-                                          />
-                                      );
-                                  }
-                              )
-                            : fallbackImages.map(
-                                  (imgUrl: string, index: number) => (
-                                      <button
-                                          key={index}
-                                          onClick={() => setMainImage(imgUrl)}
-                                          className={`relative w-[75px] h-[75px] rounded-xl overflow-hidden border-2 ${
-                                              mainImage === imgUrl
-                                                  ? "border-black"
-                                                  : "border-transparent"
-                                          }`}
-                                      >
-                                          <Image
-                                              alt="thumbnail"
-                                              src={imgUrl}
-                                              fill
-                                              className="object-cover"
-                                              unoptimized
-                                          />
-                                      </button>
-                                  )
-                              )}
+
+                {/* Color swatches */}
+                {colorVariants.length > 0 && (
+                    <div className="justify-items-center w-full">
+                        <p className="font-bold text-sm mt-6">{translations.colors}</p>
+                        <div className="flex mt-3 gap-4 flex-wrap justify-center">
+                            {colorVariants.map((variant: any, index: number) => {
+                                const variantIndex = allImages.indexOf(variant.imageUrl);
+                                const isActive = activeColorId === variant.id ||
+                                    (currentIndex === variantIndex && activeColorId === null);
+                                return (
+                                    <button
+                                        key={variant.id || index}
+                                        onClick={() => {
+                                            if (variantIndex !== -1) setCurrentIndex(variantIndex);
+                                            setActiveColorId(variant.id);
+                                            setSelectedColorName(variant.color?.name);
+                                        }}
+                                        className={`w-9 h-9 rounded-full border-2 transition-all ${
+                                            isActive
+                                                ? "border-gray-800 scale-110 shadow-md"
+                                                : "border-gray-300 hover:scale-105"
+                                        }`}
+                                        style={{ backgroundColor: variant.color?.hexCode || "#ccc" }}
+                                        title={variant.color?.name}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Details & Cart Action Column */}
