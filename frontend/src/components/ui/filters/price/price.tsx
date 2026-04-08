@@ -21,9 +21,8 @@ export const Price = ({ onValueChange, initialValues }: PriceRangeProps) => {
         setVal(initialValues);
     }, [initialValues]);
 
-    const update = (v: number[]) => {
+    const commit = (v: number[]) => {
         const nextValue = v as [number, number];
-        setVal(nextValue);
         onValueChange?.(nextValue);
 
         const params = new URLSearchParams(searchParams.toString());
@@ -42,7 +41,8 @@ export const Price = ({ onValueChange, initialValues }: PriceRangeProps) => {
                 <Slider.Root
                     className="relative flex items-center w-full h-5 touch-none select-none"
                     value={val}
-                    onValueChange={update}
+                    onValueChange={setVal}
+                    onValueCommit={commit}
                     max={DATA.MAX_LIMIT}
                     step={DATA.STEP}
                 >

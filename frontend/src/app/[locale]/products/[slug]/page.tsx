@@ -1,9 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
+import { cookies } from "next/headers";
 import { PRODUCTPAGE } from "./constants";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductInteractive from "./ProductInteractive";
 import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
+import { getLikedProductIds } from "@/src/lib/user-db";
 
 function extractImageUrl(image: any) {
     if (!image) return "/mock-images/mockshirt.png";
@@ -79,6 +81,11 @@ export default async function ProductDetail({
 
     strapiProduct = normalizeProduct(strapiProduct);
 
+    const cookieStore = await cookies();
+    const jwt = cookieStore.get("jwt")?.value ?? null;
+    const likedIds = jwt ? await getLikedProductIds(jwt) : [];
+    const isLiked = likedIds.includes(strapiProduct.documentId);
+
     const mainImageUrl = extractImageUrl(strapiProduct.image);
     const allImages = Array.isArray(strapiProduct.image)
         ? strapiProduct.image
@@ -112,6 +119,7 @@ export default async function ProductDetail({
                     price={strapiProduct.price}
                     title={strapiProduct.title}
                     slug={strapiProduct.slug}
+                    isLiked={isLiked}
                     description={strapiProduct.description}
                     initialImage={mainImageUrl}
                     fallbackImages={fallbackImages}

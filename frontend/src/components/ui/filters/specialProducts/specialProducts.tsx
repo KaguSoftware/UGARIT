@@ -50,7 +50,6 @@ export const Sp = ({ initialValue }: SpProps) => {
         nextOptions.forEach((option) => params.append("featured", option));
 
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        router.refresh();
     };
 
     return (

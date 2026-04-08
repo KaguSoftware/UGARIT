@@ -56,7 +56,6 @@ export const Size = ({ availableSizes = [], selectedSize }: SizeProps) => {
         nextSizes.forEach((size) => params.append("size", size));
 
         router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-        router.refresh();
     };
 
     return (

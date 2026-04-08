@@ -3,6 +3,7 @@ import ProductGrid from "@/src/components/productsGrid/products";
 import type { Product } from "@/src/components/cards/ProductCard/types";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import { getStrapiMedia, strapiPrivateFetch } from "@/src/lib/strapi";
+import { cookies as nextCookies } from "next/headers";
 
 type RawProduct = {
     id?: number | string;
@@ -31,11 +32,6 @@ type UserDbEntry = {
     };
 };
 
-type AuthUser = {
-    id: number;
-    username: string;
-    email: string;
-};
 
 function unwrapAttributes<T extends { id?: number; documentId?: string }>(
     value: T & { attributes?: Partial<T> }
@@ -103,85 +99,46 @@ async function getJwtFromCookie() {
     return cookieStore.get("jwt")?.value ?? null;
 }
 
-async function getAuthenticatedUser(jwt: string): Promise<AuthUser | null> {
-    try {
-        return await strapiPrivateFetch<AuthUser>("/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
-        });
-    } catch {
-        return null;
-    }
-}
-
 async function getUserDb(
     jwt: string,
-    _authUserId: number,
     authUserEmail?: string,
     authUsername?: string
 ): Promise<UserDbEntry | null> {
     try {
-        const queries = [
-            authUserEmail
-                ? {
-                      filters: {
-                          email: {
-                              $eq: authUserEmail,
-                          },
-                      },
-                  }
-                : null,
-            authUsername
-                ? {
-                      filters: {
-                          username: {
-                              $eq: authUsername,
-                          },
-                      },
-                  }
-                : null,
-        ].filter(Boolean) as Array<Record<string, any>>;
+        const filter = authUserEmail
+            ? { filters: { email: { $eq: authUserEmail } } }
+            : authUsername
+            ? { filters: { username: { $eq: authUsername } } }
+            : null;
 
-        for (const query of queries) {
-            const json = await strapiPrivateFetch<{ data?: UserDbEntry[] }>(
-                "/api/userdbs",
-                {
-                    query: {
-                        ...query,
-                        pagination: { pageSize: 1 },
-                        fields: ["documentId", "username", "email"],
-                        populate: {
-                            likedProducts: {
-                                fields: [
-                                    "id",
-                                    "documentId",
-                                    "title",
-                                    "slug",
-                                    "price",
-                                ],
-                                populate: {
-                                    image: { fields: ["url"] },
-                                    category: { fields: ["name"] },
-                                },
+        if (!filter) return null;
+
+        const json = await strapiPrivateFetch<{ data?: UserDbEntry[] }>(
+            "/api/userdbs",
+            {
+                query: {
+                    ...filter,
+                    pagination: { pageSize: 1 },
+                    fields: ["documentId", "username", "email"],
+                    populate: {
+                        likedProducts: {
+                            fields: ["id", "documentId", "title", "slug", "price"],
+                            populate: {
+                                image: { fields: ["url"] },
+                                category: { fields: ["name"] },
                             },
                         },
                     },
-                    headers: {
-                        Authorization: `Bearer ${jwt}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const entry = Array.isArray(json?.data) ? json.data[0] : null;
-
-            if (entry) {
-                return normalizeUserDbEntry(entry);
+                },
+                headers: {
+                    Authorization: `Bearer ${jwt}`,
+                    "Content-Type": "application/json",
+                },
             }
-        }
+        );
 
-        return null;
+        const entry = Array.isArray(json?.data) ? json.data[0] : null;
+        return entry ? normalizeUserDbEntry(entry) : null;
     } catch (error) {
         console.error("Failed to fetch user profile", error);
         return null;
@@ -310,25 +267,11 @@ export default async function Page() {
         );
     }
 
-    const authUser = await getAuthenticatedUser(jwt);
+    const cookieStore = await nextCookies();
+    const username = cookieStore.get("username")?.value ?? "";
+    const email = cookieStore.get("userEmail")?.value;
 
-    if (!authUser) {
-        return (
-            <main className="mx-auto max-w-5xl p-6">
-                <h1 className="mb-4 text-3xl font-bold">Liked Products</h1>
-                <p className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-                    Could not load the signed-in user.
-                </p>
-            </main>
-        );
-    }
-
-    const userDb = await getUserDb(
-        jwt,
-        authUser.id,
-        authUser.email,
-        authUser.username
-    );
+    const userDb = await getUserDb(jwt, email, username);
 
     const likedProducts = await getLikedProducts(userDb);
 
@@ -339,7 +282,7 @@ export default async function Page() {
                     <div>
                         <h1 className="text-3xl font-bold">Liked Products</h1>
                         <p className="text-gray-600">
-                            {authUser.username}&rsquo;s saved products
+                            {username}&rsquo;s saved products
                         </p>
                     </div>
                 </div>

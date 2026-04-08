@@ -1,10 +1,9 @@
 import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import ProductGrid from "@/src/components/productsGrid/products";
-import {
-    getStrapiMedia,
-    strapiPrivateFetch,
-    strapiPublicFetch,
-} from "@/src/lib/strapi";
+import { Filters } from "@/src/components/ui/filters/filters";
+import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
+import { getLikedProductIds } from "@/src/lib/user-db";
 
 function appendFields(params: URLSearchParams, key: string, fields: string[]) {
     fields.forEach((field, index) => {
@@ -12,28 +11,73 @@ function appendFields(params: URLSearchParams, key: string, fields: string[]) {
     });
 }
 
+function normalizeFilters(searchParams: {
+    min?: string;
+    max?: string;
+    size?: string | string[];
+    sort?: string;
+    featured?: string | string[];
+}) {
+    const normalizeList = (value?: string | string[]) => {
+        const values = Array.isArray(value) ? value : value ? [value] : [];
+
+        return values
+            .flatMap((item) => String(item).split(","))
+            .map((item) => item.trim())
+            .filter(Boolean)
+            .sort();
+    };
+
+    return {
+        min: searchParams.min ?? "",
+        max: searchParams.max ?? "",
+        sort: searchParams.sort ?? "",
+        size: normalizeList(searchParams.size),
+        featured: normalizeList(searchParams.featured),
+    };
+}
+
 function buildProductsQuery({
     locale,
     searchParams,
+    sizeOnly = false,
 }: {
     locale: string;
     searchParams: {
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
     };
+    sizeOnly?: boolean;
 }) {
     const params = new URLSearchParams();
     params.set("locale", locale);
 
-    ["documentId", "title", "price", "slug"].forEach((field, index) => {
+    const baseFields = sizeOnly
+        ? ["sizeXS", "sizeS", "sizeM", "sizeL", "sizeXL", "sizeXXL"]
+        : [
+              "documentId",
+              "title",
+              "price",
+              "slug",
+              "sizeXS",
+              "sizeS",
+              "sizeM",
+              "sizeL",
+              "sizeXL",
+              "sizeXXL",
+          ];
+
+    baseFields.forEach((field, index) => {
         params.append(`fields[${index}]`, field);
     });
 
-    appendFields(params, "populate[image]", ["url"]);
-    appendFields(params, "populate[category]", ["name"]);
+    if (!sizeOnly) {
+        appendFields(params, "populate[image]", ["url"]);
+        appendFields(params, "populate[category]", ["name", "slug"]);
+    }
 
     if (searchParams.min) {
         params.set("filters[price][$gte]", searchParams.min);
@@ -41,10 +85,6 @@ function buildProductsQuery({
 
     if (searchParams.max) {
         params.set("filters[price][$lte]", searchParams.max);
-    }
-
-    if (searchParams.featured === "true") {
-        params.set("filters[isFeatured][$eq]", "true");
     }
 
     const sizeMap: Record<string, string> = {
@@ -56,23 +96,79 @@ function buildProductsQuery({
         XXL: "sizeXXL",
     };
 
-    if (searchParams.size && sizeMap[searchParams.size]) {
-        params.set(`filters[${sizeMap[searchParams.size]}][$eq]`, "true");
+    const legacySizeKeyMap: Record<string, string> = {
+        one: "XS",
+        two: "S",
+        three: "M",
+        four: "L",
+        five: "XL",
+        six: "XXL",
+    };
+
+    const rawSelectedSizes = Array.isArray(searchParams.size)
+        ? searchParams.size
+        : searchParams.size
+        ? [searchParams.size]
+        : [];
+
+    const normalizedSelectedSizes = rawSelectedSizes
+        .flatMap((size) => String(size).split(","))
+        .map((size) => String(size).trim())
+        .filter(Boolean)
+        .map((size) => legacySizeKeyMap[size] || size.toUpperCase());
+
+    const validSizeFields = [...new Set(normalizedSelectedSizes)]
+        .map((size) => sizeMap[size])
+        .filter(Boolean);
+
+    validSizeFields.forEach((field, index) => {
+        params.set(`filters[$or][${index}][${field}][$eq]`, "true");
+    });
+
+    const featuredMap: Record<string, string> = {
+        "sp.one": "spOne",
+        "sp.two": "spTwo",
+        "sp.three": "spThree",
+    };
+
+    const rawFeaturedOptions = Array.isArray(searchParams.featured)
+        ? searchParams.featured
+        : searchParams.featured
+        ? [searchParams.featured]
+        : [];
+
+    const normalizedFeaturedOptions = rawFeaturedOptions
+        .flatMap((option) => String(option).split(","))
+        .map((option) => String(option).trim())
+        .filter(Boolean);
+
+    const validFeaturedFields = [...new Set(normalizedFeaturedOptions)]
+        .map((option) => featuredMap[option])
+        .filter(Boolean);
+
+    const featuredBaseIndex = validSizeFields.length;
+    validFeaturedFields.forEach((field, index) => {
+        params.set(
+            `filters[$or][${featuredBaseIndex + index}][${field}][$eq]`,
+            "true"
+        );
+    });
+
+    if (!sizeOnly) {
+        switch (searchParams.sort) {
+            case "price-asc":
+                params.append("sort[0]", "price:asc");
+                break;
+            case "price-desc":
+                params.append("sort[0]", "price:desc");
+                break;
+            case "title-asc":
+                params.append("sort[0]", "title:asc");
+                break;
+        }
     }
 
-    switch (searchParams.sort) {
-        case "price-asc":
-            params.append("sort[0]", "price:asc");
-            break;
-        case "price-desc":
-            params.append("sort[0]", "price:desc");
-            break;
-        case "title-asc":
-            params.append("sort[0]", "title:asc");
-            break;
-    }
-
-    return Object.fromEntries(params.entries());
+    return params.toString();
 }
 
 async function getProducts(
@@ -80,99 +176,83 @@ async function getProducts(
     searchParams: {
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
+    },
+    options?: {
+        sizeOnly?: boolean;
     }
 ) {
-    try {
-        return await strapiPublicFetch<{ data: any[] }>("/api/products", {
-            query: buildProductsQuery({ locale, searchParams }),
+    const normalizedFilters = normalizeFilters(searchParams);
+    const sizeOnly = Boolean(options?.sizeOnly);
+
+    const getCachedProducts = unstable_cache(
+        async () => {
+            const json = await strapiPublicFetch<{ data: any[] }>(
+                "/api/products",
+                {
+                    query: Object.fromEntries(
+                        new URLSearchParams(
+                            buildProductsQuery({
+                                locale,
+                                searchParams,
+                                sizeOnly,
+                            })
+                        )
+                    ),
+                    revalidate: 120,
+                    tags: [
+                        `products:all:${locale}`,
+                        `products:all:${locale}:${sizeOnly ? "sizes" : "grid"}`,
+                    ],
+                }
+            );
+
+            return json;
+        },
+        [
+            "all-products-page",
+            locale,
+            sizeOnly ? "sizes" : "grid",
+            normalizedFilters.min,
+            normalizedFilters.max,
+            normalizedFilters.sort,
+            normalizedFilters.size.join("|"),
+            normalizedFilters.featured.join("|"),
+        ],
+        {
             revalidate: 120,
-            tags: [`products:list:${locale}`],
-        });
-    } catch (error) {
-        console.error("Failed to fetch products", error);
-        return { data: [] };
-    }
+            tags: [
+                `products:all:${locale}`,
+                `products:all:${locale}:${sizeOnly ? "sizes" : "grid"}`,
+            ],
+        }
+    );
+
+    return getCachedProducts();
+}
+
+function getAvailableSizes(products: any[] = []) {
+    const sizeMap = [
+        { key: "sizeXS", label: "XS" },
+        { key: "sizeS", label: "S" },
+        { key: "sizeM", label: "M" },
+        { key: "sizeL", label: "L" },
+        { key: "sizeXL", label: "XL" },
+        { key: "sizeXXL", label: "XXL" },
+    ] as const;
+
+    return sizeMap
+        .filter(({ key }) =>
+            products.some((product: any) => product?.[key] === true)
+        )
+        .map(({ label }) => label);
 }
 
 async function getJwtFromCookie() {
     const cookieStore = await cookies();
     return cookieStore.get("jwt")?.value ?? null;
-}
-
-async function getLikedProductIds(jwt: string) {
-    try {
-        const me = await strapiPrivateFetch<{
-            email?: string;
-            username?: string;
-        }>("/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
-        });
-
-        const queries = [
-            me.email
-                ? {
-                      filters: {
-                          email: {
-                              $eq: me.email,
-                          },
-                      },
-                  }
-                : null,
-            me.username
-                ? {
-                      filters: {
-                          username: {
-                              $eq: me.username,
-                          },
-                      },
-                  }
-                : null,
-        ].filter(Boolean) as Array<Record<string, any>>;
-
-        for (const query of queries) {
-            const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
-                "/api/userdbs",
-                {
-                    query: {
-                        ...query,
-                        pagination: { pageSize: 1 },
-                        fields: ["email", "username", "documentId"],
-                        populate: {
-                            likedProducts: {
-                                fields: ["documentId", "id"],
-                            },
-                        },
-                    },
-                    headers: {
-                        Authorization: `Bearer ${jwt}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const entry = Array.isArray(userDbJson?.data)
-                ? userDbJson.data[0]
-                : null;
-
-            const likedProducts = entry?.likedProducts ?? [];
-
-            if (Array.isArray(likedProducts)) {
-                return likedProducts
-                    .map((product: any) => product?.documentId ?? product?.id)
-                    .filter(Boolean);
-            }
-        }
-
-        return [] as Array<string | number>;
-    } catch (error) {
-        console.error("Failed to fetch liked products", error);
-        return [] as Array<string | number>;
-    }
 }
 
 export default async function ProductList({
@@ -183,19 +263,33 @@ export default async function ProductList({
     searchParams: Promise<{
         min?: string;
         max?: string;
-        size?: string;
+        size?: string | string[];
         sort?: string;
-        featured?: string;
+        featured?: string | string[];
     }>;
 }) {
     const { locale } = await params;
     const filters = await searchParams;
 
-    const strapiResponse = await getProducts(locale, filters);
+    // Fetch grid products and available sizes simultaneously
+    const [productsResponse, sizeOptionsResponse] = await Promise.all([
+        getProducts(locale, filters),
+        getProducts(
+            locale,
+            {
+                ...filters,
+                size: undefined,
+                sort: undefined,
+            },
+            { sizeOnly: true }
+        ),
+    ]);
+
+    const availableSizes = getAvailableSizes(sizeOptionsResponse.data);
     const jwt = await getJwtFromCookie();
     const likedProductIds = jwt ? await getLikedProductIds(jwt) : [];
 
-    const formattedProducts = strapiResponse.data.map((item: any) => ({
+    const formattedProducts = productsResponse.data.map((item: any) => ({
         id: item.documentId,
         title: item.title,
         price: item.price,
@@ -210,10 +304,27 @@ export default async function ProductList({
                 <h1 className="text-3xl font-bold mb-6">All Products</h1>
 
                 <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-                    <ProductGrid
-                        products={formattedProducts}
-                        likedProductIds={likedProductIds}
-                    />
+                    {/* Filters Sidebar */}
+                    <div>
+                        <Filters
+                            initialValues={{
+                                min: filters.min,
+                                max: filters.max,
+                                size: filters.size,
+                                sort: filters.sort,
+                                featured: filters.featured,
+                            }}
+                            availableSizes={availableSizes}
+                        />
+                    </div>
+
+                    {/* Product Grid */}
+                    <div>
+                        <ProductGrid
+                            products={formattedProducts}
+                            likedProductIds={likedProductIds}
+                        />
+                    </div>
                 </div>
             </div>
         </main>

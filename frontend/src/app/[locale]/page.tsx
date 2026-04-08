@@ -6,9 +6,9 @@ import ProductGrid from "@/src/components/productsGrid/products";
 import ProductCarousel from "@/src/components/carousel/ProductCarousel";
 import {
     getStrapiMedia,
-    strapiPrivateFetch,
     strapiPublicFetch,
 } from "@/src/lib/strapi";
+import { getLikedProductIds } from "@/src/lib/user-db";
 
 function extractImageUrl(image: any) {
     if (!image) return "/image1.jpeg";
@@ -87,113 +87,6 @@ async function getJwtFromCookie() {
     return cookieStore.get("jwt")?.value ?? null;
 }
 
-async function getLikedProductIds(jwt: string) {
-    try {
-        const me = await strapiPrivateFetch<{ id: number }>("/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
-        });
-
-        const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
-            "/api/userdbs",
-            {
-                query: {
-                    filters: {
-                        email: {
-                            $eq: undefined,
-                        },
-                    },
-                    pagination: { pageSize: 1 },
-                    fields: ["email", "username", "documentId"],
-                    populate: {
-                        likedProducts: { fields: ["documentId", "id"] },
-                    },
-                },
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        ).catch(async () => {
-            const meFull = await strapiPrivateFetch<{
-                id: number;
-                email?: string;
-                username?: string;
-            }>("/api/users/me", {
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
-            });
-
-            const queries = [
-                meFull.email
-                    ? {
-                          filters: {
-                              email: {
-                                  $eq: meFull.email,
-                              },
-                          },
-                      }
-                    : null,
-                meFull.username
-                    ? {
-                          filters: {
-                              username: {
-                                  $eq: meFull.username,
-                              },
-                          },
-                      }
-                    : null,
-            ].filter(Boolean) as Array<Record<string, any>>;
-
-            for (const query of queries) {
-                const response = await strapiPrivateFetch<{ data?: any[] }>(
-                    "/api/userdbs",
-                    {
-                        query: {
-                            ...query,
-                            pagination: { pageSize: 1 },
-                            fields: ["email", "username", "documentId"],
-                            populate: {
-                                likedProducts: {
-                                    fields: ["documentId", "id"],
-                                },
-                            },
-                        },
-                        headers: {
-                            Authorization: `Bearer ${jwt}`,
-                            "Content-Type": "application/json",
-                        },
-                    }
-                );
-
-                if (Array.isArray(response?.data) && response.data[0]) {
-                    return response;
-                }
-            }
-
-            return { data: [] };
-        });
-
-        const entry = Array.isArray(userDbJson?.data)
-            ? userDbJson.data[0]
-            : null;
-
-        const likedProducts = entry?.likedProducts ?? [];
-
-        if (Array.isArray(likedProducts)) {
-            return likedProducts
-                .map((product: any) => product?.documentId ?? product?.id)
-                .filter(Boolean);
-        }
-
-        return [] as Array<string | number>;
-    } catch (error) {
-        console.error("Failed to fetch liked products", error);
-        return [] as Array<string | number>;
-    }
-}
 
 export default async function Home({
     params,

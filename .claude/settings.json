@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"users/me\\\\|getLikedProductIds\\\\|getAuthenticatedUser\\\\|authUser\\\\.\" /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/products/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/categories/[slug]/page.tsx /Users/majedahdab/Desktop/Project0/frontend/src/app/[locale]/likedproducts/page.tsx)"
+    ]
+  }
+}

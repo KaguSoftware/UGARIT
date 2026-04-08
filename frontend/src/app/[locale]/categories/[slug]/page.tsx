@@ -5,9 +5,9 @@ import { notFound } from "next/navigation";
 import { Filters } from "@/src/components/ui/filters/filters";
 import {
     getStrapiMedia,
-    strapiPrivateFetch,
     strapiPublicFetch,
 } from "@/src/lib/strapi";
+import { getLikedProductIds } from "@/src/lib/user-db";
 
 function appendFields(params: URLSearchParams, key: string, fields: string[]) {
     fields.forEach((field, index) => {
@@ -309,79 +309,6 @@ async function getJwtFromCookie() {
     return cookieStore.get("jwt")?.value ?? null;
 }
 
-async function getLikedProductIds(jwt: string) {
-    try {
-        const me = await strapiPrivateFetch<{
-            email?: string;
-            username?: string;
-        }>("/api/users/me", {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
-        });
-
-        const queries = [
-            me.email
-                ? {
-                      filters: {
-                          email: {
-                              $eq: me.email,
-                          },
-                      },
-                  }
-                : null,
-            me.username
-                ? {
-                      filters: {
-                          username: {
-                              $eq: me.username,
-                          },
-                      },
-                  }
-                : null,
-        ].filter(Boolean) as Array<Record<string, any>>;
-
-        for (const query of queries) {
-            const userDbJson = await strapiPrivateFetch<{ data?: any[] }>(
-                "/api/userdbs",
-                {
-                    query: {
-                        ...query,
-                        pagination: { pageSize: 1 },
-                        fields: ["email", "username", "documentId"],
-                        populate: {
-                            likedProducts: buildFieldPopulate([
-                                "documentId",
-                                "id",
-                            ]),
-                        },
-                    },
-                    headers: {
-                        Authorization: `Bearer ${jwt}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            const entry = Array.isArray(userDbJson?.data)
-                ? userDbJson.data[0]
-                : null;
-
-            const likedProducts = entry?.likedProducts ?? [];
-
-            if (Array.isArray(likedProducts)) {
-                return likedProducts
-                    .map((product: any) => product?.documentId ?? product?.id)
-                    .filter(Boolean);
-            }
-        }
-
-        return [] as Array<string | number>;
-    } catch (error) {
-        console.error("Failed to fetch liked products", error);
-        return [] as Array<string | number>;
-    }
-}
 
 export default async function CategoryPage({
     params,

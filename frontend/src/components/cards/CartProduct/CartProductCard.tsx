@@ -49,7 +49,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
     return (
         <MaxWidthWrapper>
             <div
-                className={`flex items-stretch bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden transition-all hover:shadow-sm h-32 md:h-36 ${
+                className={`flex items-stretch bg-gray-50 border border-gray-100 rounded-2xl overflow-hidden transition-all hover:shadow-sm ${
                     isDeleting
                         ? "opacity-50 pointer-events-none"
                         : "opacity-100"
@@ -58,12 +58,13 @@ export default function CartProductCard({ product }: cartProductCardProps) {
                 {/* Image Section */}
                 <Link
                     href={`/products/${product.slug}`}
-                    className="w-28 md:w-36 shrink-0 relative block bg-gray-200"
+                    className="w-28  shrink-0 relative block bg-gray-200"
                 >
                     <Image
                         src={imageUrl}
                         alt={product.title}
-                        fill
+                        width={750}
+                        height={1000}
                         className="object-cover"
                         unoptimized
                     />
