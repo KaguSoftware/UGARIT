@@ -14,8 +14,8 @@ async function publishWithRetry(
     uid: string,
     documentId: string,
     locale: string,
-    retries = 3,
-    delayMs = 1000
+    retries = 5,
+    delayMs = 2000
 ) {
     for (let attempt = 1; attempt <= retries; attempt++) {
         try {
@@ -63,6 +63,8 @@ async function publishWithRetry(
 
 const PRODUCT_UID = "api::product.product";
 
+const PUBLISH_DELAY_MS = 4000; // extra wait on slow hosts before reading published source
+
 function buildProductData(source: any, locale: string) {
     return {
         title: source.title ?? "",
@@ -86,6 +88,10 @@ function buildProductData(source: any, locale: string) {
         sizeXXL: source.sizeXXL ?? false,
         image: source.image?.map((img: any) => img.id) ?? [],
         category: source.category?.documentId ?? null,
+        colorVariants: source.colorVariants?.map((cv: any) => ({
+            color: cv.color?.documentId ?? cv.color?.id ?? null,
+            image: cv.image?.id ?? null,
+        })) ?? [],
     };
 }
 
@@ -98,11 +104,20 @@ async function syncProductLocales(
         `[Ugarit] ── Product sync start: ${documentId} (publish: ${shouldPublish})`
     );
 
+    // On slow hosts the published record may not be readable yet — wait before querying
+    if (shouldPublish) await wait(PUBLISH_DELAY_MS);
+
     const source = await strapi.documents(PRODUCT_UID as any).findOne({
         documentId,
         locale: SOURCE_LOCALE,
         status: shouldPublish ? "published" : "draft",
-        populate: ["image", "category"],
+        populate: {
+            image: true,
+            category: true,
+            colorVariants: {
+                populate: { color: true, image: true },
+            },
+        } as any,
     });
 
     if (!source) {

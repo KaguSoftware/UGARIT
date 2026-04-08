@@ -23,14 +23,11 @@ export default function ProductInteractive({
     translations,
     isLiked: initialIsLiked = false,
 }: any) {
-    // Build the images list: color variant images + fallback product images
-    const allImages: string[] = colorVariants.length > 0
-        ? colorVariants.map((cv: any) => cv.imageUrl).filter(Boolean)
-        : fallbackImages.length > 0
-        ? fallbackImages
-        : [initialImage];
+    // Build carousel: product gallery images first, then any color variant images not already included
+    const allImages: string[] = fallbackImages.length > 0 ? fallbackImages : [initialImage];
 
     const [currentIndex, setCurrentIndex] = useState(0);
+    const [selectedColorImage, setSelectedColorImage] = useState<string | null>(null);
     const [activeColorId, setActiveColorId] = useState<string | number | null>(null);
     const [selectedColorName, setSelectedColorName] = useState<string>("");
     const [selectedSize, setSelectedSize] = useState<string>("");
@@ -38,10 +35,18 @@ export default function ProductInteractive({
     const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
     const [isPending, startTransition] = useTransition();
 
-    const mainImage = allImages[currentIndex] ?? initialImage;
+    const mainImage = selectedColorImage ?? allImages[currentIndex] ?? initialImage;
 
-    const prev = () => setCurrentIndex((i) => (i - 1 + allImages.length) % allImages.length);
-    const next = () => setCurrentIndex((i) => (i + 1) % allImages.length);
+    const prev = () => {
+        setSelectedColorImage(null);
+        setActiveColorId(null);
+        setCurrentIndex((i) => (i - 1 + allImages.length) % allImages.length);
+    };
+    const next = () => {
+        setSelectedColorImage(null);
+        setActiveColorId(null);
+        setCurrentIndex((i) => (i + 1) % allImages.length);
+    };
 
     const handleLike = () => {
         if (isPending) return;
@@ -171,14 +176,12 @@ export default function ProductInteractive({
                         <p className="font-bold text-sm mt-6">{translations.colors}</p>
                         <div className="flex mt-3 gap-4 flex-wrap justify-center">
                             {colorVariants.map((variant: any, index: number) => {
-                                const variantIndex = allImages.indexOf(variant.imageUrl);
-                                const isActive = activeColorId === variant.id ||
-                                    (currentIndex === variantIndex && activeColorId === null);
+                                const isActive = activeColorId === variant.id;
                                 return (
                                     <button
                                         key={variant.id || index}
                                         onClick={() => {
-                                            if (variantIndex !== -1) setCurrentIndex(variantIndex);
+                                            setSelectedColorImage(variant.imageUrl);
                                             setActiveColorId(variant.id);
                                             setSelectedColorName(variant.color?.name);
                                         }}
