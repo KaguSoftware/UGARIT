@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
-import { MessageCircle, Ruler, Weight, Shirt } from "lucide-react";
+import { useState, useTransition } from "react";
+import { MessageCircle, Ruler, Weight, Shirt, Heart } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { addToCart as addToCartAction } from "@/src/lib/cart-actions";
+import { ToggleLikeProductAction } from "@/src/app/actions";
 
 export default function ProductInteractive({
     documentId,
@@ -20,16 +21,32 @@ export default function ProductInteractive({
     sizeOptions,
     modelInfo,
     translations,
+    isLiked: initialIsLiked = false,
 }: any) {
-    // This state controls the image, and now the Cart Action knows about it!
     const [mainImage, setMainImage] = useState(initialImage);
     const [activeColorId, setActiveColorId] = useState<string | number | null>(
         null
     );
     const [selectedColorName, setSelectedColorName] = useState<string>("");
-
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [isAdding, setIsAdding] = useState(false);
+    const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
+    const [isPending, startTransition] = useTransition();
+
+    const handleLike = () => {
+        if (isPending) return;
+        const previous = isLiked;
+        setIsLiked(!previous);
+        startTransition(async () => {
+            const result = await ToggleLikeProductAction(documentId);
+            if (!result?.success) {
+                setIsLiked(previous);
+                toast.error(result?.errorMessage || "Failed to update like.");
+            } else {
+                setIsLiked(result.liked);
+            }
+        });
+    };
 
     const params = useParams<{ locale?: string }>();
     const currentLocale =
@@ -72,14 +89,31 @@ export default function ProductInteractive({
             {/* Image Gallery Column */}
             <div className="justify-items-center">
                 {/* Image has the aspect-[4/3] you requested earlier */}
-                <Image
-                    className="object-cover w-full aspect-[4/3] rounded-2xl transition-opacity duration-300 shadow-sm"
-                    alt={title}
-                    src={mainImage}
-                    width={1000}
-                    height={750}
-                    unoptimized
-                />
+                <div className="relative w-full">
+                    <Image
+                        className="object-cover w-full aspect-3/4 rounded-2xl transition-opacity duration-300 shadow-sm"
+                        alt={title}
+                        src={mainImage}
+                        width={750}
+                        height={1000}
+                        unoptimized
+                    />
+                    <button
+                        type="button"
+                        onClick={handleLike}
+                        disabled={isPending}
+                        aria-label={isLiked ? "Unlike product" : "Like product"}
+                        className="absolute top-3 right-3 z-10 transition-transform hover:scale-110 disabled:opacity-70"
+                    >
+                        <Heart
+                            className={`w-7 h-7 transition-colors duration-200 drop-shadow ${
+                                isLiked
+                                    ? "fill-red-500 text-red-500"
+                                    : "text-white hover:text-red-400"
+                            }`}
+                        />
+                    </button>
+                </div>
                 <div className="justify-items-center w-full">
                     <p className="font-bold text-sm mt-6">
                         {translations.colors}
