@@ -39,7 +39,6 @@ async function getProduct(slug: string, locale: string) {
             "/api/products",
             {
                 query: {
-                    locale,
                     filters: { slug: { $eq: slug } },
                     fields: [
                         "documentId",
@@ -75,21 +74,22 @@ const LOCALES = ["tr", "en", "ar"];
 export async function generateStaticParams() {
     const results: { locale: string; slug: string }[] = [];
 
-    for (const locale of LOCALES) {
-        try {
-            const json = await strapiPublicFetch<{ data: any[] }>("/api/products", {
-                query: {
-                    locale,
-                    fields: ["slug"],
-                    pagination: { pageSize: 100 },
-                },
-            });
-            for (const product of json.data ?? []) {
-                if (product.slug) results.push({ locale, slug: product.slug });
+    try {
+        const json = await strapiPublicFetch<{ data: any[] }>("/api/products", {
+            query: {
+                fields: ["slug"],
+                pagination: { pageSize: 100 },
+            },
+        });
+        for (const product of json.data ?? []) {
+            if (product.slug) {
+                for (const locale of LOCALES) {
+                    results.push({ locale, slug: product.slug });
+                }
             }
-        } catch {
-            // if Strapi is down at build time, skip static generation for this locale
         }
+    } catch {
+        // if Strapi is down at build time, skip static generation
     }
 
     return results;
