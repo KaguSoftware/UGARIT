@@ -1,4 +1,9 @@
 {
+    "userMenu": {
+        "account": "My Account",
+        "logout": "Logout",
+        "signin": "Sign In"
+    },
     "Products": {
         "ProductPage": {
             "sizetext": "Size",
@@ -212,5 +217,11 @@
             "desc": "Fill out our form and we'll get back to you",
             "button": "Fill in the form"
         }
+    },
+    "authModal": {
+        "title": "Sign in to continue",
+        "desc": "Create an account or sign in to save your favourite products.",
+        "signinTab": "Sign In",
+        "signupTab": "Create Account"
     }
 }

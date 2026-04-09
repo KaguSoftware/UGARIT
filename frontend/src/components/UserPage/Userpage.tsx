@@ -1,10 +1,11 @@
 "use client";
 
-import { User } from "lucide-react";
+import { User, LogOut } from "lucide-react";
 import { ReactNode, useEffect, useState } from "react";
 import { USERPAGE } from "./constants";
 import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
+import { LogoutAction } from "@/src/app/actions";
 
 type StrapiUser = {
     id: number;
@@ -105,6 +106,17 @@ export default function UserPage() {
                 >
                     {t(USERPAGE.cart)}
                 </Link>
+                <button
+                    type="button"
+                    onClick={async () => {
+                        await LogoutAction();
+                        window.location.href = "/";
+                    }}
+                    className="rounded-lg bg-red-500 px-4 py-2 flex items-center justify-center gap-2 w-full border-2 border-red-500 text-white transition text-xl hover:bg-red-600"
+                >
+                    <LogOut size={20} />
+                    {t("userMenu.logout")}
+                </button>
             </div>
             <div className="w-full flex flex-col gap-7 h-full">
                 <button

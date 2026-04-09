@@ -311,7 +311,7 @@ export default function Navbar({
                 </div>
 
                 <div className="order-3 flex items-center justify-self-end gap-3 md:hidden">
-                    <Link href={"/user"}>
+                    <Link href="/user">
                         <UserCircle2Icon />
                     </Link>
                     <Link href={"/cart"}>
@@ -422,7 +422,7 @@ export default function Navbar({
                             className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-neutral-400"
                         />
                     </div>
-                    <Link href={"/user"}>
+                    <Link href="/user">
                         <UserCircle2Icon />
                     </Link>
 

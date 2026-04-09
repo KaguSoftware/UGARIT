@@ -606,3 +606,18 @@ export async function ToggleLikeProductAction(productId: string | number) {
         };
     }
 }
+
+export async function LogoutAction() {
+    const cookieStore = await cookies();
+    const cookieOptions = {
+        httpOnly: false,
+        sameSite: "lax" as const,
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 0,
+    };
+    cookieStore.set("jwt", "", { ...cookieOptions, httpOnly: true });
+    cookieStore.set("userId", "", cookieOptions);
+    cookieStore.set("username", "", cookieOptions);
+    cookieStore.set("userEmail", "", cookieOptions);
+}

@@ -8,6 +8,7 @@ import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import { addToCart as addToCartAction } from "@/src/lib/cart-actions";
 import { ToggleLikeProductAction } from "@/src/app/actions";
+import { useAuthModal } from "@/src/context/AuthModalContext";
 
 export default function ProductInteractive({
     documentId,
@@ -32,6 +33,7 @@ export default function ProductInteractive({
     const [selectedColorName, setSelectedColorName] = useState<string>("");
     const [selectedSize, setSelectedSize] = useState<string>("");
     const [isAdding, setIsAdding] = useState(false);
+    const { openAuthModal } = useAuthModal();
     const [isLiked, setIsLiked] = useState(Boolean(initialIsLiked));
     const [isPending, startTransition] = useTransition();
 
@@ -50,6 +52,16 @@ export default function ProductInteractive({
 
     const handleLike = () => {
         if (isPending) return;
+
+        const isLoggedIn = document.cookie
+            .split(";")
+            .some((c) => c.trim().startsWith("userId=") && c.trim() !== "userId=");
+
+        if (!isLoggedIn) {
+            openAuthModal();
+            return;
+        }
+
         const previous = isLiked;
         setIsLiked(!previous);
         startTransition(async () => {

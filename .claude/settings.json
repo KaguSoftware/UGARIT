@@ -7,7 +7,9 @@
       "Bash(node_modules/.bin/tsc --noEmit)",
       "Bash(node node_modules/.bin/tsc --noEmit)",
       "Bash(node node_modules/typescript/bin/tsc --noEmit)",
-      "Bash(echo \"EXIT:$?\")"
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:d[k] for k in ['signin','signup'] if k in d}, ensure_ascii=False, indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; d=json.load\\(open\\('/Users/majedahdab/Desktop/Project0/frontend/messages/en.json'\\)\\); print\\(json.dumps\\(d.get\\('Nav',{}\\), indent=2, ensure_ascii=False\\)\\)\")"
     ]
   }
 }

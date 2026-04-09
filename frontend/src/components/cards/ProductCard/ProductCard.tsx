@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
 import { ToggleLikeProductAction } from "@/src/app/actions";
+import { useAuthModal } from "@/src/context/AuthModalContext";
 import { ProductCardProps } from "./types";
 import { addToCart } from "./constants";
 import { addToCart as addToCartAction } from "@/src/lib/cart-actions";
@@ -13,6 +14,7 @@ import toast from "react-hot-toast";
 
 const ProductCard = ({ product }: ProductCardProps) => {
     const t = useTranslations();
+    const { openAuthModal } = useAuthModal();
     const [isLiked, setIsLiked] = useState(Boolean(product?.isLiked));
     const [isPending, startTransition] = useTransition();
 
@@ -39,6 +41,15 @@ const ProductCard = ({ product }: ProductCardProps) => {
                         e.stopPropagation();
 
                         if (isPending) return;
+
+                        const isLoggedIn = document.cookie
+                            .split(";")
+                            .some((c) => c.trim().startsWith("userId=") && c.trim() !== "userId=");
+
+                        if (!isLoggedIn) {
+                            openAuthModal();
+                            return;
+                        }
 
                         const previousLiked = isLiked;
                         setIsLiked(!previousLiked);

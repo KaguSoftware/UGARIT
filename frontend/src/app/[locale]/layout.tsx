@@ -6,6 +6,7 @@ import { getOrCreateCart } from "@/src/lib/cart-actions";
 import { CartItem } from "@/src/types/cart";
 import { Toaster } from "react-hot-toast";
 import { strapiPublicFetch } from "@/src/lib/strapi";
+import { AuthModalProvider } from "@/src/context/AuthModalContext";
 
 async function getNavbarCategories() {
     try {
@@ -67,13 +68,15 @@ export default async function LocaleLayout({
 
     return (
         <NextIntlClientProvider locale={locale} messages={messages}>
-            <Navbar
-                strapiCategories={categories}
-                cartItems={formattedCartItems}
-            />
-            <Toaster position="top-center" />
-            {children}
-            <Footer />
+            <AuthModalProvider>
+                <Navbar
+                    strapiCategories={categories}
+                    cartItems={formattedCartItems}
+                />
+                <Toaster position="top-center" />
+                {children}
+                <Footer />
+            </AuthModalProvider>
         </NextIntlClientProvider>
     );
 }
