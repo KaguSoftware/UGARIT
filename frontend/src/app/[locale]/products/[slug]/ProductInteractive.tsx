@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { MessageCircle, Ruler, Weight, Shirt, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import toast from "react-hot-toast";
 import { addToCart as addToCartAction } from "@/src/lib/cart-actions";
 import { ToggleLikeProductAction } from "@/src/app/actions";
@@ -79,14 +80,15 @@ export default function ProductInteractive({
     const params = useParams<{ locale?: string }>();
     const currentLocale =
         typeof params?.locale === "string" ? params.locale : "en";
+    const tc = useTranslations("Common");
 
     const handleAdd = async () => {
         if (!selectedSize) {
-            toast.error("Please select a size");
+            toast.error(tc("selectSize"));
             return;
         }
         if (colorVariants.length > 0 && !selectedColorName) {
-            toast.error("Please select a color");
+            toast.error(tc("selectColor"));
             return;
         }
 
@@ -105,9 +107,9 @@ export default function ProductInteractive({
         );
 
         if (result.success) {
-            toast.success("Added to cart!");
+            toast.success(tc("addedToCart"));
         } else {
-            toast.error("Failed to add to cart");
+            toast.error(tc("failedAddToCart"));
         }
         setIsAdding(false);
     };
@@ -123,7 +125,8 @@ export default function ProductInteractive({
                         src={mainImage}
                         width={750}
                         height={1000}
-                        unoptimized
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority
                     />
 
                     {/* Like button */}

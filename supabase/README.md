@@ -5,24 +5,10 @@ Run these SQL files **in order** in the Supabase SQL editor (Dashboard → SQL E
 1. `01_schema.sql` — tables, indexes, triggers (incl. auto-profile on signup).
 2. `02_rls.sql` — Row Level Security policies.
 3. `03_storage.sql` — creates the public `media` storage bucket + read policy.
-4. `04_seed.sql` — **generated** by the migration script; contains your existing
-   products/categories/colors/variants/likes. Paste it last.
-
-## Generating `04_seed.sql`
-
-From the repo root, before deleting `backend/`:
-
-```bash
-cd backend
-# set the service-role env so media can be uploaded to Storage:
-#   SUPABASE_URL=...                (https://<project>.supabase.co)
-#   SUPABASE_SERVICE_ROLE_KEY=...   (Project Settings → API → service_role)
-node scripts/export-to-supabase.mjs
-```
-
-This reads the old Strapi SQLite DB (`backend/.tmp/data.db`), uploads media to the
-Supabase `media` bucket, and writes `supabase/04_seed.sql`. Review it, then paste
-it into the SQL editor.
+4. `04_seed.sql` — initial catalog data (products/categories). Paste it last.
+   This was generated from the old data during the one-time migration; you can
+   re-run it on a fresh database to reseed, or skip it and add content via
+   `/admin`.
 
 ## Environment variables (frontend)
 

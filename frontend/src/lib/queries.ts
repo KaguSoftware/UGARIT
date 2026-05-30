@@ -1,10 +1,11 @@
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createPublicClient } from "@/src/lib/supabase/public";
 import { localized, firstImage, type Locale } from "@/src/lib/supabase/media";
 
 /**
  * Read-side data access for the storefront, backed by Supabase.
- * These run server-side and use the service-role client purely as a stable,
- * RLS-free reader for the public catalog (no user-specific data is exposed here).
+ * These run server-side using the anon (public) client — the catalog tables are
+ * world-readable via RLS, so no privileged key is needed, and skipping cookies
+ * keeps these reads fast and cacheable.
  *
  * The shapes returned mirror what the UI components already expect
  * (e.g. { id, title, price, imageUrl, category, slug }), so components are unchanged.
@@ -86,9 +87,8 @@ function resolveFeaturedColumns(featured?: string | string[]): string[] {
 }
 
 /**
- * Builds and runs a product-list query with the same filtering semantics the
- * old Strapi pages used: price range, size OR-filter, sp.* featured OR-filter,
- * optional category, and sort.
+ * Builds and runs a product-list query: price range, size OR-filter,
+ * sp.* promotion OR-filter, optional category, and sort.
  */
 export async function fetchProducts(options: {
     locale: string;
@@ -96,7 +96,7 @@ export async function fetchProducts(options: {
     filters: ProductFilters;
 }): Promise<StoreProduct[]> {
     const { locale, categorySlug, filters } = options;
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
 
     let categoryId: string | null = null;
     if (categorySlug) {
@@ -116,8 +116,7 @@ export async function fetchProducts(options: {
     if (filters.min) query = query.gte("price", Number(filters.min));
     if (filters.max) query = query.lte("price", Number(filters.max));
 
-    // Size + featured behave as a combined OR across boolean columns (matches
-    // the old Strapi filters[$or] behavior).
+    // Size + featured behave as a combined OR across boolean columns.
     const orColumns = [
         ...resolveSizeColumns(filters.size),
         ...resolveFeaturedColumns(filters.featured),
@@ -189,7 +188,7 @@ export async function fetchSizeAvailability(options: {
     filters: Pick<ProductFilters, "min" | "max" | "featured">;
 }): Promise<any[]> {
     const { categorySlug, filters } = options;
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
 
     let categoryId: string | null = null;
     if (categorySlug) {
@@ -222,7 +221,7 @@ export async function fetchSizeAvailability(options: {
 export async function fetchFeaturedProducts(
     locale: string
 ): Promise<StoreProduct[]> {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
         .from("products")
         .select(PRODUCT_LIST_COLUMNS)
@@ -236,7 +235,7 @@ export async function fetchFeaturedProducts(
  * Categories shown on the homepage grid.
  */
 export async function fetchHomepageCategories(locale: string) {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
         .from("categories")
         .select("id, slug, name, image_url")
@@ -251,10 +250,10 @@ export async function fetchHomepageCategories(locale: string) {
 }
 
 /**
- * Categories shown in the navbar (shape matches the Navbar's StrapiCategory).
+ * Categories shown in the navbar (shape matches the Navbar's NavbarCategory).
  */
 export async function fetchNavbarCategories(locale: string) {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
         .from("categories")
         .select("id, slug, name, show_in_navbar, is_mega_menu, mega_menu_content")
@@ -275,7 +274,7 @@ export async function fetchNavbarCategories(locale: string) {
  * Single category by slug (for the category page header).
  */
 export async function fetchCategoryBySlug(slug: string, locale: string) {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
         .from("categories")
         .select("id, slug, name")
@@ -290,7 +289,7 @@ export async function fetchCategoryBySlug(slug: string, locale: string) {
  * Full product detail by slug, including color variants.
  */
 export async function fetchProductBySlug(slug: string, locale: string) {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase
         .from("products")
         .select(
@@ -341,7 +340,7 @@ export async function fetchProductBySlug(slug: string, locale: string) {
  * All product slugs (for generateStaticParams).
  */
 export async function fetchAllProductSlugs(): Promise<string[]> {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase.from("products").select("slug");
     return (data ?? []).map((p: any) => p.slug).filter(Boolean);
 }
@@ -350,7 +349,7 @@ export async function fetchAllProductSlugs(): Promise<string[]> {
  * All category slugs (for generateStaticParams).
  */
 export async function fetchAllCategorySlugs(): Promise<string[]> {
-    const supabase = createAdminClient();
+    const supabase = createPublicClient();
     const { data } = await supabase.from("categories").select("slug");
     return (data ?? []).map((c: any) => c.slug).filter(Boolean);
 }

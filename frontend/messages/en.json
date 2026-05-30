@@ -223,5 +223,20 @@
         "desc": "Create an account or sign in to save your favourite products.",
         "signinTab": "Sign In",
         "signupTab": "Create Account"
+    },
+    "Common": {
+        "allProducts": "All Products",
+        "likedProducts": "Liked Products",
+        "savedProductsBy": "{name}'s saved products",
+        "signInFirst": "You need to sign in first.",
+        "noLikedProducts": "You have not liked any products yet.",
+        "loading": "Loading...",
+        "qty": "Qty",
+        "selectSize": "Please select a size",
+        "selectColor": "Please select a color",
+        "addedToCart": "Added to cart!",
+        "failedAddToCart": "Failed to add to cart",
+        "removedFromCart": "Item removed from cart",
+        "failedRemoveItem": "Failed to remove item"
     }
 }

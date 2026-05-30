@@ -86,7 +86,7 @@ const menuIconFlipVariants: Variants = {
     },
 };
 
-export type StrapiCategory = {
+export type NavbarCategory = {
     documentId: string;
     name: string;
     slug: string;
@@ -168,10 +168,10 @@ function LanguageMenu({
 }
 
 export default function Navbar({
-    strapiCategories = [],
+    categories = [],
     cartItems = [],
 }: {
-    strapiCategories?: StrapiCategory[];
+    categories?: NavbarCategory[];
     cartItems?: CartItem[];
 }) {
     const locale = useLocale();
@@ -179,7 +179,7 @@ export default function Navbar({
 
     const staticNavItems = tNav.raw("items") as NavItem[];
 
-    const dynamicNavItems: NavItem[] = strapiCategories
+    const dynamicNavItems: NavItem[] = categories
         .filter((cat) => cat.showInNavbar)
         .map((cat) => ({
             title: cat.name,

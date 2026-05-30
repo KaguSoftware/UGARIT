@@ -6,11 +6,13 @@ import { cartProductCardProps } from "./types";
 import MaxWidthWrapper from "../../ui/MaxWidthWrapper";
 import { Trash } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { removeFromCart } from "@/src/lib/cart-actions";
 import toast from "react-hot-toast";
 
 export default function CartProductCard({ product }: cartProductCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
+    const tc = useTranslations("Common");
 
     // Cart snapshots store absolute Supabase Storage URLs.
     const rawImage = product?.imageUrl || "";
@@ -21,10 +23,10 @@ export default function CartProductCard({ product }: cartProductCardProps) {
         const result = await removeFromCart(product.documentId);
 
         if (result.success) {
-            toast.success("Item removed from cart");
+            toast.success(tc("removedFromCart"));
         } else {
             console.error(result.error);
-            toast.error("Failed to remove item");
+            toast.error(tc("failedRemoveItem"));
             setIsDeleting(false);
         }
     };
@@ -46,10 +48,10 @@ export default function CartProductCard({ product }: cartProductCardProps) {
                     <Image
                         src={imageUrl}
                         alt={product.title}
-                        width={750}
-                        height={1000}
+                        width={112}
+                        height={150}
+                        sizes="112px"
                         className="object-cover"
-                        unoptimized
                     />
                 </Link>
 
@@ -87,7 +89,7 @@ export default function CartProductCard({ product }: cartProductCardProps) {
                     {/* Bottom Row: Quantity & Price */}
                     <div className="flex items-center justify-between mt-auto">
                         <span className="text-gray-500 text-sm font-medium">
-                            Qty: {product.quantity}
+                            {tc("qty")}: {product.quantity}
                         </span>
                         <span className="text-xl font-bold text-black">
                             ₺{product.unitPrice}

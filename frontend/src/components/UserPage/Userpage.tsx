@@ -7,8 +7,8 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/src/i18n/routing";
 import { LogoutAction } from "@/src/app/actions";
 
-type StrapiUser = {
-    id: number;
+type CurrentUser = {
+    id: string;
     username: string;
     email: string;
 };
@@ -29,7 +29,7 @@ function getCookie(name: string) {
 
 export default function UserPage() {
     const [showInfo, setShowInfo] = useState(false);
-    const [user, setUser] = useState<StrapiUser | null>(null);
+    const [user, setUser] = useState<CurrentUser | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<ReactNode>(null);
     const t = useTranslations();
@@ -54,7 +54,7 @@ export default function UserPage() {
 
         if (userId) {
             setUser({
-                id: Number(userId),
+                id: userId,
                 username: username ?? "User",
                 email: userEmail ?? "",
             });
@@ -65,12 +65,12 @@ export default function UserPage() {
 
         setError(
             <div className="flex flex-col items-center gap-3">
-                <p>No logged-in user found.</p>
+                <p>{t("Common.signInFirst")}</p>
                 <Link
                     href="/signin"
                     className="rounded-lg bg-white px-4 py-2 text-center w-full border-2 transition text-xl"
                 >
-                    Sign in
+                    {t("userMenu.signin")}
                 </Link>
             </div>
         );
@@ -84,7 +84,7 @@ export default function UserPage() {
             </h1>
             <h2 className="text-3xl">{t(USERPAGE.welcome)}</h2>
             <h3 className="text-4xl font-bold">
-                {loading ? "Loading..." : user?.username ?? "User"}
+                {loading ? t("Common.loading") : user?.username ?? "User"}
             </h3>
 
             {error && (

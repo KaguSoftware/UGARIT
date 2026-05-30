@@ -2,11 +2,18 @@ import Link from "next/link";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { localized } from "@/src/lib/supabase/media";
 import DeleteButton from "@/src/components/admin/DeleteButton";
+import SavedBanner from "@/src/components/admin/SavedBanner";
+import { FadeIn } from "@/src/components/admin/Motion";
 import { deleteColor } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ColorsPage() {
+export default async function ColorsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ saved?: string }>;
+}) {
+    const { saved } = await searchParams;
     const supabase = createAdminClient();
     const { data: colors } = await supabase
         .from("colors")
@@ -14,14 +21,15 @@ export default async function ColorsPage() {
         .order("created_at", { ascending: false });
 
     return (
-        <div>
+        <FadeIn>
+            <SavedBanner show={saved === "1"} />
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Colors</h1>
                 <Link
                     href="/admin/colors/new"
                     className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
                 >
-                    + New color
+                    + Add color
                 </Link>
             </div>
 
@@ -80,6 +88,6 @@ export default async function ColorsPage() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </FadeIn>
     );
 }

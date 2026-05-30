@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { motion } from "motion/react";
 import { adminSignIn } from "../actions";
 
 export default function AdminLoginForm() {
@@ -9,7 +10,13 @@ export default function AdminLoginForm() {
     });
 
     return (
-        <form action={formAction} className="space-y-4">
+        <motion.form
+            action={formAction}
+            className="space-y-4"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+        >
             {state?.error && (
                 <p className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
                     {state.error}
@@ -47,6 +54,6 @@ export default function AdminLoginForm() {
             >
                 {pending ? "Signing in…" : "Sign in"}
             </button>
-        </form>
+        </motion.form>
     );
 }

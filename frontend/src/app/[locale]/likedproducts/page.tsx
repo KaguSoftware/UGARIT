@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import ProductGrid from "@/src/components/productsGrid/products";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import { createClient } from "@/src/lib/supabase/server";
@@ -10,6 +11,7 @@ export default async function Page({
     params: Promise<{ locale: string }>;
 }) {
     const { locale } = await params;
+    const t = await getTranslations("Common");
     const supabase = await createClient();
 
     const {
@@ -19,9 +21,11 @@ export default async function Page({
     if (!user) {
         return (
             <main className="mx-auto max-w-5xl p-6">
-                <h1 className="mb-4 text-3xl font-bold">Liked Products</h1>
+                <h1 className="mb-4 text-3xl font-bold">
+                    {t("likedProducts")}
+                </h1>
                 <p className="rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
-                    You need to sign in first.
+                    {t("signInFirst")}
                 </p>
             </main>
         );
@@ -47,16 +51,18 @@ export default async function Page({
             <main className="mx-auto p-6">
                 <div className="mb-6 flex items-center justify-between gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold">Liked Products</h1>
+                        <h1 className="text-3xl font-bold">
+                            {t("likedProducts")}
+                        </h1>
                         <p className="text-gray-600">
-                            {username}&rsquo;s saved products
+                            {t("savedProductsBy", { name: username })}
                         </p>
                     </div>
                 </div>
 
                 {likedProducts.length === 0 ? (
                     <div className="rounded-xl border border-gray-200 bg-white p-6 text-gray-700">
-                        You have not liked any products yet.
+                        {t("noLikedProducts")}
                     </div>
                 ) : (
                     <ProductGrid

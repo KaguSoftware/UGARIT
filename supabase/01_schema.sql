@@ -84,7 +84,7 @@ create trigger products_set_updated_at
     before update on public.products
     for each row execute function public.set_updated_at();
 
--- ─── product_color_variants (replaces Strapi repeatable component) ───────────
+-- ─── product_color_variants (per-color images for a product) ─────────────────
 create table if not exists public.product_color_variants (
     id         uuid primary key default gen_random_uuid(),
     product_id uuid not null references public.products (id) on delete cascade,

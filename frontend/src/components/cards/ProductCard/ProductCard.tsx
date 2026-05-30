@@ -31,7 +31,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     src={product.imageUrl}
                     alt={product.title}
                     fill
-                    unoptimized
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     className="rounded-t-2xl object-cover transition-transform duration-300 group-hover/card:scale-105"
                 />
                 <button
@@ -83,19 +83,14 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     />
                 </button>
 
-                <button
-                    type="button"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        // cart logic here later
-                        console.log("Added to cart!");
-                    }}
-                    className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover/card:translate-y-0 transition-transform duration-300 ease-in-out"
-                >
-                    <p className="text-white text-md font-bold">
+                {/* Visual cue on hover; the whole card already links to the
+                    product page (where size/color can be selected), so this
+                    simply lets the click fall through to that Link. */}
+                <div className="absolute bottom-0 left-0 w-full bg-black/70 md:py-3 py-1 z-10 md:translate-y-full group-hover/card:translate-y-0 transition-transform duration-300 ease-in-out">
+                    <p className="text-center text-white text-md font-bold">
                         {t(addToCart.addToCartText)}
                     </p>
-                </button>
+                </div>
             </div>
 
             <div className="text-center flex flex-col gap-1 m-3 px-2 bottom-0">

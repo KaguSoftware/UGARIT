@@ -228,5 +228,20 @@
         "desc": "أنشئ حساباً أو سجّل دخولك لحفظ منتجاتك المفضلة.",
         "signinTab": "تسجيل الدخول",
         "signupTab": "إنشاء حساب"
+    },
+    "Common": {
+        "allProducts": "جميع المنتجات",
+        "likedProducts": "المنتجات المفضلة",
+        "savedProductsBy": "المنتجات المحفوظة لدى {name}",
+        "signInFirst": "يجب تسجيل الدخول أولاً.",
+        "noLikedProducts": "لم تقم بالإعجاب بأي منتج بعد.",
+        "loading": "جارٍ التحميل...",
+        "qty": "الكمية",
+        "selectSize": "الرجاء اختيار المقاس",
+        "selectColor": "الرجاء اختيار اللون",
+        "addedToCart": "تمت الإضافة إلى السلة!",
+        "failedAddToCart": "فشل في الإضافة إلى السلة",
+        "removedFromCart": "تمت إزالة المنتج من السلة",
+        "failedRemoveItem": "فشل في إزالة المنتج"
     }
 }

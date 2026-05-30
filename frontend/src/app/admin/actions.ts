@@ -28,9 +28,12 @@ async function assertAdmin() {
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 function localizedFromForm(formData: FormData, prefix: string) {
+    // Store only non-empty locales; the read-side falls back to the source
+    // locale anyway, so we don't bloat the JSONB with empty strings.
     const obj: Record<string, string> = {};
     for (const l of LOCALES) {
-        obj[l] = String(formData.get(`${prefix}_${l}`) ?? "");
+        const value = String(formData.get(`${prefix}_${l}`) ?? "").trim();
+        if (value) obj[l] = value;
     }
     return obj;
 }
@@ -38,6 +41,57 @@ function localizedFromForm(formData: FormData, prefix: string) {
 function bool(formData: FormData, key: string) {
     const v = formData.get(key);
     return v === "on" || v === "true" || v === "1";
+}
+
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
+const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+    "image/avif",
+];
+
+/**
+ * Turns a piece of text into a URL-safe slug (the customer never types this —
+ * it's derived from the product/category name automatically).
+ */
+function slugify(input: string): string {
+    return input
+        .toLowerCase()
+        .trim()
+        .normalize("NFKD")
+        .replace(/[̀-ͯ]/g, "") // strip accents
+        .replace(/[^a-z0-9\s-]/g, "") // drop non-alphanumerics
+        .replace(/[\s_-]+/g, "-") // spaces → hyphens
+        .replace(/^-+|-+$/g, ""); // trim hyphens
+}
+
+/**
+ * Generates a slug from a name that is unique within a table. Re-uses the
+ * current row's slug when editing if the name is unchanged.
+ */
+async function uniqueSlug(
+    table: "products" | "categories",
+    name: string,
+    currentId: string
+): Promise<string> {
+    const supabase = createAdminClient();
+    const base = slugify(name) || "item";
+
+    let candidate = base;
+    for (let i = 2; i < 1000; i++) {
+        const { data } = await supabase
+            .from(table)
+            .select("id")
+            .eq("slug", candidate)
+            .maybeSingle();
+
+        if (!data || data.id === currentId) return candidate;
+        candidate = `${base}-${i}`;
+    }
+    // Extremely unlikely fallback.
+    return `${base}-${randomUUID().slice(0, 6)}`;
 }
 
 function tag(name: string) {
@@ -58,9 +112,22 @@ function revalidateCatalog() {
 
 /**
  * Uploads an image File to the media bucket and returns its public URL.
+ * Throws a friendly Error on validation/upload failure so the form can show it.
  */
 async function uploadImage(file: File): Promise<string | null> {
     if (!file || file.size === 0) return null;
+
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error(
+            `"${file.name}" is not a supported image. Please use JPG, PNG, WebP, or GIF.`
+        );
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+        throw new Error(
+            `"${file.name}" is too large (max 8 MB). Please choose a smaller image.`
+        );
+    }
+
     const supabase = createAdminClient();
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
     const path = `admin/${randomUUID()}.${ext}`;
@@ -74,8 +141,7 @@ async function uploadImage(file: File): Promise<string | null> {
         });
 
     if (error) {
-        console.error("Image upload failed:", error.message);
-        return null;
+        throw new Error(`Could not upload "${file.name}". Please try again.`);
     }
 
     return supabase.storage.from("media").getPublicUrl(path).data.publicUrl;
@@ -122,14 +188,21 @@ export async function saveCategory(prevState: any, formData: FormData) {
     const supabase = createAdminClient();
 
     const id = String(formData.get("id") ?? "");
-    const slug = String(formData.get("slug") ?? "").trim();
-    if (!slug) return { error: "Slug is required." };
+    const name = localizedFromForm(formData, "name");
+    const displayName = name.tr || name.en || name.ar || "";
+    if (!displayName) {
+        return { error: "Please enter a category name." };
+    }
 
     let imageUrl = String(formData.get("existing_image_url") ?? "") || null;
-    const file = formData.get("image") as File | null;
-    if (file && file.size > 0) {
-        const uploaded = await uploadImage(file);
-        if (uploaded) imageUrl = uploaded;
+    try {
+        const file = formData.get("image") as File | null;
+        if (file && file.size > 0) {
+            const uploaded = await uploadImage(file);
+            if (uploaded) imageUrl = uploaded;
+        }
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : "Image upload failed." };
     }
 
     let megaMenuContent: unknown = null;
@@ -138,13 +211,17 @@ export async function saveCategory(prevState: any, formData: FormData) {
         try {
             megaMenuContent = JSON.parse(rawMega);
         } catch {
-            return { error: "Mega menu content is not valid JSON." };
+            return {
+                error: "The advanced menu box must be valid JSON, or left empty.",
+            };
         }
     }
 
+    const slug = await uniqueSlug("categories", displayName, id);
+
     const payload = {
         slug,
-        name: localizedFromForm(formData, "name"),
+        name,
         image_url: imageUrl,
         show_in_navbar: bool(formData, "show_in_navbar"),
         is_mega_menu: bool(formData, "is_mega_menu"),
@@ -158,7 +235,7 @@ export async function saveCategory(prevState: any, formData: FormData) {
     if (error) return { error: error.message };
 
     revalidateCatalog();
-    redirect("/admin/categories");
+    redirect("/admin/categories?saved=1");
 }
 
 export async function deleteCategory(id: string) {
@@ -184,7 +261,7 @@ export async function saveColor(prevState: any, formData: FormData) {
         : await supabase.from("colors").insert(payload);
 
     if (error) return { error: error.message };
-    redirect("/admin/colors");
+    redirect("/admin/colors?saved=1");
 }
 
 export async function deleteColor(id: string) {
@@ -199,8 +276,17 @@ export async function saveProduct(prevState: any, formData: FormData) {
     const supabase = createAdminClient();
 
     const id = String(formData.get("id") ?? "");
-    const slug = String(formData.get("slug") ?? "").trim();
-    if (!slug) return { error: "Slug is required." };
+    const title = localizedFromForm(formData, "title");
+    const displayTitle = title.tr || title.en || title.ar || "";
+    if (!displayTitle) {
+        return { error: "Please enter a product name." };
+    }
+
+    const priceRaw = String(formData.get("price") ?? "").trim();
+    if (!priceRaw || Number.isNaN(Number(priceRaw)) || Number(priceRaw) < 0) {
+        return { error: "Please enter a valid price (a number, e.g. 499.90)." };
+    }
+    const price = Number(priceRaw);
 
     // Existing images preserved + any new uploads appended.
     const existing = formData
@@ -210,22 +296,24 @@ export async function saveProduct(prevState: any, formData: FormData) {
 
     const newFiles = formData.getAll("images") as File[];
     const uploaded: string[] = [];
-    for (const file of newFiles) {
-        if (file && file.size > 0) {
-            const url = await uploadImage(file);
-            if (url) uploaded.push(url);
+    try {
+        for (const file of newFiles) {
+            if (file && file.size > 0) {
+                const url = await uploadImage(file);
+                if (url) uploaded.push(url);
+            }
         }
+    } catch (e) {
+        return { error: e instanceof Error ? e.message : "Image upload failed." };
     }
     const images = [...existing, ...uploaded];
 
-    const priceRaw = String(formData.get("price") ?? "").trim();
-    const price = priceRaw ? Number(priceRaw) : null;
-
     const categoryId = String(formData.get("category_id") ?? "") || null;
+    const slug = await uniqueSlug("products", displayTitle, id);
 
     const payload = {
         slug,
-        title: localizedFromForm(formData, "title"),
+        title,
         description: localizedFromForm(formData, "description"),
         price,
         is_featured: bool(formData, "is_featured"),
@@ -245,29 +333,17 @@ export async function saveProduct(prevState: any, formData: FormData) {
         images,
     };
 
-    let productId = id;
-    if (id) {
-        const { error } = await supabase
-            .from("products")
-            .update(payload)
-            .eq("id", id);
-        if (error) return { error: error.message };
-    } else {
-        const { data, error } = await supabase
-            .from("products")
-            .insert(payload)
-            .select("id")
-            .single();
-        if (error) return { error: error.message };
-        productId = data.id;
-    }
+    const { error } = id
+        ? await supabase.from("products").update(payload).eq("id", id)
+        : await supabase.from("products").insert(payload);
+    if (error) return { error: error.message };
 
     revalidateCatalog();
     tag(`product:tr:${slug}`);
     tag(`product:en:${slug}`);
     tag(`product:ar:${slug}`);
 
-    redirect("/admin/products");
+    redirect("/admin/products?saved=1");
 }
 
 export async function deleteProduct(id: string) {

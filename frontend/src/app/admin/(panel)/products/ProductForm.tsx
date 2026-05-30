@@ -50,46 +50,41 @@ export default function ProductForm({
         <FormShell action={saveProduct}>
             {product?.id && <input type="hidden" name="id" value={product.id} />}
 
-            <div className="grid grid-cols-2 gap-5">
-                <LocalizedInput
-                    label="Title"
-                    name="title"
-                    required
-                    defaultValues={product?.title ?? {}}
-                />
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                        Slug
-                    </label>
-                    <input
-                        type="text"
-                        name="slug"
-                        required
-                        defaultValue={product?.slug ?? ""}
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                    />
-                </div>
-            </div>
+            <LocalizedInput
+                label="Product name"
+                name="title"
+                required
+                defaultValues={product?.title ?? {}}
+                help="Use the TR / EN / AR tabs to type the name in each language. Turkish is required."
+            />
 
             <LocalizedInput
                 label="Description"
                 name="description"
                 textarea
                 defaultValues={product?.description ?? {}}
+                help="Optional. The text customers read on the product page."
             />
 
             <div className="grid grid-cols-2 gap-5">
                 <div>
                     <label className="mb-1 block text-sm font-medium text-neutral-700">
-                        Price
+                        Price (₺)
+                        <span className="ml-0.5 text-red-500">*</span>
                     </label>
                     <input
                         type="number"
                         name="price"
                         step="0.01"
+                        min="0"
+                        required
+                        placeholder="e.g. 499.90"
                         defaultValue={product?.price ?? ""}
                         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
                     />
+                    <p className="mt-1 text-xs text-neutral-500">
+                        Numbers only, in Turkish Lira.
+                    </p>
                 </div>
                 <div>
                     <label className="mb-1 block text-sm font-medium text-neutral-700">
@@ -100,28 +95,41 @@ export default function ProductForm({
                         defaultValue={product?.category_id ?? ""}
                         className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
                     >
-                        <option value="">— None —</option>
+                        <option value="">— No category —</option>
                         {categories.map((c) => (
                             <option key={c.id} value={c.id}>
                                 {c.label}
                             </option>
                         ))}
                     </select>
+                    <p className="mt-1 text-xs text-neutral-500">
+                        Which section of the shop this product belongs to.
+                    </p>
                 </div>
             </div>
 
-            <ImageUploader
-                label="Images"
-                name="images"
-                multiple
-                existing={product?.images ?? []}
-                existingFieldName="existing_images"
-            />
+            <div>
+                <ImageUploader
+                    label="Photos"
+                    name="images"
+                    multiple
+                    existing={product?.images ?? []}
+                    existingFieldName="existing_images"
+                />
+                <p className="mt-1 text-xs text-neutral-500">
+                    The first photo is the main one shown in the shop. You can
+                    add several. Max 8 MB each (JPG, PNG, WebP, or GIF).
+                </p>
+            </div>
 
             <fieldset>
-                <legend className="mb-2 text-sm font-medium text-neutral-700">
+                <legend className="mb-1 text-sm font-medium text-neutral-700">
                     Available sizes
                 </legend>
+                <p className="mb-2 text-xs text-neutral-500">
+                    Tick the sizes that are in stock. Customers can only pick
+                    ticked sizes.
+                </p>
                 <div className="flex flex-wrap gap-4">
                     {SIZES.map((s) => (
                         <label
@@ -142,17 +150,20 @@ export default function ProductForm({
             </fieldset>
 
             <fieldset>
-                <legend className="mb-2 text-sm font-medium text-neutral-700">
-                    Flags
+                <legend className="mb-1 text-sm font-medium text-neutral-700">
+                    Promotion labels
                 </legend>
-                <div className="flex flex-wrap gap-4">
+                <p className="mb-2 text-xs text-neutral-500">
+                    Tick to show this product in these areas of the shop.
+                </p>
+                <div className="flex flex-col gap-2">
                     <label className="flex items-center gap-2 text-sm">
                         <input
                             type="checkbox"
                             name="is_featured"
                             defaultChecked={product?.is_featured ?? false}
                         />
-                        Featured
+                        Show on the homepage (Featured)
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -160,7 +171,7 @@ export default function ProductForm({
                             name="sp_one"
                             defaultChecked={product?.sp_one ?? false}
                         />
-                        SP One
+                        New Arrival
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -168,7 +179,7 @@ export default function ProductForm({
                             name="sp_two"
                             defaultChecked={product?.sp_two ?? false}
                         />
-                        SP Two
+                        Discounted
                     </label>
                     <label className="flex items-center gap-2 text-sm">
                         <input
@@ -176,44 +187,53 @@ export default function ProductForm({
                             name="sp_three"
                             defaultChecked={product?.sp_three ?? false}
                         />
-                        SP Three
+                        Free Shipping
                     </label>
                 </div>
             </fieldset>
 
-            <div className="grid grid-cols-3 gap-5">
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                        Model height
-                    </label>
-                    <input
-                        type="text"
-                        name="model_height"
-                        defaultValue={product?.model_height ?? ""}
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                    />
-                </div>
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                        Model weight
-                    </label>
-                    <input
-                        type="text"
-                        name="model_weight"
-                        defaultValue={product?.model_weight ?? ""}
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                    />
-                </div>
-                <div>
-                    <label className="mb-1 block text-sm font-medium text-neutral-700">
-                        Model size
-                    </label>
-                    <input
-                        type="text"
-                        name="model_size"
-                        defaultValue={product?.model_size ?? ""}
-                        className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
-                    />
+            <div>
+                <p className="mb-2 text-sm font-medium text-neutral-700">
+                    Model info (optional)
+                </p>
+                <p className="mb-2 text-xs text-neutral-500">
+                    The measurements of the model wearing the product, shown on
+                    the size guide.
+                </p>
+                <div className="grid grid-cols-3 gap-5">
+                    <div>
+                        <label className="mb-1 block text-xs text-neutral-600">
+                            Model height
+                        </label>
+                        <input
+                            type="text"
+                            name="model_height"
+                            defaultValue={product?.model_height ?? ""}
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs text-neutral-600">
+                            Model weight
+                        </label>
+                        <input
+                            type="text"
+                            name="model_weight"
+                            defaultValue={product?.model_weight ?? ""}
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs text-neutral-600">
+                            Model size
+                        </label>
+                        <input
+                            type="text"
+                            name="model_size"
+                            defaultValue={product?.model_size ?? ""}
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                        />
+                    </div>
                 </div>
             </div>
         </FormShell>

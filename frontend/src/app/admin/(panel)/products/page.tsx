@@ -3,11 +3,18 @@ import Image from "next/image";
 import { createAdminClient } from "@/src/lib/supabase/admin";
 import { localized, firstImage } from "@/src/lib/supabase/media";
 import DeleteButton from "@/src/components/admin/DeleteButton";
+import SavedBanner from "@/src/components/admin/SavedBanner";
+import { FadeIn } from "@/src/components/admin/Motion";
 import { deleteProduct } from "../../actions";
 
 export const dynamic = "force-dynamic";
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+    searchParams,
+}: {
+    searchParams: Promise<{ saved?: string }>;
+}) {
+    const { saved } = await searchParams;
     const supabase = createAdminClient();
     const { data: products } = await supabase
         .from("products")
@@ -17,14 +24,15 @@ export default async function ProductsPage() {
         .order("created_at", { ascending: false });
 
     return (
-        <div>
+        <FadeIn>
+            <SavedBanner show={saved === "1"} />
             <div className="mb-6 flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Products</h1>
                 <Link
                     href="/admin/products/new"
                     className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800"
                 >
-                    + New product
+                    + Add product
                 </Link>
             </div>
 
@@ -97,6 +105,6 @@ export default async function ProductsPage() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </FadeIn>
     );
 }

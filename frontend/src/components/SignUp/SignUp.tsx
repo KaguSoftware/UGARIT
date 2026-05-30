@@ -12,10 +12,8 @@ import { CreateUserAction } from "@/src/app/actions";
 export default function Signup() {
     const INITIAL_STATE = {
         ZodError: null,
-        strapiError: null,
         errorMessage: null,
         successMessage: null,
-        jwt: null,
         user: null,
     };
 

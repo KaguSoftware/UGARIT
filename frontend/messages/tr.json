@@ -228,5 +228,20 @@
         "desc": "Favori ürünlerinizi kaydetmek için hesap oluşturun veya giriş yapın.",
         "signinTab": "Giriş Yap",
         "signupTab": "Hesap Oluştur"
+    },
+    "Common": {
+        "allProducts": "Tüm Ürünler",
+        "likedProducts": "Beğenilen Ürünler",
+        "savedProductsBy": "{name} kullanıcısının kaydettiği ürünler",
+        "signInFirst": "Önce giriş yapmanız gerekiyor.",
+        "noLikedProducts": "Henüz hiçbir ürün beğenmediniz.",
+        "loading": "Yükleniyor...",
+        "qty": "Adet",
+        "selectSize": "Lütfen bir beden seçin",
+        "selectColor": "Lütfen bir renk seçin",
+        "addedToCart": "Sepete eklendi!",
+        "failedAddToCart": "Sepete eklenemedi",
+        "removedFromCart": "Ürün sepetten çıkarıldı",
+        "failedRemoveItem": "Ürün çıkarılamadı"
     }
 }

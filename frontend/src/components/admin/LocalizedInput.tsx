@@ -14,6 +14,7 @@ type Props = {
     defaultValues?: Partial<Record<"tr" | "en" | "ar", string>>;
     textarea?: boolean;
     required?: boolean;
+    help?: string;
 };
 
 /**
@@ -26,6 +27,7 @@ export default function LocalizedInput({
     defaultValues = {},
     textarea = false,
     required = false,
+    help,
 }: Props) {
     const [active, setActive] = useState<"tr" | "en" | "ar">("tr");
 
@@ -34,6 +36,7 @@ export default function LocalizedInput({
             <div className="mb-1 flex items-center justify-between">
                 <label className="text-sm font-medium text-neutral-700">
                     {label}
+                    {required && <span className="ml-0.5 text-red-500">*</span>}
                 </label>
                 <div className="flex gap-1">
                     {LOCALES.map((l) => (
@@ -68,6 +71,10 @@ export default function LocalizedInput({
                     <input key={l.code} type="text" {...common} />
                 );
             })}
+
+            {help && (
+                <p className="mt-1 text-xs text-neutral-500">{help}</p>
+            )}
         </div>
     );
 }

@@ -60,7 +60,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
             <AuthModalProvider>
                 <Navbar
-                    strapiCategories={categories}
+                    categories={categories}
                     cartItems={formattedCartItems}
                 />
                 <Toaster position="top-center" />

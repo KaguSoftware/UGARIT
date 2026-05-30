@@ -10,10 +10,8 @@ import { LoginUserAction } from "@/src/app/actions";
 export default function SignIn() {
     const INITIAL_STATE = {
         ZodError: null,
-        strapiError: null,
         errorMessage: null,
         successMessage: null,
-        jwt: null,
         user: null,
     };
 

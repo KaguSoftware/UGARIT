@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import ProductGrid from "@/src/components/productsGrid/products";
 import { Filters } from "@/src/components/ui/filters/filters";
 import {
@@ -66,6 +67,7 @@ export default async function ProductList({
 }) {
     const { locale } = await params;
     const filters = await searchParams;
+    const t = await getTranslations();
 
     const [products, sizeRows, likedProductIds] = await Promise.all([
         getProducts(locale, filters),
@@ -78,7 +80,9 @@ export default async function ProductList({
     return (
         <main className="bg-white text-black min-h-screen">
             <div className="container mx-auto px-4 py-8">
-                <h1 className="text-3xl font-bold mb-6">All Products</h1>
+                <h1 className="text-3xl font-bold mb-6">
+                    {t("Common.allProducts")}
+                </h1>
 
                 <div className="grid lg:grid-cols-[280px_1fr] gap-8">
                     <div>

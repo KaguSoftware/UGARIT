@@ -19,8 +19,12 @@ export default function DeleteButton({ id, action, label = "Delete" }: Props) {
     const onClick = () => {
         if (!confirm("Delete this item? This cannot be undone.")) return;
         startTransition(async () => {
-            await action(id);
-            router.refresh();
+            try {
+                await action(id);
+                router.refresh();
+            } catch {
+                alert("Could not delete this item. Please try again.");
+            }
         });
     };
 

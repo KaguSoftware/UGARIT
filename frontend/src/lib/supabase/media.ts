@@ -29,7 +29,7 @@ export function localized(field: LocalizedField, locale: string): string {
 /**
  * Resolve a media URL. Storage URLs are already absolute, so this mostly just
  * applies the fallback image. Kept as a helper so call sites don't special-case
- * empty/missing media (replaces the old getStrapiMedia).
+ * empty/missing media.
  */
 export function getMediaUrl(url?: string | null): string {
     if (!url) return FALLBACK_IMAGE;

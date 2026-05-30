@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import CategoryGrid from "@/src/components/cards/CategoryCard/categoryGrid";
 import LocationCard from "@/src/components/cards/LocationCard/LocationCard";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
@@ -46,6 +47,7 @@ export default async function Home({
     params: Promise<{ locale: string }>;
 }) {
     const { locale } = await params;
+    const t = await getTranslations();
 
     const [featuredProducts, homepageCategories] = await Promise.all([
         getFeaturedProducts(locale),
@@ -59,7 +61,7 @@ export default async function Home({
             <MaxWidthWrapper>
                 <CategoryGrid categories={homepageCategories} />
                 <ProductCarousel
-                    title="Featured Products"
+                    title={t("Carousel.Title")}
                     products={featuredProducts}
                     likedProductIds={likedProductIds}
                 />

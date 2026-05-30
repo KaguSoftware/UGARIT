@@ -17,11 +17,9 @@ const LoginUserSchema = z.object({
 
 type ActionState = {
     ZodError?: Record<string, string[] | undefined> | null;
-    strapiError?: unknown;
     errorMessage?: string | null;
     success?: boolean;
     successMessage?: string | null;
-    jwt?: string | null;
     user?: unknown;
     redirectTo?: string | null;
 };
@@ -33,11 +31,9 @@ function buildActionState(
     return {
         ...prevState,
         ZodError: null,
-        strapiError: null,
         errorMessage: null,
         success: false,
         successMessage: null,
-        jwt: null,
         user: null,
         redirectTo: null,
         ...overrides,

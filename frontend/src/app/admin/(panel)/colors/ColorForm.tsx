@@ -16,15 +16,16 @@ export default function ColorForm({ color }: { color?: Color }) {
             {color?.id && <input type="hidden" name="id" value={color.id} />}
 
             <LocalizedInput
-                label="Name"
+                label="Color name"
                 name="name"
                 required
                 defaultValues={color?.name ?? {}}
+                help="Use the TR / EN / AR tabs to type the color name in each language. Turkish is required."
             />
 
             <div>
                 <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Hex code
+                    Pick the color
                 </label>
                 <input
                     type="color"
@@ -32,6 +33,9 @@ export default function ColorForm({ color }: { color?: Color }) {
                     defaultValue={color?.hex_code ?? "#000000"}
                     className="h-10 w-20 cursor-pointer rounded-lg border border-neutral-300"
                 />
+                <p className="mt-1 text-xs text-neutral-500">
+                    Click the box and choose the color shown to customers.
+                </p>
             </div>
         </FormShell>
     );

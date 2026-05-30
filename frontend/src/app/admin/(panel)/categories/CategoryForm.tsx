@@ -23,67 +23,72 @@ export default function CategoryForm({ category }: { category?: Category }) {
             )}
 
             <LocalizedInput
-                label="Name"
+                label="Category name"
                 name="name"
                 required
                 defaultValues={category?.name ?? {}}
+                help="Use the TR / EN / AR tabs to type the name in each language. Turkish is required."
             />
 
             <div>
-                <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Slug
-                </label>
+                <ImageUploader
+                    label="Image"
+                    name="image"
+                    existing={category?.image_url ? [category.image_url] : []}
+                    existingFieldName="existing_image_url"
+                />
+                <p className="mt-1 text-xs text-neutral-500">
+                    Optional. Shown on the homepage category cards. Max 8 MB.
+                </p>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm">
                 <input
-                    type="text"
-                    name="slug"
-                    required
-                    defaultValue={category?.slug ?? ""}
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
+                    type="checkbox"
+                    name="show_in_navbar"
+                    defaultChecked={category?.show_in_navbar ?? true}
                 />
-            </div>
+                Show this category in the top menu
+            </label>
 
-            <ImageUploader
-                label="Image"
-                name="image"
-                existing={category?.image_url ? [category.image_url] : []}
-                existingFieldName="existing_image_url"
-            />
-
-            <div className="flex gap-6">
-                <label className="flex items-center gap-2 text-sm">
-                    <input
-                        type="checkbox"
-                        name="show_in_navbar"
-                        defaultChecked={category?.show_in_navbar ?? true}
-                    />
-                    Show in navbar
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                    <input
-                        type="checkbox"
-                        name="is_mega_menu"
-                        defaultChecked={category?.is_mega_menu ?? false}
-                    />
-                    Mega menu
-                </label>
-            </div>
-
-            <div>
-                <label className="mb-1 block text-sm font-medium text-neutral-700">
-                    Mega menu content (JSON, optional)
-                </label>
-                <textarea
-                    name="mega_menu_content"
-                    rows={5}
-                    defaultValue={
-                        category?.mega_menu_content
-                            ? JSON.stringify(category.mega_menu_content, null, 2)
-                            : ""
-                    }
-                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs focus:border-neutral-900 focus:outline-none"
-                    placeholder='[{"title":"Tops","links":[{"title":"T-Shirts","href":"/products"}]}]'
-                />
-            </div>
+            {/* Advanced mega-menu is hidden by default so it doesn't confuse
+                day-to-day editing. */}
+            <details className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
+                <summary className="cursor-pointer text-sm font-medium text-neutral-700">
+                    Advanced: dropdown menu (optional)
+                </summary>
+                <div className="mt-3 space-y-3">
+                    <label className="flex items-center gap-2 text-sm">
+                        <input
+                            type="checkbox"
+                            name="is_mega_menu"
+                            defaultChecked={category?.is_mega_menu ?? false}
+                        />
+                        Show a large dropdown menu for this category
+                    </label>
+                    <div>
+                        <label className="mb-1 block text-xs text-neutral-600">
+                            Dropdown menu layout (advanced — leave empty unless
+                            you know the JSON format)
+                        </label>
+                        <textarea
+                            name="mega_menu_content"
+                            rows={5}
+                            defaultValue={
+                                category?.mega_menu_content
+                                    ? JSON.stringify(
+                                          category.mega_menu_content,
+                                          null,
+                                          2
+                                      )
+                                    : ""
+                            }
+                            className="w-full rounded-lg border border-neutral-300 px-3 py-2 font-mono text-xs focus:border-neutral-900 focus:outline-none"
+                            placeholder='[{"title":"Tops","links":[{"title":"T-Shirts","href":"/products"}]}]'
+                        />
+                    </div>
+                </div>
+            </details>
         </FormShell>
     );
 }
