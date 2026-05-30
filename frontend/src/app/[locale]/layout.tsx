@@ -3,36 +3,26 @@ import Navbar from "@/src/components/navbar/Navbar";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import { getOrCreateCart } from "@/src/lib/cart-actions";
 import { CartItem } from "@/src/types/cart";
 import { Toaster } from "react-hot-toast";
-import { strapiPublicFetch } from "@/src/lib/strapi";
+import { fetchNavbarCategories } from "@/src/lib/queries";
 import { AuthModalProvider } from "@/src/context/AuthModalContext";
 
-async function getNavbarCategories() {
-    try {
-        const json = await strapiPublicFetch<{ data?: any[] }>(
-            "/api/categories",
-            {
-                query: {
-                    filters: {
-                        showInNavbar: {
-                            $eq: true,
-                        },
-                    },
-                    fields: ["name", "slug"],
-                    sort: ["name:asc"],
-                },
-                revalidate: 300,
-                tags: ["navbar-categories"],
+function getNavbarCategories(locale: string) {
+    return unstable_cache(
+        async () => {
+            try {
+                return await fetchNavbarCategories(locale);
+            } catch (error) {
+                console.error("Failed to fetch categories", error);
+                return [];
             }
-        );
-
-        return json.data ?? [];
-    } catch (error) {
-        console.error("Failed to fetch categories", error);
-        return [];
-    }
+        },
+        [`navbar-categories-${locale}`],
+        { revalidate: 300, tags: ["navbar-categories"] }
+    )();
 }
 
 export default async function LocaleLayout({
@@ -49,25 +39,21 @@ export default async function LocaleLayout({
     const cartSessionId = cookieStore.get("cartSessionId")?.value;
 
     const [categories, cartData] = await Promise.all([
-        getNavbarCategories(),
+        getNavbarCategories(locale),
         cartSessionId ? getOrCreateCart(cartSessionId) : Promise.resolve(null),
     ]);
 
-    const rawItems = Array.isArray(cartData?.cart_items)
-        ? cartData.cart_items
-        : Array.isArray(cartData?.cart_items?.data)
-        ? cartData.cart_items.data
-        : [];
+    const rawItems = cartData?.cart_items ?? [];
 
-    const formattedCartItems: CartItem[] = rawItems.map((item: any) => ({
-        documentId: item.documentId,
-        productDocumentId: item.product?.documentId || "",
-        title: item.titleSnapshot,
-        slug: item.slugSnapshot,
-        imageUrl: item.imageSnapshot || "",
-        size: item.size,
+    const formattedCartItems: CartItem[] = rawItems.map((item) => ({
+        documentId: item.id,
+        productDocumentId: item.product?.id || "",
+        title: item.title_snapshot,
+        slug: item.slug_snapshot,
+        imageUrl: item.image_snapshot || "",
+        size: item.size as CartItem["size"],
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
+        unitPrice: item.unit_price,
     }));
 
     return (

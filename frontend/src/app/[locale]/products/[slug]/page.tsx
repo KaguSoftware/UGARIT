@@ -1,97 +1,36 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import { PRODUCTPAGE } from "./constants";
 import MaxWidthWrapper from "@/src/components/ui/MaxWidthWrapper";
 import ProductInteractive from "./ProductInteractive";
-import { getStrapiMedia, strapiPublicFetch } from "@/src/lib/strapi";
+import {
+    fetchProductBySlug,
+    fetchAllProductSlugs,
+} from "@/src/lib/queries";
+import { getMediaUrl, firstImage } from "@/src/lib/supabase/media";
 import { getLikedProductIds } from "@/src/lib/user-db";
-
-function extractImageUrl(image: any) {
-    if (!image) return "/mock-images/mockshirt.png";
-    if (Array.isArray(image)) return extractImageUrl(image[0]);
-    if (typeof image === "string") return getStrapiMedia(image);
-    if (image.url) return getStrapiMedia(image.url);
-    if (image.data) return extractImageUrl(image.data);
-    if (image.attributes?.url) return getStrapiMedia(image.attributes.url);
-    return "/mock-images/mockshirt.png";
-}
-
-function normalizeProduct(product: any) {
-    return product?.attributes ?? product;
-}
-
-function buildProductPopulate() {
-    return {
-        image: { fields: ["url"] },
-        colorVariants: {
-            populate: {
-                color: { fields: ["name", "hexCode"] },
-                image: { fields: ["url"] },
-            },
-        },
-    };
-}
-
-async function getProduct(slug: string, locale: string) {
-    try {
-        const json = await strapiPublicFetch<{ data?: any[] }>(
-            "/api/products",
-            {
-                query: {
-                    filters: { slug: { $eq: slug } },
-                    fields: [
-                        "documentId",
-                        "title",
-                        "slug",
-                        "price",
-                        "description",
-                        "sizeXS",
-                        "sizeS",
-                        "sizeM",
-                        "sizeL",
-                        "sizeXL",
-                        "sizeXXL",
-                        "modelHeight",
-                        "modelWeight",
-                        "modelSize",
-                        "locale",
-                    ],
-                    populate: buildProductPopulate(),
-                },
-                revalidate: 300,
-                tags: [`product:${locale}:${slug}`],
-            }
-        );
-        return json.data?.[0] || null;
-    } catch (error) {
-        return null;
-    }
-}
 
 const LOCALES = ["tr", "en", "ar"];
 
+function getProduct(slug: string, locale: string) {
+    return unstable_cache(
+        async () => fetchProductBySlug(slug, locale),
+        ["product-detail", locale, slug],
+        { revalidate: 300, tags: [`product:${locale}:${slug}`] }
+    )();
+}
+
 export async function generateStaticParams() {
     const results: { locale: string; slug: string }[] = [];
-
     try {
-        const json = await strapiPublicFetch<{ data: any[] }>("/api/products", {
-            query: {
-                fields: ["slug"],
-                pagination: { pageSize: 100 },
-            },
-        });
-        for (const product of json.data ?? []) {
-            if (product.slug) {
-                for (const locale of LOCALES) {
-                    results.push({ locale, slug: product.slug });
-                }
-            }
+        const slugs = await fetchAllProductSlugs();
+        for (const slug of slugs) {
+            for (const locale of LOCALES) results.push({ locale, slug });
         }
     } catch {
-        // if Strapi is down at build time, skip static generation
+        // skip static generation if the DB is unreachable at build time
     }
-
     return results;
 }
 
@@ -103,59 +42,42 @@ export default async function ProductDetail({
     const { locale, slug } = await params;
     const t = await getTranslations();
 
-    let strapiProduct = await getProduct(slug, locale);
-    if (!strapiProduct) notFound();
+    const product = await getProduct(slug, locale);
+    if (!product) notFound();
 
-    strapiProduct = normalizeProduct(strapiProduct);
+    const likedIds = await getLikedProductIds();
+    const isLiked = likedIds.includes(product.id);
 
-    const cookieStore = await cookies();
-    const jwt = cookieStore.get("jwt")?.value ?? null;
-    const likedIds = jwt ? await getLikedProductIds(jwt) : [];
-    const isLiked = likedIds.includes(strapiProduct.documentId);
-
-    const mainImageUrl = extractImageUrl(strapiProduct.image);
-    const allImages = Array.isArray(strapiProduct.image)
-        ? strapiProduct.image
-        : strapiProduct.image
-        ? [strapiProduct.image]
-        : [];
-    const fallbackImages = allImages.map((img: any) => extractImageUrl(img));
-
-    const formattedColorVariants = (strapiProduct.colorVariants || [])
-        .map((cv: any) => ({
-            id: cv.id,
-            color: cv.color?.attributes || cv.color,
-            imageUrl: extractImageUrl(cv.image),
-        }))
-        .filter((cv: any) => cv.color);
+    const mainImageUrl = firstImage(product.images);
+    const fallbackImages = product.images.map((img: string) => getMediaUrl(img));
 
     const sizeOptions = [
-        { label: "XS", isAvailable: strapiProduct.sizeXS },
-        { label: "S", isAvailable: strapiProduct.sizeS },
-        { label: "M", isAvailable: strapiProduct.sizeM },
-        { label: "L", isAvailable: strapiProduct.sizeL },
-        { label: "XL", isAvailable: strapiProduct.sizeXL },
-        { label: "XXL", isAvailable: strapiProduct.sizeXXL },
+        { label: "XS", isAvailable: product.sizes.XS },
+        { label: "S", isAvailable: product.sizes.S },
+        { label: "M", isAvailable: product.sizes.M },
+        { label: "L", isAvailable: product.sizes.L },
+        { label: "XL", isAvailable: product.sizes.XL },
+        { label: "XXL", isAvailable: product.sizes.XXL },
     ];
 
     return (
         <MaxWidthWrapper>
             <main className="py-10 px-6">
                 <ProductInteractive
-                    documentId={strapiProduct.documentId}
-                    price={strapiProduct.price}
-                    title={strapiProduct.title}
-                    slug={strapiProduct.slug}
+                    documentId={product.id}
+                    price={product.price}
+                    title={product.title}
+                    slug={product.slug}
                     isLiked={isLiked}
-                    description={strapiProduct.description}
+                    description={product.description}
                     initialImage={mainImageUrl}
                     fallbackImages={fallbackImages}
-                    colorVariants={formattedColorVariants}
+                    colorVariants={product.variants}
                     sizeOptions={sizeOptions}
                     modelInfo={{
-                        modelHeight: strapiProduct.modelHeight,
-                        modelWeight: strapiProduct.modelWeight,
-                        modelSize: strapiProduct.modelSize,
+                        modelHeight: product.modelHeight,
+                        modelWeight: product.modelWeight,
+                        modelSize: product.modelSize,
                     }}
                     translations={{
                         colors: t(PRODUCTPAGE.colors),

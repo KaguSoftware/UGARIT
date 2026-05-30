@@ -3,52 +3,29 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { randomUUID } from "crypto";
-import { strapiPrivateFetch } from "@/src/lib/strapi";
+import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 
-type StrapiEntity<T> = {
-    id?: number;
-    documentId?: string;
-    attributes?: T;
-} & T;
-
-type StrapiCollectionResponse<T> = {
-    data?: Array<StrapiEntity<T>>;
+export type CartRecord = {
+    id: string;
+    session_id: string;
+    status: string;
+    cart_items: Array<{
+        id: string;
+        quantity: number;
+        size: string | null;
+        color: string | null;
+        unit_price: number;
+        title_snapshot: string;
+        slug_snapshot: string;
+        image_snapshot: string | null;
+        product: { id: string; slug: string } | null;
+    }>;
 };
 
-type StrapiSingleResponse<T> = {
-    data?: StrapiEntity<T> | null;
-};
-
-type CartItemSnapshot = {
-    quantity?: number;
-    size?: string;
-    color?: string;
-    unitPrice?: number;
-    titleSnapshot?: string;
-    slugSnapshot?: string;
-    imageSnapshot?: string;
-    product?: unknown;
-};
-
-type CartEntity = {
-    sessionId?: string;
-    cartStatus?: string;
-    cart_items?:
-        | Array<StrapiEntity<CartItemSnapshot>>
-        | { data?: Array<StrapiEntity<CartItemSnapshot>> }
-        | null;
-};
-
-async function getStrapiHeaders(includeJson = false) {
-    const cookieStore = await cookies();
-    const jwt = cookieStore.get("jwt")?.value;
-
-    return {
-        ...(includeJson ? { "Content-Type": "application/json" } : {}),
-        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-    };
-}
-
+const CART_SELECT =
+    "id, session_id, status, " +
+    "cart_items(id, quantity, size, color, unit_price, title_snapshot, slug_snapshot, image_snapshot, product:products(id, slug))";
 
 export async function getCartSessionId() {
     const cookieStore = await cookies();
@@ -73,60 +50,48 @@ export async function ensureCartSessionId() {
     return cartSessionId;
 }
 
-export async function getOrCreateCart(cartSessionId?: string) {
-    const resolvedCartSessionId = cartSessionId ?? (await getCartSessionId());
+export async function getOrCreateCart(
+    cartSessionId?: string
+): Promise<CartRecord | null> {
+    const resolvedCartSessionId =
+        cartSessionId ?? (await getCartSessionId());
 
     if (!resolvedCartSessionId) return null;
 
-    try {
-        const searchData = await strapiPrivateFetch<
-            StrapiCollectionResponse<CartEntity>
-        >("/api/carts", {
-            query: {
-                filters: { sessionId: { $eq: resolvedCartSessionId } },
-                fields: ["sessionId", "cartStatus", "documentId"],
-                populate: {
-                    cart_items: {
-                        fields: [
-                            "quantity",
-                            "size",
-                            "color",
-                            "unitPrice",
-                            "titleSnapshot",
-                            "slugSnapshot",
-                            "imageSnapshot",
-                        ],
-                        populate: {
-                            product: {
-                                fields: ["documentId", "slug", "title"],
-                            },
-                        },
-                    },
-                },
-                pagination: { pageSize: 1 },
-            },
-            headers: await getStrapiHeaders(),
-        });
+    const supabase = createAdminClient();
 
-        if (searchData?.data && searchData.data.length > 0) {
-            return searchData.data[0];
+    try {
+        const { data: existing } = await supabase
+            .from("carts")
+            .select(CART_SELECT)
+            .eq("session_id", resolvedCartSessionId)
+            .maybeSingle();
+
+        if (existing) return existing as unknown as CartRecord;
+
+        // Attach the cart to the signed-in user when available.
+        let profileId: string | null = null;
+        try {
+            const ssr = await createClient();
+            const {
+                data: { user },
+            } = await ssr.auth.getUser();
+            profileId = user?.id ?? null;
+        } catch {
+            profileId = null;
         }
 
-        const newData = await strapiPrivateFetch<
-            StrapiSingleResponse<CartEntity>
-        >("/api/carts", {
-            method: "POST",
-            headers: await getStrapiHeaders(true),
-            body: JSON.stringify({
-                data: {
-                    sessionId: resolvedCartSessionId,
-                    cartStatus: "active",
-                    publishedAt: new Date().toISOString(),
-                },
-            }),
-        });
+        const { data: created } = await supabase
+            .from("carts")
+            .insert({
+                session_id: resolvedCartSessionId,
+                status: "active",
+                profile_id: profileId,
+            })
+            .select(CART_SELECT)
+            .single();
 
-        return newData.data ?? null;
+        return (created as unknown as CartRecord) ?? null;
     } catch (error) {
         console.error("Failed to get or create cart:", error);
         return null;
@@ -134,7 +99,7 @@ export async function getOrCreateCart(cartSessionId?: string) {
 }
 
 export async function addToCart(
-    productDocumentId: string,
+    productId: string,
     size: string,
     color: string,
     quantity: number,
@@ -142,59 +107,50 @@ export async function addToCart(
     title: string,
     slug: string,
     imageUrl: string,
-    currentLocale: string
+    _currentLocale: string
 ) {
     const cartSessionId = await ensureCartSessionId();
     const cart = await getOrCreateCart(cartSessionId);
 
     if (!cart) return { success: false, error: "Could not get cart session" };
 
-    const cartId = typeof cart?.id === "number" ? cart.id : null;
-
-    if (!cartId) {
-        return { success: false, error: "Failed to save item." };
-    }
+    const supabase = createAdminClient();
 
     try {
-        await strapiPrivateFetch<StrapiSingleResponse<CartItemSnapshot>>(
-            "/api/cart-items",
-            {
-                method: "POST",
-                headers: await getStrapiHeaders(true),
-                body: JSON.stringify({
-                    data: {
-                        quantity,
-                        size,
-                        color,
-                        unitPrice,
-                        titleSnapshot: title,
-                        slugSnapshot: slug,
-                        imageSnapshot: imageUrl,
-                        cart_item: cartId,
-                        product: productDocumentId,
-                        locale: currentLocale,
-                        publishedAt: new Date().toISOString(),
-                    },
-                }),
-            }
-        );
+        const { error } = await supabase.from("cart_items").insert({
+            cart_id: cart.id,
+            product_id: productId || null,
+            quantity,
+            size: size || null,
+            color: color || null,
+            unit_price: unitPrice,
+            title_snapshot: title,
+            slug_snapshot: slug,
+            image_snapshot: imageUrl,
+        });
+
+        if (error) throw error;
 
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
 
         return { success: true };
     } catch (error) {
-        console.error("Network error adding to cart:", error);
+        console.error("Error adding to cart:", error);
         return { success: false, error: "Could not connect to database." };
     }
 }
 
-export async function removeFromCart(documentId: string) {
+export async function removeFromCart(cartItemId: string) {
+    const supabase = createAdminClient();
     try {
-        await strapiPrivateFetch(`/api/cart-items/${documentId}`, {
-            method: "DELETE",
-            headers: await getStrapiHeaders(),
-        });
+        const { error } = await supabase
+            .from("cart_items")
+            .delete()
+            .eq("id", cartItemId);
+
+        if (error) throw error;
+
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
         return { success: true };

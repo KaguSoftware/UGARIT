@@ -10,13 +10,8 @@ const nextConfig: NextConfig = {
     images: {
         remotePatterns: [
             {
-                protocol: "http",
-                hostname: "localhost",
-                port: "1337",
-            },
-            {
                 protocol: "https",
-                hostname: "romantic-health-ae58f264eb.strapiapp.com",
+                hostname: "*.supabase.co",
             },
         ],
     },

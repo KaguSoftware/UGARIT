@@ -12,26 +12,9 @@ import toast from "react-hot-toast";
 export default function CartProductCard({ product }: cartProductCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // guarantees the image URL always points to your Strapi backend
+    // Cart snapshots store absolute Supabase Storage URLs.
     const rawImage = product?.imageUrl || "";
-    const imageUrl =
-        rawImage.startsWith("http") || rawImage.startsWith("data:")
-            ? rawImage
-            : rawImage
-            ? `${
-                  process.env.NEXT_PUBLIC_STRAPI_URL?.replace(/\/$/, "") ||
-                  "http://localhost:1337"
-              }${rawImage}`
-            : "/LogoNoBg.png";
-
-    if (
-        !process.env.NEXT_PUBLIC_STRAPI_URL &&
-        process.env.NODE_ENV === "production"
-    ) {
-        console.warn(
-            "NEXT_PUBLIC_STRAPI_URL is not set in production. Falling back to localhost."
-        );
-    }
+    const imageUrl = rawImage || "/LogoNoBg.png";
 
     const handleDelete = async () => {
         setIsDeleting(true);
