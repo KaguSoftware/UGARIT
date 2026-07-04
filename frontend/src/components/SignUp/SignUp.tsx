@@ -32,14 +32,15 @@ export default function Signup() {
     );
 
     useEffect(() => {
-        if (!formState?.successMessage) return;
+        if (!formState?.success || !formState?.redirectTo) return;
 
+        const target = formState.redirectTo;
         const timeout = setTimeout(() => {
-            router.push("/user");
+            router.push(target);
         }, 1500);
 
         return () => clearTimeout(timeout);
-    }, [formState?.successMessage, router]);
+    }, [formState?.success, formState?.redirectTo, router]);
 
     function handleChange(event: ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
@@ -68,7 +69,8 @@ export default function Signup() {
 
                     {formState?.successMessage && (
                         <div className="w-full rounded-xl border border-green-300 bg-green-100 p-3 text-center text-green-800">
-                            {formState.successMessage} {t("signup.redirecting")}
+                            {formState.successMessage}{" "}
+                            {formState.redirectTo && t("signup.redirecting")}
                         </div>
                     )}
 

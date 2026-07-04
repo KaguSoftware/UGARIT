@@ -2,7 +2,9 @@
 
 import FormShell from "@/src/components/admin/FormShell";
 import LocalizedInput from "@/src/components/admin/LocalizedInput";
-import ImageUploader from "@/src/components/admin/ImageUploader";
+import ProductImagesField, {
+    type ColorOption,
+} from "@/src/components/admin/ProductImagesField";
 import { saveProduct } from "../../actions";
 
 type Product = {
@@ -26,9 +28,11 @@ type Product = {
     size_xl?: boolean;
     size_xxl?: boolean;
     category_id?: string | null;
+    stock?: number | null;
 };
 
 type CategoryOption = { id: string; label: string };
+type ExistingImage = { url: string; colorId: string | null };
 
 const SIZES = [
     { key: "size_xs", label: "XS" },
@@ -42,9 +46,13 @@ const SIZES = [
 export default function ProductForm({
     product,
     categories,
+    colors,
+    existingImages = [],
 }: {
     product?: Product;
     categories: CategoryOption[];
+    colors: ColorOption[];
+    existingImages?: ExistingImage[];
 }) {
     return (
         <FormShell action={saveProduct}>
@@ -108,19 +116,29 @@ export default function ProductForm({
                 </div>
             </div>
 
-            <div>
-                <ImageUploader
-                    label="Photos"
-                    name="images"
-                    multiple
-                    existing={product?.images ?? []}
-                    existingFieldName="existing_images"
+            <div className="max-w-xs">
+                <label className="mb-1 block text-sm font-medium text-neutral-700">
+                    Stock
+                </label>
+                <input
+                    type="number"
+                    name="stock"
+                    min="0"
+                    step="1"
+                    placeholder="Leave empty to not track"
+                    defaultValue={product?.stock ?? ""}
+                    className="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-900 focus:outline-none"
                 />
                 <p className="mt-1 text-xs text-neutral-500">
-                    The first photo is the main one shown in the shop. You can
-                    add several. Max 8 MB each (JPG, PNG, WebP, or GIF).
+                    Leave empty to not track stock. Set to 0 to mark as out of
+                    stock (customers can&apos;t add it to their cart).
                 </p>
             </div>
+
+            <ProductImagesField
+                existing={existingImages}
+                colors={colors}
+            />
 
             <fieldset>
                 <legend className="mb-1 text-sm font-medium text-neutral-700">

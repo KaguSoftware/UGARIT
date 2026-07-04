@@ -40,23 +40,31 @@ export default async function proxy(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser();
 
-    if (isAdminRoute && pathname !== "/admin/login") {
-        if (!user) {
-            const url = request.nextUrl.clone();
-            url.pathname = "/admin/login";
-            return NextResponse.redirect(url);
+    if (isAdminRoute) {
+        // Look up admin status once when a user is present; skip the DB round-trip
+        // entirely for anonymous visitors.
+        let isAdmin = false;
+        if (user) {
+            const { data: profile } = await supabase
+                .from("profiles")
+                .select("is_admin")
+                .eq("id", user.id)
+                .single();
+            isAdmin = Boolean(profile?.is_admin);
         }
 
-        const { data: profile } = await supabase
-            .from("profiles")
-            .select("is_admin")
-            .eq("id", user.id)
-            .single();
-
-        if (!profile?.is_admin) {
+        if (pathname === "/admin/login") {
+            // Already-authenticated admins skip the login page.
+            if (isAdmin) {
+                const url = request.nextUrl.clone();
+                url.pathname = "/admin";
+                url.search = "";
+                return NextResponse.redirect(url);
+            }
+        } else if (!isAdmin) {
             const url = request.nextUrl.clone();
             url.pathname = "/admin/login";
-            url.searchParams.set("error", "not-admin");
+            if (user) url.searchParams.set("error", "not-admin");
             return NextResponse.redirect(url);
         }
     }

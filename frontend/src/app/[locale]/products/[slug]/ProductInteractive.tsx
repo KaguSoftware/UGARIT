@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { MessageCircle, Ruler, Weight, Shirt, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -23,6 +23,8 @@ export default function ProductInteractive({
     sizeOptions,
     modelInfo,
     translations,
+    stock = null,
+    whatsappNumber = "905372825347",
     isLiked: initialIsLiked = false,
 }: any) {
     // Combine product images + color variant images into one carousel, deduped
@@ -31,6 +33,27 @@ export default function ProductInteractive({
     const extra = variantImages.filter((url: string) => !base.includes(url));
     const allImages: string[] = [...base, ...extra].filter(Boolean);
     if (allImages.length === 0) allImages.push(initialImage);
+
+    const outOfStock = stock === 0;
+
+    // One swatch per color: a color may map to several photos, so group variants
+    // by color name and keep the ordered list of that color's images.
+    const colorSwatches = useMemo(() => {
+        type Swatch = { name: string; hexCode: string; imageUrls: string[] };
+        const byName = new Map<string, Swatch>();
+        for (const v of colorVariants as any[]) {
+            const name = v.color?.name;
+            if (!name) continue;
+            const entry: Swatch = byName.get(name) ?? {
+                name,
+                hexCode: v.color?.hexCode || "#ccc",
+                imageUrls: [],
+            };
+            if (v.imageUrl) entry.imageUrls.push(v.imageUrl);
+            byName.set(name, entry);
+        }
+        return Array.from(byName.values());
+    }, [colorVariants]);
 
     const [currentIndex, setCurrentIndex] = useState(0);
     const [activeColorId, setActiveColorId] = useState<string | number | null>(null);
@@ -83,11 +106,15 @@ export default function ProductInteractive({
     const tc = useTranslations("Common");
 
     const handleAdd = async () => {
+        if (outOfStock) {
+            toast.error(translations.outOfStock ?? "Out of stock");
+            return;
+        }
         if (!selectedSize) {
             toast.error(tc("selectSize"));
             return;
         }
-        if (colorVariants.length > 0 && !selectedColorName) {
+        if (colorSwatches.length > 0 && !selectedColorName) {
             toast.error(tc("selectColor"));
             return;
         }
@@ -186,29 +213,30 @@ export default function ProductInteractive({
                     )}
                 </div>
 
-                {/* Color swatches */}
-                {colorVariants.length > 0 && (
+                {/* Color swatches — one per color */}
+                {colorSwatches.length > 0 && (
                     <div className="justify-items-center w-full">
                         <p className="font-bold text-sm mt-6">{translations.colors}</p>
                         <div className="flex mt-3 gap-4 flex-wrap justify-center">
-                            {colorVariants.map((variant: any, index: number) => {
-                                const isActive = activeColorId === variant.id;
+                            {colorSwatches.map((swatch) => {
+                                const isActive = activeColorId === swatch.name;
                                 return (
                                     <button
-                                        key={variant.id || index}
+                                        key={swatch.name}
                                         onClick={() => {
-                                            const idx = allImages.indexOf(variant.imageUrl);
+                                            const firstImg = swatch.imageUrls[0];
+                                            const idx = allImages.indexOf(firstImg);
                                             if (idx !== -1) setCurrentIndex(idx);
-                                            setActiveColorId(variant.id);
-                                            setSelectedColorName(variant.color?.name);
+                                            setActiveColorId(swatch.name);
+                                            setSelectedColorName(swatch.name);
                                         }}
                                         className={`w-9 h-9 rounded-full border-2 transition-all ${
                                             isActive
                                                 ? "border-gray-800 scale-110 shadow-md"
                                                 : "border-gray-300 hover:scale-105"
                                         }`}
-                                        style={{ backgroundColor: variant.color?.hexCode || "#ccc" }}
-                                        title={variant.color?.name}
+                                        style={{ backgroundColor: swatch.hexCode }}
+                                        title={swatch.name}
                                     />
                                 );
                             })}
@@ -267,13 +295,17 @@ export default function ProductInteractive({
                 <div className="flex flex-col gap-4 mt-6 font-bold">
                     <button
                         onClick={handleAdd}
-                        disabled={isAdding}
+                        disabled={isAdding || outOfStock}
                         className="text-black bg-neutral-100 hover:bg-black hover:text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-xl duration-300 shadow-xl h-14"
                     >
-                        {isAdding ? "..." : translations.addtocart}
+                        {outOfStock
+                            ? (translations.outOfStock ?? "Out of stock")
+                            : isAdding
+                            ? "..."
+                            : translations.addtocart}
                     </button>
                     <Link
-                        href={`https://wa.me/905372825347?text=${encodeURIComponent(
+                        href={`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(
                             `${translations.linktext}: ${title}`
                         )}`}
                         target="_blank"

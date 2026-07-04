@@ -18,6 +18,7 @@ export type StoreProduct = {
     imageUrl: string;
     category: string;
     slug: string;
+    stock: number | null;
 };
 
 const SIZE_COLUMNS = [
@@ -30,7 +31,7 @@ const SIZE_COLUMNS = [
 ] as const;
 
 const PRODUCT_LIST_COLUMNS =
-    "id, slug, title, price, images, " +
+    "id, slug, title, price, stock, images, " +
     SIZE_COLUMNS.join(", ") +
     ", category:categories(name)";
 
@@ -156,6 +157,7 @@ export function formatProduct(item: any, locale: string): StoreProduct {
             ? localized(item.category.name, locale) || "Uncategorized"
             : "Uncategorized",
         slug: item.slug,
+        stock: item.stock ?? null,
     };
 }
 
@@ -320,6 +322,7 @@ export async function fetchProductBySlug(slug: string, locale: string) {
         title: localized(data.title, locale),
         description: localized(data.description, locale),
         price: typeof data.price === "number" ? data.price : Number(data.price ?? 0),
+        stock: data.stock ?? null,
         images: Array.isArray(data.images) ? data.images : [],
         modelHeight: data.model_height,
         modelWeight: data.model_weight,

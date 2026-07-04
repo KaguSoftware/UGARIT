@@ -245,31 +245,6 @@ export async function deleteCategory(id: string) {
     revalidateCatalog();
 }
 
-// ─── colors ─────────────────────────────────────────────────────────────────
-export async function saveColor(prevState: any, formData: FormData) {
-    await assertAdmin();
-    const supabase = createAdminClient();
-
-    const id = String(formData.get("id") ?? "");
-    const payload = {
-        name: localizedFromForm(formData, "name"),
-        hex_code: String(formData.get("hex_code") ?? "#000000"),
-    };
-
-    const { error } = id
-        ? await supabase.from("colors").update(payload).eq("id", id)
-        : await supabase.from("colors").insert(payload);
-
-    if (error) return { error: error.message };
-    redirect("/admin/colors?saved=1");
-}
-
-export async function deleteColor(id: string) {
-    await assertAdmin();
-    const supabase = createAdminClient();
-    await supabase.from("colors").delete().eq("id", id);
-}
-
 // ─── products ───────────────────────────────────────────────────────────────
 export async function saveProduct(prevState: any, formData: FormData) {
     await assertAdmin();
@@ -288,25 +263,77 @@ export async function saveProduct(prevState: any, formData: FormData) {
     }
     const price = Number(priceRaw);
 
-    // Existing images preserved + any new uploads appended.
+    const stockRaw = String(formData.get("stock") ?? "").trim();
+    const stock =
+        stockRaw === "" ? null : Math.max(0, Math.trunc(Number(stockRaw) || 0));
+
+    // ── Images + their per-image color assignments ──────────────────────────
+    // Existing images preserved (in order) + any new uploads appended. Each
+    // image carries a color reference: "" (none), an existing color id, or
+    // "new:<idx>" pointing at an inline color defined below.
     const existing = formData
         .getAll("existing_images")
-        .map((v) => String(v))
-        .filter(Boolean);
+        .map((v) => String(v));
+    const existingColorRefs = formData
+        .getAll("existing_image_color")
+        .map((v) => String(v));
 
     const newFiles = formData.getAll("images") as File[];
-    const uploaded: string[] = [];
+    const newColorRefs = formData
+        .getAll("new_image_color")
+        .map((v) => String(v));
+
+    // Inline colors created on the form (parallel name/hex arrays).
+    const inlineNames = formData.getAll("new_color_name").map((v) => String(v));
+    const inlineHexes = formData.getAll("new_color_hex").map((v) => String(v));
+
+    // Resolve a color reference to a real color id, creating inline colors on
+    // first use and caching the result so shared references reuse one row.
+    const inlineIdCache = new Map<number, string>();
+    async function resolveColorRef(ref: string): Promise<string | null> {
+        if (!ref) return null;
+        if (!ref.startsWith("new:")) return ref; // existing color id
+        const idx = Number(ref.slice(4));
+        if (Number.isNaN(idx)) return null;
+        if (inlineIdCache.has(idx)) return inlineIdCache.get(idx)!;
+
+        const name = (inlineNames[idx] ?? "").trim();
+        if (!name) return null; // unnamed inline color → treat as "no color"
+        const hex = inlineHexes[idx] || "#000000";
+        const { data, error } = await supabase
+            .from("colors")
+            .insert({ name: { tr: name }, hex_code: hex })
+            .select("id")
+            .single();
+        if (error || !data) return null;
+        inlineIdCache.set(idx, data.id);
+        return data.id;
+    }
+
+    // images[i] pairs with imageColorRefs[i] once uploads finish.
+    const images: string[] = [];
+    const imageColorRefs: string[] = [];
+    for (let i = 0; i < existing.length; i++) {
+        const url = existing[i];
+        if (!url) continue;
+        images.push(url);
+        imageColorRefs.push(existingColorRefs[i] ?? "");
+    }
+
     try {
-        for (const file of newFiles) {
+        for (let i = 0; i < newFiles.length; i++) {
+            const file = newFiles[i];
             if (file && file.size > 0) {
                 const url = await uploadImage(file);
-                if (url) uploaded.push(url);
+                if (url) {
+                    images.push(url);
+                    imageColorRefs.push(newColorRefs[i] ?? "");
+                }
             }
         }
     } catch (e) {
         return { error: e instanceof Error ? e.message : "Image upload failed." };
     }
-    const images = [...existing, ...uploaded];
 
     const categoryId = String(formData.get("category_id") ?? "") || null;
     const slug = await uniqueSlug("products", displayTitle, id);
@@ -316,6 +343,7 @@ export async function saveProduct(prevState: any, formData: FormData) {
         title,
         description: localizedFromForm(formData, "description"),
         price,
+        stock,
         is_featured: bool(formData, "is_featured"),
         sp_one: bool(formData, "sp_one"),
         sp_two: bool(formData, "sp_two"),
@@ -333,10 +361,51 @@ export async function saveProduct(prevState: any, formData: FormData) {
         images,
     };
 
-    const { error } = id
-        ? await supabase.from("products").update(payload).eq("id", id)
-        : await supabase.from("products").insert(payload);
-    if (error) return { error: error.message };
+    let productId = id;
+    if (id) {
+        const { error } = await supabase
+            .from("products")
+            .update(payload)
+            .eq("id", id);
+        if (error) return { error: error.message };
+    } else {
+        const { data, error } = await supabase
+            .from("products")
+            .insert(payload)
+            .select("id")
+            .single();
+        if (error || !data) {
+            return { error: error?.message ?? "Could not create product." };
+        }
+        productId = data.id;
+    }
+
+    // ── Sync color variants: rebuild from the current image→color mapping ────
+    await supabase
+        .from("product_color_variants")
+        .delete()
+        .eq("product_id", productId);
+
+    const variantRows: {
+        product_id: string;
+        color_id: string;
+        image_url: string;
+        position: number;
+    }[] = [];
+    for (let i = 0; i < images.length; i++) {
+        const colorId = await resolveColorRef(imageColorRefs[i]);
+        if (colorId) {
+            variantRows.push({
+                product_id: productId,
+                color_id: colorId,
+                image_url: images[i],
+                position: i,
+            });
+        }
+    }
+    if (variantRows.length > 0) {
+        await supabase.from("product_color_variants").insert(variantRows);
+    }
 
     revalidateCatalog();
     tag(`product:tr:${slug}`);
@@ -351,4 +420,46 @@ export async function deleteProduct(id: string) {
     const supabase = createAdminClient();
     await supabase.from("products").delete().eq("id", id);
     revalidateCatalog();
+}
+
+// ─── site settings ───────────────────────────────────────────────────────────
+export async function saveSettings(prevState: any, formData: FormData) {
+    await assertAdmin();
+    const supabase = createAdminClient();
+
+    const whatsapp = String(formData.get("whatsapp_number") ?? "").trim();
+    const storeName = String(formData.get("store_name") ?? "").trim();
+    const instagram = String(formData.get("instagram") ?? "").trim();
+
+    // WhatsApp deep links expect a digits-only number (country code + number).
+    const normalizedWhatsapp = whatsapp.replace(/[^0-9]/g, "");
+
+    const rows = [
+        { key: "whatsapp_number", value: normalizedWhatsapp },
+        { key: "store_name", value: storeName },
+        { key: "socials", value: { instagram } },
+    ];
+
+    const { error } = await supabase
+        .from("site_settings")
+        .upsert(rows, { onConflict: "key" });
+
+    if (error) return { error: error.message };
+
+    tag("site-settings");
+    redirect("/admin/settings?saved=1");
+}
+
+// ─── customers ───────────────────────────────────────────────────────────────
+export async function setCustomerAdmin(profileId: string, isAdmin: boolean) {
+    const actingUser = await assertAdmin();
+    // Guard against locking yourself out of the admin panel.
+    if (profileId === actingUser.id && !isAdmin) {
+        throw new Error("You cannot remove your own admin access.");
+    }
+    const supabase = createAdminClient();
+    await supabase
+        .from("profiles")
+        .update({ is_admin: isAdmin })
+        .eq("id", profileId);
 }

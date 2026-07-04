@@ -1,10 +1,14 @@
 import CartProductGrid from "@/src/components/cart/cartproducts";
 import CartTandO from "@/src/components/cart/cartTotalAndorder/cartTandO";
 import { getOrCreateCart } from "@/src/lib/cart-actions";
+import { getWhatsappNumber } from "@/src/lib/settings";
 import { CartItem } from "@/src/types/cart";
 
 export default async function CartPage() {
-    const cartData = await getOrCreateCart();
+    const [cartData, whatsappNumber] = await Promise.all([
+        getOrCreateCart(),
+        getWhatsappNumber(),
+    ]);
 
     const rawItems = cartData?.cart_items ?? [];
 
@@ -26,7 +30,10 @@ export default async function CartPage() {
                 <CartProductGrid cartproducts={formattedItems} />
             </div>
             <div className="w-full">
-                <CartTandO cartItems={formattedItems || []} />{" "}
+                <CartTandO
+                    cartItems={formattedItems || []}
+                    whatsappNumber={whatsappNumber}
+                />{" "}
             </div>
         </main>
     );

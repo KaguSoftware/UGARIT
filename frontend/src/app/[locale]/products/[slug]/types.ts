@@ -9,4 +9,5 @@ export interface ProductPage {
     colors: string;
     desc: string;
     linktext: string;
+    outofstock: string;
 }

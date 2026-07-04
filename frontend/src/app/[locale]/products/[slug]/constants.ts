@@ -11,4 +11,5 @@ export const PRODUCTPAGE: ProductPage = {
     colors: "Products.ProductPage.colors",
     desc: "Products.ProductPage.desc",
     linktext: "Products.ProductPage.linktext",
+    outofstock: "Products.ProductPage.outofstock",
 };
