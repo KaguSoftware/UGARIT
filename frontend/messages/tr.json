@@ -80,18 +80,39 @@
                     {
                         "title": "Kategoriler",
                         "links": [
-                            { "title": "Tişört", "href": "/t-shirt" },
-                            { "title": "Pantolon", "href": "/trousers" },
-                            { "title": "Ayakkabı", "href": "/shoe" },
-                            { "title": "Kaban", "href": "/coat" },
-                            { "title": "Sweatshirt", "href": "/sweat" }
+                            {
+                                "title": "Tişört",
+                                "href": "/t-shirt"
+                            },
+                            {
+                                "title": "Pantolon",
+                                "href": "/trousers"
+                            },
+                            {
+                                "title": "Ayakkabı",
+                                "href": "/shoe"
+                            },
+                            {
+                                "title": "Kaban",
+                                "href": "/coat"
+                            },
+                            {
+                                "title": "Sweatshirt",
+                                "href": "/sweat"
+                            }
                         ]
                     },
                     {
                         "title": "Koleksiyonlar",
                         "links": [
-                            { "title": "Yeni sezon", "href": "/new" },
-                            { "title": "İndirim", "href": "/discount" }
+                            {
+                                "title": "Yeni sezon",
+                                "href": "/new"
+                            },
+                            {
+                                "title": "İndirim",
+                                "href": "/discount"
+                            }
                         ]
                     }
                 ]
@@ -206,7 +227,8 @@
         "passwordPlaceholder": "Şifrenizi girin",
         "signup": "Kayıt Ol",
         "link": "Zaten hesabınız var mı? Giriş yapın",
-        "redirecting": "Yönlendiriliyor..."
+        "redirecting": "Yönlendiriliyor...",
+        "checkEmail": "Neredeyse tamam! E-postanıza bir onay bağlantısı gönderdik. Hesabınızı etkinleştirmek için gelen kutunuzu kontrol edin."
     },
     "contactCard": {
         "call": {

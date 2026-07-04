@@ -1,9 +1,29 @@
 "use server";
 
 import z from "zod";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
+
+/**
+ * Absolute site origin for building email-confirmation links. Prefers the
+ * explicit env var (set on Vercel), then the incoming request's origin, and
+ * finally localhost for dev.
+ */
+async function getSiteOrigin(): Promise<string> {
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+        return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
+    }
+    const h = await headers();
+    const origin = h.get("origin");
+    if (origin) return origin;
+    const host = h.get("host");
+    if (host) {
+        const proto = host.startsWith("localhost") ? "http" : "https";
+        return `${proto}://${host}`;
+    }
+    return "http://localhost:3000";
+}
 
 /**
  * Only allow relative, same-origin redirect targets so a crafted `next` param
@@ -103,10 +123,18 @@ export async function CreateUserAction(
 
     const supabase = await createClient();
 
+    const origin = await getSiteOrigin();
+    const nextPath = safeNext(formData.get("next"));
+
     const { data, error } = await supabase.auth.signUp({
         email: result.data.email,
         password: result.data.password,
-        options: { data: { username: result.data.name } },
+        options: {
+            data: { username: result.data.name },
+            emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+                nextPath
+            )}`,
+        },
     });
 
     if (error) {

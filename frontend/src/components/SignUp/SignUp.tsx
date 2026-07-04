@@ -1,8 +1,10 @@
 "use client";
 
 import MaxWidthWrapper from "../ui/MaxWidthWrapper";
-import { useActionState, useState, type ChangeEvent } from "react";
+import { useActionState, useEffect, useState, type ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
+import toast from "react-hot-toast";
+import { Mail } from "lucide-react";
 import { SIGNUP } from "./constants";
 import type { SignupFormData } from "./types";
 import { Link } from "@/src/i18n/routing";
@@ -45,6 +47,17 @@ export default function Signup({ next }: { next?: string }) {
         INITIAL_STATE
     );
 
+    // Signup succeeded but needs email confirmation → toast + inline panel.
+    const awaitingConfirmation = Boolean(
+        formState?.success && formState?.successMessage
+    );
+
+    useEffect(() => {
+        if (awaitingConfirmation) {
+            toast.success(t("signup.checkEmail"), { duration: 6000 });
+        }
+    }, [awaitingConfirmation, t]);
+
     function handleChange(event: ChangeEvent<HTMLInputElement>) {
         const { name, value } = event.target;
         setForm((currentForm) => ({ ...currentForm, [name]: value }));
@@ -70,12 +83,23 @@ export default function Signup({ next }: { next?: string }) {
                         </p>
                     </div>
 
-                    {formState?.successMessage && (
-                        <div className="mb-4 rounded-xl border border-green-300 bg-green-50 p-3 text-center text-sm text-green-700">
-                            {formState.successMessage}
+                    {awaitingConfirmation ? (
+                        <div className="flex flex-col items-center gap-4 rounded-xl border border-green-300 bg-green-50 p-6 text-center">
+                            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-green-100">
+                                <Mail className="h-7 w-7 text-green-600" />
+                            </div>
+                            <p className="text-sm font-medium text-green-800">
+                                {t("signup.checkEmail")}
+                            </p>
+                            <Link
+                                href="/signin"
+                                className="mt-1 w-full rounded-xl bg-neutral-900 py-3 text-sm font-semibold text-white transition-colors hover:bg-neutral-800"
+                            >
+                                {t(SIGNUP.link)}
+                            </Link>
                         </div>
-                    )}
-
+                    ) : (
+                    <>
                     {formState?.errorMessage && (
                         <div className="mb-4 rounded-xl border border-red-300 bg-red-50 p-3 text-center text-sm text-red-700">
                             {formState.errorMessage}
@@ -168,6 +192,8 @@ export default function Signup({ next }: { next?: string }) {
                     >
                         {t(SIGNUP.link)}
                     </Link>
+                    </>
+                    )}
                 </form>
             </div>
         </MaxWidthWrapper>

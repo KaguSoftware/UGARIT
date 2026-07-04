@@ -80,18 +80,39 @@
                     {
                         "title": "Categories",
                         "links": [
-                            { "title": "T-shirt", "href": "/t-shirt" },
-                            { "title": "Pants", "href": "/trousers" },
-                            { "title": "Shoes", "href": "/shoe" },
-                            { "title": "Coat", "href": "/coat" },
-                            { "title": "sweat", "href": "/sweat" }
+                            {
+                                "title": "T-shirt",
+                                "href": "/t-shirt"
+                            },
+                            {
+                                "title": "Pants",
+                                "href": "/trousers"
+                            },
+                            {
+                                "title": "Shoes",
+                                "href": "/shoe"
+                            },
+                            {
+                                "title": "Coat",
+                                "href": "/coat"
+                            },
+                            {
+                                "title": "sweat",
+                                "href": "/sweat"
+                            }
                         ]
                     },
                     {
                         "title": "Collections",
                         "links": [
-                            { "title": "New Season", "href": "/new" },
-                            { "title": "Discount", "href": "/discount" }
+                            {
+                                "title": "New Season",
+                                "href": "/new"
+                            },
+                            {
+                                "title": "Discount",
+                                "href": "/discount"
+                            }
                         ]
                     }
                 ]
@@ -156,13 +177,18 @@
         "success": "Message sent successfully!",
         "error": "Failed to send message. Please try again."
     },
-    "Carousel": { "Title": "Featured products" },
+    "Carousel": {
+        "Title": "Featured products"
+    },
     "User": {
         "userpage": {
             "welcome": "Welcome",
             "liked": "Go to liked products ",
             "cart": "Go to cart",
-            "user": { "show": "Show user info", "hide": "Hide user info" },
+            "user": {
+                "show": "Show user info",
+                "hide": "Hide user info"
+            },
             "name": "Name",
             "last": "Last Name",
             "email": "Email"
@@ -201,7 +227,8 @@
         "passwordPlaceholder": "Enter your password",
         "signup": "Sign Up",
         "link": "Already have an account? Sign in",
-        "redirecting": "Redirecting..."
+        "redirecting": "Redirecting...",
+        "checkEmail": "Almost there! We sent a confirmation link to your email. Please check your inbox to activate your account."
     },
     "contactCard": {
         "call": {

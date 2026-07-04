@@ -80,18 +80,39 @@
                     {
                         "title": "الفئات",
                         "links": [
-                            { "title": "تيشيرت", "href": "/t-shirt" },
-                            { "title": "بنطال", "href": "/trousers" },
-                            { "title": "أحذية", "href": "/shoe" },
-                            { "title": "معطف", "href": "/coat" },
-                            { "title": "سويت", "href": "/sweat" }
+                            {
+                                "title": "تيشيرت",
+                                "href": "/t-shirt"
+                            },
+                            {
+                                "title": "بنطال",
+                                "href": "/trousers"
+                            },
+                            {
+                                "title": "أحذية",
+                                "href": "/shoe"
+                            },
+                            {
+                                "title": "معطف",
+                                "href": "/coat"
+                            },
+                            {
+                                "title": "سويت",
+                                "href": "/sweat"
+                            }
                         ]
                     },
                     {
                         "title": "المجموعات",
                         "links": [
-                            { "title": "الموسم الجديد", "href": "/new" },
-                            { "title": "تخفيضات", "href": "/discount" }
+                            {
+                                "title": "الموسم الجديد",
+                                "href": "/new"
+                            },
+                            {
+                                "title": "تخفيضات",
+                                "href": "/discount"
+                            }
                         ]
                     }
                 ]
@@ -206,7 +227,8 @@
         "passwordPlaceholder": "أدخل كلمة المرور",
         "signup": "إنشاء حساب",
         "link": "لديك حساب بالفعل؟ سجّل الدخول",
-        "redirecting": "جارٍ إعادة التوجيه..."
+        "redirecting": "جارٍ إعادة التوجيه...",
+        "checkEmail": "اقتربت من الانتهاء! أرسلنا رابط تأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد لتفعيل حسابك."
     },
     "contactCard": {
         "call": {
