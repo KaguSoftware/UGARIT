@@ -2,7 +2,17 @@
 
 import z from "zod";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
+
+/**
+ * Only allow relative, same-origin redirect targets so a crafted `next` param
+ * can't bounce users to another site after they authenticate.
+ */
+function safeNext(next: unknown): string {
+    const value = typeof next === "string" ? next : "";
+    return value.startsWith("/") && !value.startsWith("//") ? value : "/user";
+}
 
 const CreateUserSchema = z.object({
     email: z.string().email(),
@@ -125,13 +135,7 @@ export async function CreateUserAction(
             loginData.user.email ?? result.data.email
         );
 
-        return buildActionState(prevState, {
-            success: true,
-            successMessage:
-                "Your account already existed, so you were signed in instead.",
-            user: loginData.user,
-            redirectTo: "/user",
-        });
+        redirect(safeNext(formData.get("next")));
     }
 
     // When email confirmation is required, signUp returns a user but no session.
@@ -148,15 +152,16 @@ export async function CreateUserAction(
             result.data.name,
             data.user.email ?? result.data.email
         );
+        redirect(safeNext(formData.get("next")));
     }
 
+    // No session yet → email confirmation pending. Stay on the page and tell them.
     return buildActionState(prevState, {
         success: true,
-        successMessage: data.session
-            ? "User created successfully."
-            : "Account created. Please check your email to confirm, then sign in.",
+        successMessage:
+            "Account created. Please check your email to confirm, then sign in.",
         user: data.user,
-        redirectTo: data.session ? "/user" : null,
+        redirectTo: null,
     });
 }
 
@@ -201,12 +206,9 @@ export async function LoginUserAction(
     });
     await upsertProfile(data.user.id, username, data.user.email ?? "");
 
-    return buildActionState(prevState, {
-        success: true,
-        successMessage: "Signed in successfully.",
-        user: data.user,
-        redirectTo: "/user",
-    });
+    // Redirect server-side: the session cookie is set on this response, so the
+    // destination renders already-authenticated (no client-side race).
+    redirect(safeNext(formData.get("next")));
 }
 
 export async function ToggleLikeProductAction(productId: string | number) {
