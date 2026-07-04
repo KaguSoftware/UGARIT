@@ -192,6 +192,12 @@ export default function Navbar({
 
     const navItems = [...staticNavItems, ...dynamicNavItems];
 
+    // The desktop bar only has room for a handful of links before they crowd the
+    // search box and icons, so cap what renders inline there. The mobile menu
+    // scrolls, so it shows everything.
+    const DESKTOP_NAV_LIMIT = 5;
+    const desktopNavItems = navItems.slice(0, DESKTOP_NAV_LIMIT);
+
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [isLangOpen, setIsLangOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
@@ -334,7 +340,7 @@ export default function Navbar({
                 </div>
 
                 <div className="hidden h-full items-center justify-center gap-8 md:flex md:flex-1">
-                    {navItems.map((item, index) => (
+                    {desktopNavItems.map((item, index) => (
                         <div
                             key={item.title}
                             className="relative flex h-full items-center"

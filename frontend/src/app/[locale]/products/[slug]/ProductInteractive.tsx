@@ -145,7 +145,7 @@ export default function ProductInteractive({
         <div className="md:grid md:grid-cols-2 grid-cols-1">
             {/* Image Carousel Column */}
             <div className="justify-items-center">
-                <div className="relative w-full select-none">
+                <div className="relative w-full max-w-md select-none">
                     <Image
                         className="object-cover w-full aspect-3/4 rounded-2xl transition-opacity duration-300 shadow-sm"
                         alt={title}
