@@ -13,16 +13,16 @@ async function count(table: string) {
 }
 
 export default async function AdminDashboard() {
-    const [products, categories, colors] = await Promise.all([
+    const [products, categories, customers] = await Promise.all([
         count("products"),
         count("categories"),
-        count("colors"),
+        count("profiles"),
     ]);
 
     const cards = [
         { label: "Products", value: products, href: "/admin/products" },
         { label: "Categories", value: categories, href: "/admin/categories" },
-        { label: "Colors", value: colors, href: "/admin/colors" },
+        { label: "Customers", value: customers, href: "/admin/customers" },
     ];
 
     return (

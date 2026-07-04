@@ -15,7 +15,8 @@
             "mansize": "Manken bedeni",
             "colors": "Renk seçenekleri",
             "desc": "Ürün açıklaması",
-            "linktext": "Bu ürün hakkında bir sorum var "
+            "linktext": "Bu ürün hakkında bir sorum var ",
+            "outofstock": "Stokta yok"
         },
         "productCardTitle": {
             "1": "Merhaba",

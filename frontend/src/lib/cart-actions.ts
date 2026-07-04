@@ -117,19 +117,62 @@ export async function addToCart(
     const supabase = createAdminClient();
 
     try {
-        const { error } = await supabase.from("cart_items").insert({
-            cart_id: cart.id,
-            product_id: productId || null,
-            quantity,
-            size: size || null,
-            color: color || null,
-            unit_price: unitPrice,
-            title_snapshot: title,
-            slug_snapshot: slug,
-            image_snapshot: imageUrl,
-        });
+        // Enforce stock when the product tracks it (null = untracked).
+        let stockLimit: number | null = null;
+        if (productId) {
+            const { data: product } = await supabase
+                .from("products")
+                .select("stock")
+                .eq("id", productId)
+                .maybeSingle();
+            stockLimit = product?.stock ?? null;
+            if (stockLimit === 0) {
+                return { success: false, error: "out_of_stock" };
+            }
+        }
 
-        if (error) throw error;
+        // Increment an existing matching line instead of creating a duplicate.
+        let existingQuery = supabase
+            .from("cart_items")
+            .select("id, quantity")
+            .eq("cart_id", cart.id);
+        existingQuery = productId
+            ? existingQuery.eq("product_id", productId)
+            : existingQuery.is("product_id", null);
+        existingQuery = size
+            ? existingQuery.eq("size", size)
+            : existingQuery.is("size", null);
+        existingQuery = color
+            ? existingQuery.eq("color", color)
+            : existingQuery.is("color", null);
+
+        const { data: existing } = await existingQuery.maybeSingle();
+
+        let nextQuantity = (existing?.quantity ?? 0) + quantity;
+        if (stockLimit !== null) {
+            nextQuantity = Math.min(nextQuantity, stockLimit);
+        }
+
+        if (existing) {
+            const { error } = await supabase
+                .from("cart_items")
+                .update({ quantity: nextQuantity })
+                .eq("id", existing.id);
+            if (error) throw error;
+        } else {
+            const { error } = await supabase.from("cart_items").insert({
+                cart_id: cart.id,
+                product_id: productId || null,
+                quantity: nextQuantity,
+                size: size || null,
+                color: color || null,
+                unit_price: unitPrice,
+                title_snapshot: title,
+                slug_snapshot: slug,
+                image_snapshot: imageUrl,
+            });
+            if (error) throw error;
+        }
 
         revalidatePath("/cart");
         revalidatePath("/[locale]/cart", "page");
@@ -138,6 +181,60 @@ export async function addToCart(
     } catch (error) {
         console.error("Error adding to cart:", error);
         return { success: false, error: "Could not connect to database." };
+    }
+}
+
+/**
+ * Sets the quantity of a cart line. A quantity below 1 removes the line.
+ * Caps at the product's stock when it is tracked.
+ */
+export async function updateCartItemQuantity(
+    cartItemId: string,
+    quantity: number
+) {
+    const supabase = createAdminClient();
+    try {
+        if (quantity < 1) {
+            const { error } = await supabase
+                .from("cart_items")
+                .delete()
+                .eq("id", cartItemId);
+            if (error) throw error;
+            revalidatePath("/cart");
+            revalidatePath("/[locale]/cart", "page");
+            return { success: true };
+        }
+
+        // Respect stock when the underlying product tracks it.
+        const { data: item } = await supabase
+            .from("cart_items")
+            .select("product_id")
+            .eq("id", cartItemId)
+            .maybeSingle();
+
+        let next = quantity;
+        if (item?.product_id) {
+            const { data: product } = await supabase
+                .from("products")
+                .select("stock")
+                .eq("id", item.product_id)
+                .maybeSingle();
+            const stock = product?.stock ?? null;
+            if (stock !== null) next = Math.max(1, Math.min(quantity, stock));
+        }
+
+        const { error } = await supabase
+            .from("cart_items")
+            .update({ quantity: next })
+            .eq("id", cartItemId);
+        if (error) throw error;
+
+        revalidatePath("/cart");
+        revalidatePath("/[locale]/cart", "page");
+        return { success: true };
+    } catch (error) {
+        console.error("Error updating cart item:", error);
+        return { success: false, error: "Could not connect to database" };
     }
 }
 

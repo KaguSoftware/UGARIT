@@ -4,15 +4,35 @@ import Image from "next/image";
 import { Link } from "@/src/i18n/routing";
 import { cartProductCardProps } from "./types";
 import MaxWidthWrapper from "../../ui/MaxWidthWrapper";
-import { Trash } from "lucide-react";
-import { useState } from "react";
+import { Trash, Minus, Plus } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { removeFromCart } from "@/src/lib/cart-actions";
+import {
+    removeFromCart,
+    updateCartItemQuantity,
+} from "@/src/lib/cart-actions";
 import toast from "react-hot-toast";
 
 export default function CartProductCard({ product }: cartProductCardProps) {
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isPending, startTransition] = useTransition();
+    const router = useRouter();
     const tc = useTranslations("Common");
+
+    const changeQuantity = (next: number) => {
+        startTransition(async () => {
+            const result = await updateCartItemQuantity(
+                product.documentId,
+                next
+            );
+            if (result.success) {
+                router.refresh();
+            } else {
+                toast.error(tc("failedRemoveItem"));
+            }
+        });
+    };
 
     // Cart snapshots store absolute Supabase Storage URLs.
     const rawImage = product?.imageUrl || "";
@@ -88,11 +108,35 @@ export default function CartProductCard({ product }: cartProductCardProps) {
 
                     {/* Bottom Row: Quantity & Price */}
                     <div className="flex items-center justify-between mt-auto">
-                        <span className="text-gray-500 text-sm font-medium">
-                            {tc("qty")}: {product.quantity}
-                        </span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    changeQuantity(product.quantity - 1)
+                                }
+                                disabled={isPending}
+                                aria-label="Decrease quantity"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                                <Minus size={14} />
+                            </button>
+                            <span className="min-w-6 text-center text-sm font-semibold text-gray-800">
+                                {product.quantity}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    changeQuantity(product.quantity + 1)
+                                }
+                                disabled={isPending}
+                                aria-label="Increase quantity"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
+                            >
+                                <Plus size={14} />
+                            </button>
+                        </div>
                         <span className="text-xl font-bold text-black">
-                            ₺{product.unitPrice}
+                            ₺{(Number(product.unitPrice) * product.quantity).toFixed(2)}
                         </span>
                     </div>
                 </div>

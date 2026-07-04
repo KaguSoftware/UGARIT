@@ -21,6 +21,9 @@ const ProductCard = ({ product }: ProductCardProps) => {
     if (!product) {
         return null;
     }
+
+    const outOfStock = (product as { stock?: number | null }).stock === 0;
+
     return (
         <Link
             href={`/products/${product.slug}`}
@@ -34,6 +37,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
                     className="rounded-t-2xl object-cover transition-transform duration-300 group-hover/card:scale-105"
                 />
+                {outOfStock && (
+                    <span className="absolute left-3 top-3 z-10 rounded-full bg-black/80 px-2.5 py-1 text-xs font-semibold text-white">
+                        {t("Products.ProductPage.outofstock")}
+                    </span>
+                )}
                 <button
                     type="button"
                     onClick={(e) => {

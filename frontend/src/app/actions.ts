@@ -107,9 +107,10 @@ export async function CreateUserAction(
                 password: result.data.password,
             });
 
-        if (loginError || !loginData.user) {
+        if (loginError || !loginData.session) {
             return buildActionState(prevState, {
-                errorMessage: error.message,
+                errorMessage:
+                    "An account with this email already exists. Please sign in instead.",
             });
         }
 
@@ -129,11 +130,14 @@ export async function CreateUserAction(
             successMessage:
                 "Your account already existed, so you were signed in instead.",
             user: loginData.user,
-            redirectTo: "/",
+            redirectTo: "/user",
         });
     }
 
-    if (data.user) {
+    // When email confirmation is required, signUp returns a user but no session.
+    // Only mark the browser as "logged in" once a real session exists — otherwise
+    // the navbar would show the user as signed in before they confirm.
+    if (data.user && data.session) {
         await setProfileCookies({
             id: data.user.id,
             username: result.data.name,
@@ -152,7 +156,7 @@ export async function CreateUserAction(
             ? "User created successfully."
             : "Account created. Please check your email to confirm, then sign in.",
         user: data.user,
-        redirectTo: data.session ? "/" : null,
+        redirectTo: data.session ? "/user" : null,
     });
 }
 
@@ -201,7 +205,7 @@ export async function LoginUserAction(
         success: true,
         successMessage: "Signed in successfully.",
         user: data.user,
-        redirectTo: "/",
+        redirectTo: "/user",
     });
 }
 

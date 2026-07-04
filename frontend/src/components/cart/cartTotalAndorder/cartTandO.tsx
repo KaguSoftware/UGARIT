@@ -8,8 +8,12 @@ import { CartItem } from "@/src/types/cart";
 
 interface CartTandOProps {
     cartItems: CartItem[];
+    whatsappNumber?: string;
 }
-export default function CartTandO({ cartItems = [] }: CartTandOProps) {
+export default function CartTandO({
+    cartItems = [],
+    whatsappNumber = "905372825347",
+}: CartTandOProps) {
     const t = useTranslations();
     const Cartwhatsapbuttontext = CARTTANDO.buttonlink;
 
@@ -35,10 +39,14 @@ export default function CartTandO({ cartItems = [] }: CartTandOProps) {
                                 className="text-xl font-medium flex w-full justify-between gap-4"
                             >
                                 <p className="line-clamp-1 text-gray-700">
+                                    {item.quantity > 1 && `${item.quantity} × `}
                                     {item.title}
                                 </p>
                                 <p className="whitespace-nowrap">
-                                    ₺{item.unitPrice}
+                                    ₺
+                                    {(
+                                        Number(item.unitPrice) * item.quantity
+                                    ).toFixed(2)}
                                 </p>
                             </h2>
                         ))}
@@ -49,7 +57,7 @@ export default function CartTandO({ cartItems = [] }: CartTandOProps) {
                     </div>
                 </div>
                 <Link
-                    href={`https://wa.me/905372825347?text=${t(
+                    href={`https://wa.me/${whatsappNumber}?text=${t(
                         Cartwhatsapbuttontext
                     )}:${titlesString}`}
                     target="_blank"

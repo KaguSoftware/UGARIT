@@ -10,6 +10,7 @@ import {
 } from "@/src/lib/queries";
 import { getMediaUrl, firstImage } from "@/src/lib/supabase/media";
 import { getLikedProductIds } from "@/src/lib/user-db";
+import { getWhatsappNumber } from "@/src/lib/settings";
 
 const LOCALES = ["tr", "en", "ar"];
 
@@ -45,7 +46,10 @@ export default async function ProductDetail({
     const product = await getProduct(slug, locale);
     if (!product) notFound();
 
-    const likedIds = await getLikedProductIds();
+    const [likedIds, whatsappNumber] = await Promise.all([
+        getLikedProductIds(),
+        getWhatsappNumber(),
+    ]);
     const isLiked = likedIds.includes(product.id);
 
     const mainImageUrl = firstImage(product.images);
@@ -74,6 +78,8 @@ export default async function ProductDetail({
                     fallbackImages={fallbackImages}
                     colorVariants={product.variants}
                     sizeOptions={sizeOptions}
+                    stock={product.stock}
+                    whatsappNumber={whatsappNumber}
                     modelInfo={{
                         modelHeight: product.modelHeight,
                         modelWeight: product.modelWeight,
@@ -90,6 +96,7 @@ export default async function ProductDetail({
                         height: t(PRODUCTPAGE.height),
                         weight: t(PRODUCTPAGE.weight),
                         mansize: t(PRODUCTPAGE.mansize),
+                        outOfStock: t(PRODUCTPAGE.outofstock),
                     }}
                 />
             </main>
